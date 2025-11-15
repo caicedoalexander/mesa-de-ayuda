@@ -1,0 +1,447 @@
+<?php
+/**
+ * @var \App\View\AppView $this
+ * @var \App\Model\Entity\Ticket $ticket
+ */
+$this->assign('title', 'Ticket #' . $ticket->ticket_number);
+?>
+
+<div class="ticket-view-container">
+    <?= $this->element('tickets/left_sidebar', ['ticket' => $ticket, 'agents' => $agents, 'tags' => $tags]) ?>
+
+    <!-- Main Content Area -->
+    <div class="sidebar-left d-flex flex-column bg-white">
+        <div class="px-3 py-1 bg-light">
+            <?= $this->Html->link('<i class="bi bi-chevron-left"></i>Volver a tickets', ['action' => 'index',], ['class' => 'text-secondary fw-bold text-decoration-none', 'escape' => false]) ?>
+        </div>
+
+        <div class="sidebar-scroll flex-grow-1 border-top border-end overflow-auto p-3">
+            <section class="mb-4">
+                <h3 class="fs-6 fw-semibold mb-3">Información del Ticket</h3>
+
+                <div class="mb-3">
+                    <label class="small text-uppercase text-muted fw-semibold mb-1">Estado:</label>
+                    <div><?= $this->Status->badge($ticket->status) ?></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="small text-uppercase text-muted fw-semibold mb-1">Prioridad:</label>
+                    <?= $this->Form->create(null, ['url' => ['action' => 'changePriority', $ticket->id], 'class' => 'm-0']) ?>
+                    <?= $this->Form->select('priority', [
+                        'baja' => '🟢 Baja',
+                        'media' => '🟡 Media',
+                        'alta' => '🟠 Alta',
+                        'urgente' => '🔴 Urgente'
+                    ], [
+                        'value' => $ticket->priority,
+                        'class' => 'form-select form-select-sm',
+                        'onchange' => 'this.form.submit()'
+                    ]) ?>
+                    <?= $this->Form->end() ?>
+                </div>
+
+                <div class="mb-3">
+                    <label class="small text-uppercase text-muted fw-semibold mb-1">Canal:</label>
+                    <div class="small text-uppercase"><?= h($ticket->channel) ?></div>
+                </div>
+            </section>
+
+            <!--
+                <section class="mb-4">
+                    <h3 class="fs-6 fw-semibold mb-3">Solicitante</h3>
+                    <div>
+                        <strong class="d-block"><?= h($ticket->requester->name) ?></strong>
+                        <small class="text-muted"><?= h($ticket->requester->email) ?></small>
+                        <?php if ($ticket->requester->phone): ?>
+                            <br><small class="text-muted">📞 <?= h($ticket->requester->phone) ?></small>
+                        <?php endif; ?>
+                    </div>
+                </section>
+            -->
+
+            <section class="mb-4">
+                <h3 class="fs-6 fw-semibold mb-3">Asignación</h3>
+                <?php if ($ticket->assignee): ?>
+                    <div class="mb-2">
+                        <strong class="d-block"><?= h($ticket->assignee->name) ?></strong>
+                        <small class="text-muted"><?= h($ticket->assignee->email) ?></small>
+                        <small class="text-muted"><?= h($ticket->assignee->email) ?></small>
+                    </div>
+                <?php else: ?>
+                    <p class="text-muted small mb-2">Sin asignar</p>
+                <?php endif; ?>
+
+                <?= $this->Form->create(null, ['url' => ['action' => 'assign', $ticket->id]]) ?>
+                <?= $this->Form->control('agent_id', [
+                    'options' => $agents,
+                    'label' => false,
+                    'class' => 'form-select form-select-sm mb-2'
+                ]) ?>
+                <?= $this->Form->button('Asignar', ['class' => 'btn btn-secondary btn-sm w-100 my-2']) ?>
+                <?= $this->Form->end() ?>
+            </section>
+
+            <?php if (!empty($ticket->tags) || !empty($tags)): ?>
+            <section class="mb-4">
+                <h3 class="fs-6 fw-semibold mb-3">Etiquetas</h3>
+                <?php if (!empty($ticket->tags)): ?>
+                    <div class="d-flex flex-wrap gap-1 mb-2">
+                        <?php foreach ($ticket->tags as $tag): ?>
+                            <span class="badge rounded-pill" style="background-color: <?= h($tag->color) ?>;">
+                                <?= h($tag->name) ?>
+                                <?= $this->Form->postLink('x', ['action' => 'removeTag', $ticket->id, $tag->id], [
+                                    'confirm' => '¿Eliminar etiqueta?',
+                                    'class' => 'text-white text-decoration-none ms-1 fw-bold opacity-75'
+                                ]) ?>
+                            </span>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+                <?php if (!empty($tags)): ?>
+                    <?= $this->Form->create(null, ['url' => ['action' => 'addTag', $ticket->id]]) ?>
+                    <?= $this->Form->control('tag_id', [
+                        'options' => $tags,
+                        'empty' => '-- Agregar etiqueta --',
+                        'label' => false,
+                        'class' => 'form-select form-select-sm mb-2'
+                    ]) ?>
+                    <?= $this->Form->button('Agregar', ['class' => 'btn btn-outline-secondary btn-sm w-100 my-2']) ?>
+                    <?= $this->Form->end() ?>
+                <?php endif; ?>
+            </section>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content d-flex flex-column bg-white">
+        <!-- Fixed Header -->
+        <div class="ticket-header py-3 px-4 border-bottom bg-white">
+            <div class="d-flex justify-content-between gap-5 align-items-center small">
+                <div class="d-flex flex-column">
+                    <h1 class="fs-5 fw-semibold m-0"><?= h($ticket->subject) ?></h1>
+                    <span><strong>Ticket:</strong> <?= h($ticket->ticket_number) ?></span>
+                </div>
+                <div class="d-flex flex-column">
+                    <span class="text-muted lh-1"><strong>Creado:</strong> <?= $this->TimeHuman->long($ticket->created) ?></span>
+                    <?php if ($ticket->resolved_at && $ticket->status === 'resuelto'): ?>
+                        <span class="text-success lh-1"><strong>Resuelto:</strong> <?= $this->TimeHuman->long($ticket->resolved_at) ?></span>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scrollable Comments Area -->
+        <div class="comments-scroll flex-grow-1 overflow-auto p-3 px-4">
+            <!-- Original Message -->
+            <div class="card rounded-0 p-3 mb-3 bg-light">
+                <div class="d-flex gap-2 mb-2 align-items-center">
+                    <div class="avatar text-white rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0" style="width: 40px; height: 40px; background-color: #CD6A15;">
+                        <?= strtoupper(substr($ticket->requester->name, 0, 1)) ?>
+                    </div>
+                    <div class="flex-grow-1">
+                        <strong class="d-block"><?= h($ticket->requester->name) ?></strong>
+                        <small class="text-muted"><?= $this->TimeHuman->time($ticket->created) ?></small>
+                    </div>
+                </div>
+                <div class="lh-base small">
+                    <?= $ticket->description ?>
+                </div>
+
+                <?php if (!empty($ticket->attachments)): ?>
+                    <div class="mt-3 pt-3 border-top">
+                        <strong class="d-block mb-2">Adjuntos:</strong>
+                        <?php foreach ($ticket->attachments as $attachment): ?>
+                            <?php if (!$attachment->is_inline): ?>
+                                <?= $this->Html->link(
+                                    '📎 ' . h($attachment->original_filename) . ' (' . number_format($attachment->file_size / 1024, 1) . ' KB)',
+                                    ['action' => 'downloadAttachment', $attachment->id],
+                                    ['class' => 'd-block py-2 text-decoration-none small']
+                                ) ?>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Comments Thread -->
+            <?php if (!empty($ticket->ticket_comments)): ?>
+                <?php foreach ($ticket->ticket_comments as $comment): ?>
+                    <div class="card d-flex rounded-0 p-3 mb-3 <?= $comment->is_system_comment ? 'bg-warning bg-opacity-10 border-warning' : ($comment->comment_type === 'internal' ? 'bg-info bg-opacity-10 border-primary' : 'bg-light') ?>">
+                        <div class="d-flex mb-2 gap-2">
+                            <div class="avatar bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center fw-normal shadow-sm flex-shrink-0" style="width: 40px; height: 40px;">
+                                <?php if ($comment->is_system_comment): ?>
+                                    <i class="bi bi-robot"></i>
+                                <?php else: ?>
+                                    <?= strtoupper(substr($comment->user->name, 0, 1)) ?>
+                                <?php endif; ?>
+                            </div>
+                            <div class="flex-grow-1 d-flex flex-column gap-0">
+                                <div class="d-flex justify-content-between">
+                                    <?php if ($comment->is_system_comment): ?>
+                                        <strong>Soporte COPC</strong>
+                                    <?php else: ?>
+                                        <strong><?= h($comment->user->name) ?></strong>
+                                    <?php endif; ?>
+                                    <div>
+                                        <?php if ($comment->comment_type === 'internal'): ?>
+                                            <span class="badge bg-secondary rounded-0 ms-2">Nota interna</span>
+                                        <?php endif; ?>
+                                        <?php if ($comment->is_system_comment): ?>
+                                            <span class="badge border border-secondary text-secondary rounded-0 ms-2">Sistema</span>
+                                        <?php endif; ?>
+                                        <?php if ($comment->user_id === 1 && !$comment->is_system_comment): ?>
+                                            <span class="badge border border-secondary text-secondary rounded-0 ms-2">Agente</span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                                <small class="text-muted"><?= $this->TimeHuman->time($comment->created) ?></small>
+                            </div>
+                        </div>
+                        <div class="lh-base small">
+                            <?= $comment->body ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+
+        <!-- Fixed Reply Editor -->
+        <div class="reply-editor border-top bg-white">
+            <?= $this->Form->create(null, [
+                'url' => ['action' => 'addComment', $ticket->id],
+                'type' => 'file',
+                'id' => 'reply-form'
+            ]) ?>
+
+            <div class="d-flex border-bottom w-75">
+                <button type="button" class="editor-tab flex-grow-1 fw-normal text-decoration-none border-0 border-end rounded-0 py-2 active" onclick="setCommentType('public')" id="tab-public">
+                    Respuesta Pública
+                </button>
+                <button type="button" class="editor-tab flex-grow-1 fw-normal text-decoration-none border-0 border-end rounded-0 py-2" onclick="setCommentType('internal')" id="tab-internal">
+                    Nota Interna
+                </button>
+            </div>
+
+            <?= $this->Form->hidden('comment_type', ['value' => 'public', 'id' => 'comment-type']) ?>
+
+            <div class="">
+                <?= $this->Form->control('comment_body', [
+                    'type' => 'textarea',
+                    'label' => false,
+                    'placeholder' => 'Escribe tu respuesta aquí...',
+                    'class' => 'form-control form-control-sm rounded-0 border-0 shadow-none p-2',
+                    'required' => true,
+                    'id' => 'comment-textarea',
+                    'rows' => 4,
+                    'style' => 'resize: none;'
+                ]) ?>
+
+                <div class="mb-2 px-3">
+                    <label class="btn btn-sm btn-outline-secondary rounded-0">
+                        <i class="bi bi-paperclip fw-bold fs-6"></i>
+                        <?= $this->Form->file('attachments[]', [
+                            'multiple' => true,
+                            'id' => 'file-input',
+                            'onchange' => 'updateFileList()',
+                            'style' => 'display: none;'
+                        ]) ?>
+                    </label>
+                    <div id="file-list"></div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-3 align-items-center px-3 py-1 border-top border-2">
+                <div class="d-flex align-items-center gap-2">
+                    <label class="mb-0 fw-semibold">Estado:</label>
+                    <?= $this->Form->select('status', [
+                        'nuevo' => 'Nuevo',
+                        'abierto' => 'Abierto',
+                        'pendiente' => 'Pendiente',
+                        'resuelto' => 'Resuelto'
+                    ], [
+                        'value' => $ticket->status,
+                        'class' => 'form-select',
+                    ]) ?>
+                </div>
+                <?= $this->Form->button('Enviar Respuesta', [
+                    'class' => 'btn btn-success rounded-0',
+                    'type' => 'submit'
+                ]) ?>
+            </div>
+
+            <?= $this->Form->end() ?>
+        </div>
+    </div>
+
+    <!-- Right Sidebar - User Info (with independent scroll) -->
+    <div class="sidebar-right d-flex flex-column border-start bg-light">
+        <div class="px-4 py-3 text-start bg-white border-bottom">
+            <div class="avatar-large text-white rounded-circle d-flex align-items-center justify-content-center fw-bold mb-2" style="width: 60px; height: 60px; font-size: 28px; background-color: #CD6A15">
+                <?= strtoupper(substr($ticket->requester->name, 0, 2)) ?>
+            </div>
+            <div class="fw-semibold"><?= h($ticket->requester->name) ?></div>
+            <small class="text-muted"><?= h($ticket->requester->email) ?></small>
+        </div>
+
+        <div class="sidebar-scroll flex-grow-1 overflow-auto p-3">
+            <section class="mb-3">
+                <h3 class="fs-6 mb-3">Información del Usuario</h3>
+
+                <?php if ($ticket->requester->phone): ?>
+                <div class="mb-2">
+                    <label class="small text-uppercase text-muted fw-semibold mb-1">Teléfono</label>
+                    <div class="small"><?= h($ticket->requester->phone) ?></div>
+                </div>
+                <?php endif; ?>
+
+                <?php if ($ticket->organization): ?>
+                <div class="mb-2">
+                    <label class="small text-uppercase text-muted fw-semibold mb-1">Organización</label>
+                    <div class="small"><?= h($ticket->organization->name) ?></div>
+                </div>
+                <?php endif; ?>
+
+                <div class="mb-2">
+                    <label class="small text-uppercase text-muted fw-semibold mb-1">Rol</label>
+                    <div class="small text-capitalize"><?= h($ticket->requester->role) ?></div>
+                </div>
+
+                <div class="mb-2">
+                    <label class="small text-uppercase text-muted fw-semibold mb-1">Usuario desde</label>
+                    <div class="small"><?= $this->TimeHuman->long($ticket->requester->created) ?></div>
+                </div>
+            </section>
+
+            <?php if (!empty($ticket->ticket_followers)): ?>
+            <section class="mb-3">
+                <h3 class="fs-6 fw-semibold mb-3">Seguidores</h3>
+                <?php foreach ($ticket->ticket_followers as $follower): ?>
+                    <div class="d-flex align-items-center gap-2 py-2">
+                        <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0" style="width: 28px; height: 28px; font-size: 11px;">
+                            <?= strtoupper(substr($follower->user->name, 0, 1)) ?>
+                        </div>
+                        <small><?= h($follower->user->name) ?></small>
+                    </div>
+                <?php endforeach; ?>
+            </section>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Only custom CSS that Bootstrap doesn't provide */
+
+/* Main Container - Fixed height viewport */
+.ticket-view-container {
+    display: grid;
+    grid-template-columns: 280px 1fr 280px;
+    gap: 0;
+    height: calc(100vh - 53px);
+    max-height: calc(100vh - 53px);
+    overflow: hidden;
+}
+
+/* Fixed heights for columns */
+.sidebar-left,
+.sidebar-right,
+.main-content {
+    height: calc(100dvh - 53px);
+}
+
+/* Custom scrollbars */
+.sidebar-scroll::-webkit-scrollbar,
+.comments-scroll::-webkit-scrollbar {
+    width: 2px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track,
+.comments-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb,
+.comments-scroll::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover,
+.comments-scroll::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Editor tabs active state */
+.editor-tab {
+    background: #f8f9fa;
+    color: #495057;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.editor-tab:hover {
+    background: #e9ecef;
+}
+
+.editor-tab.active {
+    background: white;
+    color: #555;
+    border-bottom: 2px solid #555 !important;
+    margin-bottom: -1px;
+}
+</style>
+
+<script>
+function setCommentType(type) {
+    document.getElementById('comment-type').value = type;
+
+    document.querySelectorAll('.editor-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+
+    if (type === 'public') {
+        document.getElementById('tab-public').classList.add('active');
+    } else {
+        document.getElementById('tab-internal').classList.add('active');
+    }
+
+    const textarea = document.getElementById('comment-textarea');
+    if (type === 'internal') {
+        textarea.placeholder = 'Escribe una nota interna...';
+    } else {
+        textarea.placeholder = 'Escribe tu respuesta aquí...';
+    }
+}
+
+function updateFileList() {
+    const input = document.getElementById('file-input');
+    const fileList = document.getElementById('file-list');
+
+    if (input.files.length === 0) {
+        fileList.innerHTML = '';
+        return;
+    }
+
+    let html = '<div class="mt-2">';
+    for (let i = 0; i < input.files.length; i++) {
+        const file = input.files[i];
+        const size = (file.size / 1024).toFixed(1);
+        html += `
+            <div class="small p-2 bg-white border rounded mb-1">
+                📄 ${file.name} <span class="text-muted">(${size} KB)</span>
+            </div>
+        `;
+    }
+    html += '</div>';
+    fileList.innerHTML = html;
+}
+
+// Auto-scroll to bottom of comments on load
+window.addEventListener('load', function() {
+    const commentsArea = document.querySelector('.comments-scroll');
+    if (commentsArea) {
+        commentsArea.scrollTop = commentsArea.scrollHeight;
+    }
+});
+</script>
