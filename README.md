@@ -1,53 +1,68 @@
-# CakePHP Application Skeleton
+# Soporte — Sistema de tickets (CakePHP)
 
-![Build Status](https://github.com/cakephp/app/actions/workflows/ci.yml/badge.svg?branch=5.x)
-[![Total Downloads](https://img.shields.io/packagist/dt/cakephp/app.svg?style=flat-square)](https://packagist.org/packages/cakephp/app)
-[![PHPStan](https://img.shields.io/badge/PHPStan-level%208-brightgreen.svg?style=flat-square)](https://github.com/phpstan/phpstan)
+Aplicación de soporte y gestión de incidencias construida sobre CakePHP 5.x.
+Permite la creación y seguimiento de tickets, comentarios, adjuntos, etiquetas
+y flujos básicos para PQRS (peticiones, quejas, reclamos y sugerencias).
 
-A skeleton for creating applications with [CakePHP](https://cakephp.org) 5.x.
+**Características principales:**
+- Administración de tickets (creación, estado, asignación).
+- Comentarios y historial de actividad por ticket.
+- Gestión de adjuntos y plantillas de correo.
+- Etiquetas y seguimiento por usuarios y equipos.
+- Módulo de PQRS con comentarios y adjuntos.
+- Migraciones y seeds incluidos para datos iniciales.
 
-The framework source code can be found here: [cakephp/cakephp](https://github.com/cakephp/cakephp).
+**Estructura relevante del proyecto:**
+- `src/` — código de la aplicación (Controllers, Models, Services, Views).
+- `config/` — configuración de la aplicación y credenciales locales.
+- `Migrations/` — scripts de migración y seeds para la base de datos.
+- `templates/` y `webroot/` — vistas y activos públicos.
 
-## Installation
+## Requisitos
+- PHP 8.1 o superior
+- Composer
+- Servidor de base de datos compatible (MySQL/MariaDB recomendado)
 
-1. Download [Composer](https://getcomposer.org/doc/00-intro.md) or update `composer self-update`.
-2. Run `php composer.phar create-project --prefer-dist cakephp/app [app_name]`.
-
-If Composer is installed globally, run
+## Instalación rápida
+1. Clona el repositorio y entra al directorio del proyecto.
+2. Instala dependencias:
 
 ```bash
-composer create-project --prefer-dist cakephp/app
+composer install
 ```
 
-In case you want to use a custom app dir name (e.g. `/myapp/`):
+3. Crea el archivo de configuración local copiando el ejemplo y ajusta la base de datos:
 
 ```bash
-composer create-project --prefer-dist cakephp/app myapp
+cp config/app_local.example.php config/app_local.php
+# Edita config/app_local.php para poner credenciales de DB y otros valores
 ```
 
-You can now either use your machine's webserver to view the default home page, or start
-up the built-in webserver with:
+4. Ejecuta migraciones y seeds:
+
+```bash
+bin/cake migrations migrate
+bin/cake migrations seed
+```
+
+5. Inicia el servidor de desarrollo (opcional):
 
 ```bash
 bin/cake server -p 8765
 ```
 
-Then visit `http://localhost:8765` to see the welcome page.
+Visita `http://localhost:8765` en tu navegador.
 
-## Update
+## Desarrollo y contribución
+- Revisa los tests en `tests/` y ejecuta con PHPUnit o la herramienta configurada.
+- Antes de enviar cambios, asegúrate de aplicar `phpcs`/`phpstan` y las pruebas.
+- Abre un issue o pull request para discutir cambios mayores.
 
-Since this skeleton is a starting point for your application and various files
-would have been modified as per your needs, there isn't a way to provide
-automated upgrades, so you have to do any updates manually.
+## Licencia
+Revisa el archivo de licencia del repositorio si existe. Si no, consulta
+al mantenedor del proyecto.
 
-## Configuration
+---
 
-Read and edit the environment specific `config/app_local.php` and set up the
-`'Datasources'` and any other configuration relevant for your application.
-Other environment agnostic settings can be changed in `config/app.php`.
-
-## Layout
-
-The app skeleton uses [Milligram](https://milligram.io/) (v1.3) minimalist CSS
-framework by default. You can, however, replace it with any other library or
-custom styles.
+Si quieres, puedo ajustar esta descripción (más técnica, más breve o incluir
+instrucciones para Docker). Dime qué prefieres.
