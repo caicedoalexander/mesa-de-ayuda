@@ -1,4 +1,4 @@
-# Soporte — Sistema de tickets (CakePHP)
+# Mesa de Ayuda - Sistema de tickets (CakePHP)
 
 Aplicación de soporte y gestión de incidencias construida sobre CakePHP 5.x.
 Permite la creación y seguimiento de tickets, comentarios, adjuntos, etiquetas
