@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # Sistema Integrado de Gestión Corporativa (Soporte, Compras, PQRS)
+=======
+# Mesa de Ayuda - Sistema de tickets (CakePHP)
+>>>>>>> fb65f96dadc60b8fe030f70cdb0d80569059b7a1
 
 > **Developed in collaboration with Claude Code** 🤖✨
 

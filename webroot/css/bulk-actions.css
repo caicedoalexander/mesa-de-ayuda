@@ -213,7 +213,6 @@ table, thead, tbody, th, td {
     font-size: 1rem;
     font-weight: 600;
     display: flex;
-    align-items-center;
 }
 
 .modal-header .modal-title i {
