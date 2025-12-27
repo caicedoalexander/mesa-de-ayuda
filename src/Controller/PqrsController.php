@@ -293,4 +293,24 @@ class PqrsController extends AppController
     {
         return $this->bulkDeleteEntity('pqrs');
     }
+
+    /**
+     * Recalculate SLA for a PQRS
+     *
+     * @param string|null $id PQRS id
+     * @return \Cake\Http\Response|null Redirects on success
+     */
+    public function recalculateSla($id = null)
+    {
+        $this->request->allowMethod(['post', 'get']);
+
+        try {
+            $this->pqrsService->recalculateSLA((int)$id);
+            $this->Flash->success(__('SLA recalculado exitosamente.'));
+        } catch (\Exception $e) {
+            $this->Flash->error(__('Error al recalcular SLA: {0}', $e->getMessage()));
+        }
+
+        return $this->redirect(['action' => 'view', $id]);
+    }
 }

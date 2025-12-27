@@ -4,306 +4,526 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a unified helpdesk/ticketing system built on **CakePHP 5.x** that integrates three core modules:
-- **Tickets/Soporte**: Internal IT helpdesk with email-to-ticket conversion via Gmail API
-- **PQRS**: External customer complaints/requests (public-facing, no authentication required)
-- **Compras**: Procurement workflow with SLA tracking and approval processes
+This is a **CakePHP 5.x** enterprise helpdesk system with three integrated modules:
+- **Tickets (Soporte)**: Internal IT support ticket management
+- **Compras**: Purchase requisition workflow system
+- **PQRS**: External customer complaints/suggestions module
 
-The system integrates with external services (n8n for AI automation, WhatsApp via Evolution API, Gmail API) and follows a service-oriented architecture with extensive use of traits for code reuse.
+The system integrates with Gmail (email-to-ticket conversion), WhatsApp (Evolution API), and n8n (workflow automation with AI capabilities).
 
 ## Development Commands
 
-### Database
+### Essential Commands
 ```bash
-# Run all migrations
+# Install dependencies
+composer install
+
+# Database migrations (run in order)
+bin/cake migrations migrate
+bin/cake migrations seed
+
+# Start development server
+bin/cake server
+
+# Run all quality checks (tests + phpcs + phpstan)
+composer check
+```
+
+### Testing & Code Quality
+```bash
+# Run PHPUnit tests
+composer test
+# or with verbose output
+bin/cake phpunit --colors=always
+
+# Code style checking (PSR-12 via CakePHP standards)
+composer cs-check
+
+# Fix code style issues automatically
+composer cs-fix
+
+# Static analysis (PHPStan level 5)
+composer stan
+# or directly
+vendor/bin/phpstan analyse
+```
+
+### Database Operations
+```bash
+# Run migrations
 bin/cake migrations migrate
 
 # Rollback last migration
 bin/cake migrations rollback
 
 # Create new migration
-bin/cake bake migration CreateTableName
+bin/cake bake migration MigrationName
 
-# Check migration status
-bin/cake migrations status
-
-# Seed database (if seed migrations exist)
+# Run seeders
 bin/cake migrations seed
 ```
 
-### Server
+### Custom Console Commands
 ```bash
-# Start development server (default: http://localhost:8765)
-bin/cake server
-
-# Start on specific port
-bin/cake server -p 8080
-
-# Start on specific host
-bin/cake server -H 0.0.0.0
-```
-
-### Testing
-```bash
-# Run all tests
-composer test
-# or
-vendor/bin/phpunit
-
-# Run specific test file
-vendor/bin/phpunit tests/TestCase/Controller/TicketsControllerTest.php
-
-# Run specific test method
-vendor/bin/phpunit --filter testAdd tests/TestCase/Controller/TicketsControllerTest.php
-
-# Run with coverage (requires xdebug)
-vendor/bin/phpunit --coverage-html tmp/coverage
-```
-
-### Code Quality
-```bash
-# Check code style (PSR-12 + CakePHP standards)
-composer cs-check
-
-# Auto-fix code style issues
-composer cs-fix
-
-# Run both tests and code style check
-composer check
-```
-
-### Console Commands
-```bash
-# Import Gmail messages and create tickets
+# Import Gmail emails and create tickets
 bin/cake import_gmail
+bin/cake import_gmail --max 100 --query "is:unread"
+bin/cake import_gmail --delay 2000
 
-# List all available commands
-bin/cake
-
-# Clear all caches
-bin/cake cache clear_all
+# Test email configuration
+bin/cake test_email
 ```
 
-### Code Generation (Bake)
+### Bake (Code Generation)
 ```bash
 # Generate controller
 bin/cake bake controller ControllerName
 
-# Generate model (Table + Entity)
+# Generate model (entity + table)
 bin/cake bake model ModelName
 
-# Generate all for a model
+# Generate all (controller + model + templates)
 bin/cake bake all ModelName
 ```
 
-## Architecture & Key Patterns
+## Architecture & Code Organization
 
-### Service-Oriented Architecture
+### Service Layer Architecture
+Business logic is centralized in **service classes** (`src/Service/`), NOT in controllers. Controllers delegate to services:
 
-All business logic lives in **service classes** (`src/Service/`), not controllers. Controllers are thin and delegate to services:
-
-- **TicketService**: Ticket lifecycle, email-to-ticket conversion, file handling
-- **PqrsService**: PQRS creation from public forms
-- **ComprasService**: Purchase requests with SLA tracking, ticket conversion
-- **GmailService**: OAuth2 Gmail API integration (fetch, parse, send emails)
-- **N8nService**: Webhook integration for AI-powered automation
+- **TicketService**: Ticket lifecycle, email-to-ticket conversion, status changes
+- **PqrsService**: PQRS management (mirrors ticket system for external users)
+- **ComprasService**: Purchase requisition workflow
+- **EmailService**: Transactional emails using templates from database
 - **WhatsappService**: WhatsApp notifications via Evolution API
-- **EmailService**: Template-based email notifications
-- **ResponseService**: Unified comment/response handling across modules
+- **GmailService**: OAuth2 Gmail integration, attachment handling
+- **N8nService**: Webhook integration for AI-powered tag classification
+- **StatisticsService**: Dashboard metrics and analytics
+- **ResponseService**: Unified comment/reply handling for tickets/PQRS
 
-### Shared Functionality via Traits
+**Critical Pattern**: Controllers call services, services call other services. Keep controllers thin.
 
-The three modules (Tickets, PQRS, Compras) share 80%+ of their code through traits:
+### Shared Logic via Traits
 
-**Service Traits** (`src/Service/Traits/`):
-- **TicketSystemTrait**: Core business logic (changeStatus, addComment, assign, changePriority)
-- **NotificationDispatcherTrait**: Orchestrates email + WhatsApp notifications
-- **GenericAttachmentTrait**: File upload handling with security validation
-- **SettingsEncryptionTrait**: Encrypt/decrypt sensitive settings (API keys, tokens)
+The codebase uses **traits extensively** to eliminate duplication between Tickets and PQRS modules:
 
-**Controller Traits** (`src/Controller/Traits/`):
-- **TicketSystemControllerTrait**: Shared controller actions (assign, changeStatus, addComment)
-- **StatisticsControllerTrait**: Dashboard metrics
-- **ViewDataNormalizerTrait**: Data normalization for views
+#### Service Traits (`src/Service/Traits/`)
+- **TicketSystemTrait**: Shared logic for status changes, assignments, priority changes
+- **NotificationDispatcherTrait**: Email/WhatsApp notification orchestration
+- **GenericAttachmentTrait**: File upload/download handling
+- **StatisticsServiceTrait**: Common metrics calculations
+- **SLAManagementTrait**: SLA calculation, breach detection, and recalculation logic (see SLA Management section)
 
-### Database Schema Pattern
+#### Controller Traits (`src/Controller/Traits/`)
+- **TicketSystemControllerTrait**: Actions like `assignEntity()`, `changeEntityStatus()`, `addEntityComment()`
+- **StatisticsControllerTrait**: Dashboard statistics rendering
+- **ViewDataNormalizerTrait**: Helper methods for view data preparation
 
-Each module follows identical structure:
-1. **Main entity table** (`tickets`, `pqrs`, `compras`) - Core entity data
-2. **Comments table** (`ticket_comments`, `pqrs_comments`, `compras_comments`) - Public/internal comments
-3. **Attachments table** (`attachments`, `pqrs_attachments`, `compras_attachments`) - File uploads
-4. **History table** (`ticket_history`, `pqrs_history`, `compras_history`) - Complete audit trail
+**Usage Pattern**: Traits accept an `$entityType` parameter (`'ticket'`, `'pqrs'`, or `'compra'`) to switch behavior dynamically.
 
-### Entity Numbering
+### Database Configuration
 
-All entities use sequential, prefixed numbers:
-- Tickets: `TKT-2025-00001`
-- PQRS: `PQRS-2025-00001`
-- Compras: `CPR-2025-00001`
+- **Database**: MySQL/MariaDB configured in `config/app_local.php` (gitignored)
+- **Configuration Template**: Copy `config/app_local.example.php` to `config/app_local.php`
+- **System Settings**: Stored in `system_settings` table (cached, accessed via `SettingsEncryptionTrait`)
+- **Email Templates**: Dynamic templates in `email_templates` table with variable substitution
 
-Format: `{PREFIX}-{YEAR}-{SEQUENTIAL_NUMBER}`
+### Migrations & Seeding
 
-### Conversion Workflows
+Migrations are **timestamped and sequential**:
+1. Core tables: `20251205000001_CreateOrganizations.php` through `20251205000015_CreatePqrsHistory.php`
+2. Seeders: `20251205000016_SeedSystemSettings.php`, `SeedEmailTemplates.php`, `SeedTags.php`, `SeedAdminUser.php`
+3. Schema changes: `20251206164107_AddChannelToTickets.php`, etc.
 
-Built-in entity conversion flows:
-- **Ticket → Compra**: Convert support ticket to purchase request via `ComprasService::createFromTicket()`
-- **Compra → Ticket**: Reverse conversion via `TicketService::createFromCompra()`
-- Conversions copy all comments, attachments, and preserve full history
-
-### External Integrations
-
-**Gmail API Integration** (`src/Service/GmailService.php`):
-- OAuth2 with refresh tokens (encrypted in `system_settings` table)
-- Email-to-ticket conversion via `ImportGmailCommand`
-- Handles attachments, inline images (Content-ID mapping), thread tracking
-- Send replies via Gmail API (preserves conversation threads)
-
-**n8n Webhook Integration** (`src/Service/N8nService.php`):
-- Sends ticket data to n8n on creation for AI processing
-- AI can suggest tags/classification based on content
-- Non-blocking (failures don't prevent ticket creation)
-
-**WhatsApp Notifications** (`src/Service/WhatsappService.php`):
-- Notifications via Evolution API
-- **Critical rule**: WhatsApp only sent on entity **creation**, never on updates/comments
-- Separate phone numbers per module (configured in `system_settings`)
-
-### Configuration Management
-
-Settings stored in `system_settings` table with key-value pairs:
-- **Sensitive values** (API keys, tokens) are encrypted using `SettingsEncryptionTrait`
-- Settings are cached in `_cake_core_` cache to avoid redundant queries
-- Access via `SettingsTable::get('key_name')`
-
-### Security: File Upload Validation
-
-All file uploads go through `GenericAttachmentTrait::saveGenericUploadedFile()` with:
-- Whitelist-based MIME type validation
-- Forbidden executable extensions (`.exe`, `.bat`, `.js`, `.sh`, etc.)
-- Double extension detection (prevents `file.pdf.exe`)
-- MIME type verification via `finfo` (not just extension)
-- File size limits (10MB general, 5MB images)
-- Path traversal prevention
-- UUID-based filenames for security
-- Entity-specific directory structure: `webroot/uploads/{entity_type}/{entity_number}/`
+**Rule**: Always create migrations for schema changes. Never modify existing migrations after deployment.
 
 ### Authentication & Authorization
 
-Uses **CakePHP Authentication** plugin with strict role-based access control.
+- **Authentication**: CakePHP Authentication plugin (`cakephp/authentication`)
+- **Role-based Access**: Users have roles (`admin`, `agente`, `usuario`, `compras`, `servicio_cliente`)
+- **Role Redirects**: Controllers redirect users to their allowed module in `beforeFilter()`
+  - `compras` role → `/compras`
+  - `servicio_cliente` role → `/pqrs`
+  - Others → `/tickets`
 
-**Available Roles**: `admin`, `agent`, `requester`, `servicio_cliente`, `compras`
+### Key Integrations
 
-**Module Access Matrix**:
-- **Tickets Module**: `admin`, `agent`, `requester` only
-  - Users with `compras` role → redirected to Compras
-  - Users with `servicio_cliente` role → redirected to PQRS
+#### Gmail Integration
+- **OAuth2 Flow**: Configured via Admin Settings (`/admin/settings`)
+- **Client Secret**: Stored in `config/google/client_secret.json` (gitignored)
+- **Tokens**: Encrypted in `system_settings` table using `SettingsEncryptionTrait`
+- **Email Import**: Runs via `ImportGmailCommand` (can be automated with cron)
 
-- **PQRS Module**: `admin`, `servicio_cliente` only
-  - Users with `compras` role → redirected to Compras
-  - Users with `agent` or `requester` role → redirected to Tickets
-  - Public access allowed for form submission (`create`, `success` actions)
+#### WhatsApp (Evolution API)
+- **Configuration**: API URL, instance name, API key in `system_settings`
+- **Message Templates**: HTML-based, rendered via `NotificationRenderer`
+- **Use Cases**: Ticket assignments, status changes, new comments
 
-- **Compras Module**: `admin`, `compras` only
-  - Users with `servicio_cliente` role → redirected to PQRS
-  - Users with other roles → redirected to Tickets
+#### n8n Automation
+- **Webhook**: Sends ticket data to n8n on creation
+- **AI Classification**: n8n returns suggested tags based on ticket content
+- **Configuration**: `n8n_webhook_url`, `n8n_api_key` in system settings
+- **Lazy Loading**: N8nService only instantiated when needed to reduce overhead
 
-**Implementation**:
-- Each controller has a `beforeFilter()` method that checks user role
-- Unauthorized access attempts show error message and redirect to appropriate module
-- Admin role has full access to all modules
-- Permission checks also verify entity ownership (e.g., requesters can only view their own tickets)
+### Template System
 
-### Notification Strategy
+- **Engine**: CakePHP templates (`.php` files) + Twig support available but not used
+- **Structure**:
+  - `templates/Tickets/`, `templates/Pqrs/`, `templates/Compras/` - Module views
+  - `templates/Element/` - Reusable elements (especially `shared/` for ticket/PQRS commonalities)
+  - `templates/cell/` - ViewCells for sidebar statistics
+- **Shared Elements Pattern**: `Element/shared/` contains forms/displays reused across Tickets and PQRS (e.g., comments, attachments)
 
-**WhatsApp**: High-priority creation events only
-- Sent when: Ticket/PQRS/Compra created
-- Never sent for: Updates, comments, status changes
+### Frontend Architecture
 
-**Email**: All events
-- Sent for: Creation, updates, comments, status changes, assignments
-- Template-based (stored in `email_templates` table)
-- Rendered via `NotificationRenderer`
+- **Stack**: Bootstrap 5, Vanilla JavaScript (no framework)
+- **Philosophy**: Server-rendered views, progressive enhancement
+- **AJAX**: Used for dynamic actions (comments, status changes) with JSON responses
+- **Assets**: `webroot/css/` and `webroot/js/`
 
-## Configuration Setup
+## Important Conventions
 
-1. **Copy example config**:
-   ```bash
-   cp config/app_local.example.php config/app_local.php
-   ```
+### Code Style
+- **PSR-12** via CakePHP Code Sniffer
+- **Strict Types**: All files use `declare(strict_types=1);`
+- **Type Hints**: Always use parameter and return type hints
+- **PHPDoc**: Required for complex methods, especially service classes
 
-2. **Configure database** in `config/app_local.php`:
-   ```php
-   'Datasources' => [
-       'default' => [
-           'host' => 'localhost',
-           'username' => 'your_username',
-           'password' => 'your_password',
-           'database' => 'your_database',
-       ],
-   ],
-   ```
+### Naming Conventions
+- **Controllers**: Plural (`TicketsController`, `PqrsController`)
+- **Tables**: Plural (`TicketsTable`, `PqrsTable`)
+- **Entities**: Singular (`Ticket`, `Pqrs`)
+- **Services**: Singular with `Service` suffix (`TicketService`)
+- **Traits**: Descriptive with `Trait` suffix (`TicketSystemTrait`)
 
-3. **Set security salt** in `config/app_local.php`:
-   ```php
-   'Security' => [
-       'salt' => 'your-random-salt-here',
-   ],
-   ```
+### Configuration Pattern
+Services accept optional `$systemConfig` array in constructors to avoid redundant database queries. This config is cached at the AppController level and passed down:
 
-4. **External integrations** (stored in `system_settings` table after migrations):
-   - Gmail OAuth2 credentials (client ID, secret, refresh token)
-   - WhatsApp Evolution API (instance name, API key, phone numbers)
-   - n8n webhook URL and API key
+```php
+// In Controller
+$systemConfig = Cache::remember('system_settings', ...);
+$service = new TicketService($systemConfig);
 
-## Code Style & Conventions
+// In Service
+public function __construct(?array $systemConfig = null) {
+    $this->config = $systemConfig ?? $this->loadConfigFromDb();
+}
+```
 
-- **PHP 8.5+** with strict types: All files start with `declare(strict_types=1);`
-- **Type hints everywhere**: Parameters, return types, properties
-- **PSR-12** coding standard + CakePHP conventions
-- **Logging**: Use `Cake\Log\Log::debug()`, `Log::error()` extensively
-- **Entity assertions**: Use `assert($entity instanceof EntityClass)` after ORM queries for type safety
-- **Naming conventions**:
-  - Services: `{Module}Service.php`
-  - Entities: Singular (`Ticket`, `Pqr`, `Compra`)
-  - Tables: Plural (`TicketsTable`, `PqrsTable`, `ComprasTable`)
-  - Traits: `{Purpose}Trait.php`
-  - Commands: `{Action}Command.php`
+### Security Considerations
+- **HTML Purifier**: Used selectively - email content is stored raw, purified on display
+- **CSRF Protection**: Enabled by default via CakePHP FormProtection
+- **Encryption**: Sensitive settings (API keys, OAuth tokens) encrypted via `SettingsEncryptionTrait`
+- **File Uploads**: Validated extensions, stored outside webroot when possible
 
-## Important Implementation Notes
+## Testing Guidelines
 
-### When Adding New Features
+- **Test Location**: `tests/TestCase/` mirrors `src/` structure
+- **Fixtures**: Define test data in `tests/Fixture/`
+- **Run Single Test**: `bin/cake phpunit tests/TestCase/Service/TicketServiceTest.php`
+- **Coverage**: Run `composer test` to generate coverage report
 
-1. **Add business logic to services**, not controllers
-2. **Use existing traits** when implementing similar functionality across modules
-3. **Log all changes** to history tables via `{Entity}HistoryTable`
-4. **Send notifications** via `NotificationDispatcherTrait`
-5. **Validate file uploads** using `GenericAttachmentTrait`
-6. **Encrypt sensitive config** using `SettingsEncryptionTrait`
+## Common Gotchas
 
-### When Working with Emails
+1. **System Settings Cache**: After changing settings in Admin panel, cache is auto-cleared. Manual clear: `Cache::clear(false, '_cake_core_')`
 
-- Email parsing preserves HTML formatting (fallback to plain text)
-- Inline images use Content-ID mapping (stored in attachments with `is_inline` flag)
-- Reply emails preserve thread context via `gmail_thread_id`
-- Recipients stored as JSON arrays (`email_to`, `email_cc`) for reply-all
+2. **Trait Method Conflicts**: When using multiple traits, be aware of method name collisions. Use trait aliasing if needed.
 
-### When Working with Comments
+3. **Entity Type Parameter**: Methods in traits require `$entityType` ('ticket', 'pqrs', 'compra'). Always pass the correct string.
 
-- Comments have `comment_type`: `public` (visible to requester) or `internal` (agent-only)
-- System comments (`is_system_comment = true`) are auto-generated for status changes
-- Ticket comments can be sent as email replies (`sent_as_email` flag)
-- All comments trigger email notifications (not WhatsApp)
+4. **Gmail Token Refresh**: Access tokens expire. The system auto-refreshes, but if authentication fails, re-authorize via Admin Settings.
 
-### Performance Considerations
+5. **Migration Order**: Seed migrations depend on table migrations. Always run in timestamp order.
 
-- System settings are cached (clear cache after updating settings)
-- History records loaded via AJAX, not on page load
-- Gmail API calls have 200ms sleep delays between messages
-- Lazy-load services (e.g., N8nService initialized only when needed)
+6. **Service Circular Dependencies**: Avoid circular service instantiation. Use lazy loading (see N8nService pattern).
 
-## Testing Notes
+## Module-Specific Notes
 
-- Test database configured in `config/app_local.php` under `Datasources.test`
-- Default test DB: SQLite in `tmp/tests.sqlite`
-- Fixtures should be placed in `tests/Fixture/`
-- Use `IntegrationTestCase` for controller tests, `TestCase` for unit tests
+### Tickets Module
+- **Email-to-Ticket**: Primary input method, converts Gmail messages to tickets
+- **Thread Tracking**: Uses `gmail_message_id` and `gmail_thread_id` to link conversations
+- **Channels**: Tickets have a `channel` field ('email', 'web', 'phone', etc.)
+
+### PQRS Module
+- **Public Access**: Designed for external users (customers)
+- **Shared Codebase**: Reuses 90% of Ticket logic via traits
+- **Recipient Tracking**: PQRS have `recipient_names` and `recipient_emails` fields for multi-recipient handling
+
+### Compras Module
+- **Approval Workflow**: Multi-stage approval process
+- **Similar Pattern**: Uses same trait-based architecture as Tickets/PQRS
+- **Attachments**: Purchase requisitions support file attachments
+
+## SLA (Service Level Agreement) Management
+
+### Overview
+The system includes a comprehensive SLA management system for both PQRS and Compras modules, tracking **two critical metrics** per entity:
+- **First Response Time SLA**: Time until first agent response
+- **Resolution Time SLA**: Time until resolved/closed
+
+### SLA Configuration
+- **Location**: Admin Panel → `/admin/settings/sla`
+- **PQRS**: Type-based SLA (4 types × 2 metrics = 8 configurations)
+  - Petición: 2 days first response, 5 days resolution (default)
+  - Queja: 1 day first response, 3 days resolution (default)
+  - Reclamo: 1 day first response, 3 days resolution (default)
+  - Sugerencia: 3 days first response, 7 days resolution (default)
+- **Compras**: Single SLA (2 metrics)
+  - First Response: 1 day (default)
+  - Resolution: 3 days (default)
+- **Storage**: `system_settings` table with keys like `sla_pqrs_peticion_first_response_days`
+- **Calculation**: 24/7 calendar days (not business hours)
+
+### Architecture
+
+#### SLAManagementTrait (`src/Service/Traits/SLAManagementTrait.php`)
+Core business logic shared between PqrsService and ComprasService:
+- `calculatePqrsSLA(string $type, ?DateTime $created)` - Type-specific calculation for PQRS
+- `calculateComprasSLA(?DateTime $created)` - Single calculation for Compras
+- `isFirstResponseSLABreached(Entity $entity)` - Check first response breach
+- `isResolutionSLABreached(Entity $entity)` - Check resolution breach
+- `getBreachedSLAEntities(string $module, array $closedStatuses, string $slaType)` - Query breached entities
+- `recalculateSLAForEntity(Entity $entity)` - Recalculate after config changes
+
+#### SLAHelper (`src/View/Helper/SLAHelper.php`)
+Shared visualization helper with traffic light system:
+- **Traffic Light Logic**:
+  - 🟢 GREEN (ok): > 50% time remaining
+  - 🟡 YELLOW (warning): 25-50% time remaining
+  - 🔴 RED (critical): < 25% time remaining
+  - 🔴 RED (breached): Past deadline
+  - ⚪ GRAY (completed): Entity closed
+- **Methods**:
+  - `getSlaStatus($entity, $slaField, $closedStatuses)` - Calculate SLA status
+  - `slaBadge($entity, $slaField, $closedStatuses, $showPercentage)` - Display badge
+  - `slaIcon($entity, $slaField, $closedStatuses)` - Simple icon with tooltip
+  - `slaIndicator($entity, $slaField, $closedStatuses, $showProgressBar)` - Detailed indicator
+
+#### PqrsHelper & ComprasHelper
+Both helpers delegate to SLAHelper for consistent visualization:
+
+**PqrsHelper** (`src/View/Helper/PqrsHelper.php`):
+```php
+public array $helpers = ['SLA'];
+
+// Wrapper methods for convenience
+$this->Pqrs->firstResponseSlaBadge($pqr, $showPercentage = false);
+$this->Pqrs->resolutionSlaBadge($pqr, $showPercentage = false);
+$this->Pqrs->firstResponseSlaIcon($pqr);
+$this->Pqrs->resolutionSlaIcon($pqr);
+$this->Pqrs->firstResponseSlaIndicator($pqr, $showProgressBar = false);
+$this->Pqrs->resolutionSlaIndicator($pqr, $showProgressBar = false);
+```
+
+**ComprasHelper** (`src/View/Helper/ComprasHelper.php`):
+```php
+public array $helpers = ['SLA'];
+
+// Wrapper methods with field parameter
+$this->Compras->getSlaStatus($compra, $slaField = 'resolution_sla_due');
+$this->Compras->slaBadge($compra, $slaField = 'resolution_sla_due', $showPercentage = false);
+$this->Compras->slaIcon($compra, $slaField = 'resolution_sla_due');
+$this->Compras->slaIndicator($compra, $slaField = 'resolution_sla_due', $showProgressBar = false);
+```
+
+### Database Schema
+
+#### PQRS Table Fields
+- `first_response_sla_due` (datetime, indexed) - First response deadline
+- `resolution_sla_due` (datetime, indexed) - Resolution deadline
+- `closed_at` (datetime) - Closure timestamp
+
+#### Compras Table Fields
+- `first_response_sla_due` (datetime, indexed) - First response deadline
+- `resolution_sla_due` (datetime, indexed) - Resolution deadline
+- `sla_due_date` (datetime, deprecated) - Old field kept for backward compatibility
+
+### Service Layer Integration
+
+#### PqrsService
+```php
+// Auto-calculates SLA on creation based on type
+$pqrs = $pqrsService->createFromForm($formData, $files);
+
+// Recalculate after config changes
+$pqrsService->recalculateSLA($pqrsId);
+
+// Get breached entities
+$breached = $pqrsService->getBreachedFirstResponseSLA();
+$breached = $pqrsService->getBreachedResolutionSLA();
+```
+
+#### ComprasService
+```php
+// Auto-calculates SLA on creation from ticket
+$compra = $comprasService->createFromTicket($ticket, $data);
+
+// Check if SLA breached (checks BOTH SLAs)
+$breached = $comprasService->isSLABreached($compra);
+
+// Old method (deprecated, returns resolution SLA only)
+$slaDate = $comprasService->calculateSLA($compra);
+
+// Recalculate after config changes
+$comprasService->recalculateSLA($compraId);
+```
+
+### View Integration
+
+#### PQRS Views
+**Index View** (`templates/Pqrs/index.php`):
+- Two SLA columns added after "Asignado a":
+  - "1ra Resp. SLA" - Shows `firstResponseSlaIcon()`
+  - "Resolución SLA" - Shows `resolutionSlaIcon()`
+
+**Detail View** (`templates/element/pqrs/left_sidebar.php`):
+- SLA section displays both metrics with badges
+- Shows due dates formatted as `d/m/Y H:i`
+- Admin-only "Recalcular SLA" button
+
+#### Compras Views
+**Index View** (`templates/Compras/index.php`):
+- Two SLA columns (replaced single "SLA" column):
+  - "1ra Resp. SLA" - Shows `slaIcon($compra, 'first_response_sla_due')`
+  - "Resolución SLA" - Shows `slaIcon($compra, 'resolution_sla_due')`
+
+**Detail View** (`templates/element/compras/left_sidebar.php`):
+- Dedicated SLA section with both metrics
+- Badges with percentage/time remaining
+- Admin-only "Recalcular SLA" button
+
+### Controller Actions
+
+Both PqrsController and ComprasController include:
+
+```php
+/**
+ * Recalculate SLA for an entity
+ * @param string|null $id Entity ID
+ */
+public function recalculateSla($id = null)
+{
+    $this->request->allowMethod(['post', 'get']);
+
+    try {
+        $this->pqrsService->recalculateSLA((int)$id); // or comprasService
+        $this->Flash->success(__('SLA recalculado exitosamente.'));
+    } catch (\Exception $e) {
+        $this->Flash->error(__('Error al recalcular SLA: {0}', $e->getMessage()));
+    }
+
+    return $this->redirect(['action' => 'view', $id]);
+}
+```
+
+### Statistics Integration
+
+**StatisticsService** (`src/Service/StatisticsService.php`) includes SLA metrics:
+
+#### PQRS Statistics
+```php
+$stats = $statisticsService->getPqrsStats($filters);
+$stats['sla_metrics'] = [
+    'first_response_breached' => 5,      // Count past first response deadline
+    'first_response_at_risk' => 3,       // Count < 24h until deadline
+    'first_response_compliance' => 92.5, // % compliance
+    'resolution_breached' => 2,          // Count past resolution deadline
+    'resolution_at_risk' => 4,           // Count < 24h until deadline
+    'resolution_compliance' => 96.0,     // % compliance
+    'active_count' => 40,                // Total active PQRS
+];
+```
+
+#### Compras Statistics
+```php
+$stats = $statisticsService->getComprasStats($filters);
+$stats['sla_metrics'] = [
+    'first_response_breached' => 3,
+    'first_response_at_risk' => 2,
+    'first_response_compliance' => 94.0,
+    'resolution_breached' => 1,
+    'resolution_at_risk' => 5,
+    'resolution_compliance' => 97.5,
+    'active_count' => 30,
+
+    // Legacy fields (backward compatibility)
+    'breached_count' => 1,        // Maps to resolution_breached
+    'at_risk_count' => 5,         // Maps to resolution_at_risk
+    'compliance_rate' => 97.5,    // Maps to resolution_compliance
+];
+```
+
+### Admin Usage
+
+1. **Configure SLA**: Navigate to Admin Settings → SLA Configuration
+2. **Edit Values**: Change days for each type/metric
+3. **Save**: Changes apply to new entities immediately
+4. **Recalculate**: Use "Recalcular SLA" button on individual entities to update existing ones
+
+### Migrations
+
+Run migrations in order:
+```bash
+bin/cake migrations migrate
+```
+
+Migrations created:
+1. `20251227150226_AddSlaFieldsToPqrs` - Adds 3 fields to pqrs table
+2. `20251227150341_AddSlaFieldsToCompras` - Adds 2 fields to compras table
+3. `20251227150434_MigrateComprasSlaData` - Migrates existing Compras data
+4. `20251227150559_SeedSlaSettings` - Seeds 10 SLA configuration settings
+
+### Important Notes
+
+- **Type Safety**: All SLA calculations use strict typing with `DateTimeInterface` for compatibility
+  - ⚠️ **CRITICAL**: Helper properties must use typed declarations: `public array $helpers = ['SLA'];`
+  - SLA methods accept `?DateTimeInterface` to support both native `DateTime` and `Cake\I18n\DateTime`
+- **Backward Compatibility**: Old `sla_due_date` field preserved in Compras
+  - Legacy `calculateSLA()` method still works but returns only resolution SLA
+  - Statistics include legacy fields (`breached_count`, `at_risk_count`, `compliance_rate`)
+- **Cache**: SLA settings cached in `_cake_core_` cache, cleared on save
+- **Closed Statuses**: SLA ignored for closed entities:
+  - PQRS: `resuelto`, `cerrado`
+  - Compras: `completado`, `rechazado`, `convertido`
+- **Nullable Fields**: All SLA fields are nullable (won't break if not set)
+- **Migration Order**: Run migrations sequentially - they depend on each other
+- **Admin Navigation**: SLA config accessible via `/admin/settings/sla` or Settings → SLA button
+
+### Common Issues & Troubleshooting
+
+**Type Error: "must be of type ?array, false given"**
+- **Cause**: `TicketSystemTrait` calling `addComment()` with wrong parameters
+- **Fix**: Ensure `addComment()` calls don't pass extra `$isPqrs` parameter
+- **Correct**: `$this->addComment($id, $userId, $comment, 'internal', true, false);`
+- **Incorrect**: `$this->addComment($id, $userId, $comment, 'internal', true, false, $isPqrs);`
+
+**Type Error: "must be of type ?DateTime, Cake\I18n\DateTime given"**
+- **Cause**: Type hint mismatch between native `DateTime` and CakePHP's `DateTime`
+- **Fix**: Use `?DateTimeInterface` type hint in method signatures
+- **File**: `src/Service/Traits/SLAManagementTrait.php`
+
+**Fatal Error: "Type of Helper::$helpers must be array"**
+- **Cause**: Missing type declaration on `$helpers` property in Helper classes
+- **Fix**: Use `public array $helpers = ['SLA'];` (not `public $helpers`)
+- **Files**: `PqrsHelper.php`, `ComprasHelper.php`
+
+**SLA Not Calculating**
+- Check that migrations ran successfully
+- Verify SLA settings exist in `system_settings` table
+- Clear cache: `bin/cake cache clear _cake_core_`
+- Check entity has `created` timestamp
+
+**SLA Shows N/A or null**
+- Verify entity has SLA due dates set
+- Check entity status (closed entities don't show SLA)
+- For PQRS: ensure `type` field is set correctly
+- Recalculate SLA via admin button
+
+## External Dependencies
+
+- **PHP**: 8.5+
+- **CakePHP**: 5.2.x
+- **Database**: MySQL/MariaDB
+- **Google APIs**: `google/apiclient` for Gmail OAuth2
+- **HTMLPurifier**: `ezyang/htmlpurifier` for XSS protection
+- **Mobile Detection**: `mobiledetect/mobiledetectlib` for responsive behavior

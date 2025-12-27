@@ -18,6 +18,7 @@ class ComprasService
     }
     use \App\Service\Traits\NotificationDispatcherTrait;
     use \App\Service\Traits\GenericAttachmentTrait;
+    use \App\Service\Traits\SLAManagementTrait;
 
     private EmailService $emailService;
     private WhatsappService $whatsappService;
@@ -40,7 +41,9 @@ class ComprasService
 
         try {
             $compraNumber = $comprasTable->generateCompraNumber();
-            $slaDate = $this->calculateSLA();
+
+            // Calculate SLA deadlines using new system
+            $slas = $this->calculateComprasSLA(new DateTime());
 
             $compra = $comprasTable->newEntity([
                 'compra_number' => $compraNumber,
@@ -54,7 +57,9 @@ class ComprasService
                 'channel' => $ticket->channel ?? 'email',
                 'email_to' => $ticket->email_to,  // Copy email recipients
                 'email_cc' => $ticket->email_cc,  // Copy CC recipients (managers, etc.)
-                'sla_due_date' => $slaDate,
+                'sla_due_date' => $slas['resolution'],  // Backward compatibility
+                'first_response_sla_due' => $slas['first_response'],
+                'resolution_sla_due' => $slas['resolution'],
             ]);
 
             if ($comprasTable->save($compra)) {
@@ -154,25 +159,42 @@ class ComprasService
 
     /**
      * Calcula fecha de vencimiento de SLA
-     * SLA de Compras: created + 3 días
+     *
+     * @deprecated Use calculateComprasSLA() from SLAManagementTrait
+     * @param \App\Model\Entity\Compra|null $compra Compra entity
+     * @return \Cake\I18n\DateTime Resolution SLA date (for backward compatibility)
      */
     public function calculateSLA(?Compra $compra = null): DateTime
     {
         $createdDate = $compra ? $compra->created : new DateTime();
-        return $createdDate->modify('+3 days');
+        $slas = $this->calculateComprasSLA($createdDate);
+
+        // Return resolution SLA for backward compatibility
+        return $slas['resolution'];
     }
 
     /**
      * Verifica si el SLA está vencido
+     *
+     * Checks BOTH first response AND resolution SLA.
+     * Returns true if EITHER is breached.
+     *
+     * @param \App\Model\Entity\Compra $compra Compra entity
+     * @return bool True if any SLA is breached
      */
     public function isSLABreached(Compra $compra): bool
     {
-        if (in_array($compra->status, ['completado', 'rechazado'])) {
-            return false;
+        // Check first response SLA
+        if ($this->isFirstResponseSLABreached($compra)) {
+            return true;
         }
 
-        $now = new DateTime();
-        return $compra->sla_due_date && $now > $compra->sla_due_date;
+        // Check resolution SLA
+        if ($this->isResolutionSLABreached($compra)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -291,6 +313,42 @@ class ComprasService
         $result = $this->saveGenericUploadedFile('compra', $compra, $file, $commentId, $userId);
         assert($result instanceof \App\Model\Entity\ComprasAttachment || $result === null);
         return $result;
+    }
+
+    /**
+     * Recalculate SLA for a Compra after configuration changes
+     *
+     * @param int $compraId Compra ID
+     * @return bool Success
+     */
+    public function recalculateSLA(int $compraId): bool
+    {
+        $comprasTable = $this->fetchTable('Compras');
+        $compra = $comprasTable->get($compraId);
+
+        return $this->recalculateSLAForEntity($compra);
+    }
+
+    /**
+     * Get all Compras with breached first response SLA
+     *
+     * @return array Array of Compra entities
+     */
+    public function getBreachedFirstResponseSLA(): array
+    {
+        $closedStatuses = ['completado', 'rechazado'];
+        return $this->getBreachedSLAEntities('Compras', $closedStatuses, 'first_response');
+    }
+
+    /**
+     * Get all Compras with breached resolution SLA
+     *
+     * @return array Array of Compra entities
+     */
+    public function getBreachedResolutionSLA(): array
+    {
+        $closedStatuses = ['completado', 'rechazado'];
+        return $this->getBreachedSLAEntities('Compras', $closedStatuses, 'resolution');
     }
 }
 

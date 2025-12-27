@@ -13,6 +13,13 @@ use Cake\View\Helper;
 class PqrsHelper extends Helper
 {
     /**
+     * Helpers
+     *
+     * @var array
+     */
+    public array $helpers = ['SLA'];
+
+    /**
      * Get badge color for PQRS type
      *
      * @param string $type PQRS type
@@ -120,5 +127,85 @@ class PqrsHelper extends Helper
             h($color),
             h($label)
         );
+    }
+
+    // ========================================================================
+    // SLA Visualization Methods (delegating to SLAHelper)
+    // ========================================================================
+
+    /**
+     * Render first response SLA badge
+     *
+     * @param \Cake\Datasource\EntityInterface $pqr PQRS entity
+     * @param bool $showPercentage Show percentage in badge (default: false)
+     * @return string HTML badge
+     */
+    public function firstResponseSlaBadge($pqr, bool $showPercentage = false): string
+    {
+        $closedStatuses = ['resuelto', 'cerrado'];
+        return $this->SLA->slaBadge($pqr, 'first_response_sla_due', $closedStatuses, $showPercentage);
+    }
+
+    /**
+     * Render resolution SLA badge
+     *
+     * @param \Cake\Datasource\EntityInterface $pqr PQRS entity
+     * @param bool $showPercentage Show percentage in badge (default: false)
+     * @return string HTML badge
+     */
+    public function resolutionSlaBadge($pqr, bool $showPercentage = false): string
+    {
+        $closedStatuses = ['resuelto', 'cerrado'];
+        return $this->SLA->slaBadge($pqr, 'resolution_sla_due', $closedStatuses, $showPercentage);
+    }
+
+    /**
+     * Render first response SLA icon (for index views)
+     *
+     * @param \Cake\Datasource\EntityInterface $pqr PQRS entity
+     * @return string HTML icon
+     */
+    public function firstResponseSlaIcon($pqr): string
+    {
+        $closedStatuses = ['resuelto', 'cerrado'];
+        return $this->SLA->slaIcon($pqr, 'first_response_sla_due', $closedStatuses);
+    }
+
+    /**
+     * Render resolution SLA icon (for index views)
+     *
+     * @param \Cake\Datasource\EntityInterface $pqr PQRS entity
+     * @return string HTML icon
+     */
+    public function resolutionSlaIcon($pqr): string
+    {
+        $closedStatuses = ['resuelto', 'cerrado'];
+        return $this->SLA->slaIcon($pqr, 'resolution_sla_due', $closedStatuses);
+    }
+
+    /**
+     * Render first response SLA indicator (for detail views)
+     *
+     * @param \Cake\Datasource\EntityInterface $pqr PQRS entity
+     * @param bool $showProgressBar Show progress bar (default: false)
+     * @return string HTML indicator
+     */
+    public function firstResponseSlaIndicator($pqr, bool $showProgressBar = false): string
+    {
+        $closedStatuses = ['resuelto', 'cerrado'];
+        return $this->SLA->slaIndicator($pqr, 'first_response_sla_due', $closedStatuses, $showProgressBar);
+    }
+
+    /**
+     * Render resolution SLA indicator (for detail views)
+     *
+     * @param \Cake\Datasource\EntityInterface $pqr PQRS entity
+     * @param bool $showProgressBar Show progress bar (default: false)
+     * @return string HTML indicator
+     */
+    public function resolutionSlaIndicator($pqr, bool $showProgressBar = false): string
+    {
+        $closedStatuses = ['resuelto', 'cerrado'];
+        return $this->SLA->slaIndicator($pqr, 'resolution_sla_due', $closedStatuses, $showProgressBar);
     }
 }

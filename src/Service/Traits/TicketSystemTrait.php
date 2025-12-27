@@ -76,10 +76,10 @@ trait TicketSystemTrait
 
         // Add system comment (always internal)
         if ($comment) {
-            $this->addComment($entity->id, $userId, $comment, 'internal', true, false, $isPqrs);
+            $this->addComment($entity->id, $userId, $comment, 'internal', true, false);
         } else {
             $systemComment = "El estado cambió de '{$oldStatus}' a '{$newStatus}'";
-            $this->addComment($entity->id, $userId, $systemComment, 'internal', true, false, $isPqrs);
+            $this->addComment($entity->id, $userId, $systemComment, 'internal', true, false);
         }
 
         // Send notifications ONLY if requested
@@ -233,7 +233,7 @@ trait TicketSystemTrait
 
         // Add system comment
         $systemComment = "Asignado a {$newAssigneeName}";
-        $this->addComment($entity->id, $userId, $systemComment, 'internal', true, false, $isPqrs);
+        $this->addComment($entity->id, $userId, $systemComment, 'internal', true, false);
 
         return true;
     }
@@ -284,7 +284,7 @@ trait TicketSystemTrait
 
         // Add system comment
         $systemComment = "Prioridad cambiada de '{$oldPriority}' a '{$newPriority}'";
-        $this->addComment($entity->id, $userId, $systemComment, 'internal', true, false, $isPqrs);
+        $this->addComment($entity->id, $userId, $systemComment, 'internal', true, false);
 
         return true;
     }

@@ -27,6 +27,7 @@ class PqrsService
     }
     use \App\Service\Traits\NotificationDispatcherTrait;
     use \App\Service\Traits\GenericAttachmentTrait;
+    use \App\Service\Traits\SLAManagementTrait;
 
     private EmailService $emailService;
     private WhatsappService $whatsappService;
@@ -87,18 +88,26 @@ class PqrsService
         // Generate PQRS number
         $pqrsNumber = $pqrsTable->generatePqrsNumber();
 
+        // Get PQRS type for SLA calculation
+        $type = $formData['type'] ?? 'peticion';
+
+        // Calculate SLA deadlines based on PQRS type
+        $slas = $this->calculatePqrsSLA($type, new \DateTime());
+
         // Create PQRS entity
         $pqrs = $pqrsTable->newEntity([
             'pqrs_number' => $pqrsNumber,
             'requester_name' => $formData['requester_name'] ?? '',
             'requester_email' => $formData['requester_email'] ?? '',
             'requester_phone' => $formData['requester_phone'] ?? null,
-            'type' => $formData['type'] ?? 'peticion',
+            'type' => $type,
             'subject' => $formData['subject'] ?? '',
             'description' => $formData['description'] ?? '',
             'status' => 'nuevo',
             'priority' => $formData['priority'] ?? 'media',
             'channel' => 'web',
+            'first_response_sla_due' => $slas['first_response'],
+            'resolution_sla_due' => $slas['resolution'],
         ]);
         assert($pqrs instanceof \App\Model\Entity\Pqr);
 
@@ -168,5 +177,41 @@ class PqrsService
         $result = $this->saveGenericUploadedFile('pqrs', $pqrs, $file, $commentId, $userId);
         assert($result instanceof \App\Model\Entity\PqrsAttachment || $result === null);
         return $result;
+    }
+
+    /**
+     * Recalculate SLA for a PQRS after configuration changes
+     *
+     * @param int $pqrsId PQRS ID
+     * @return bool Success
+     */
+    public function recalculateSLA(int $pqrsId): bool
+    {
+        $pqrsTable = $this->fetchTable('Pqrs');
+        $pqrs = $pqrsTable->get($pqrsId);
+
+        return $this->recalculateSLAForEntity($pqrs);
+    }
+
+    /**
+     * Get all PQRS with breached first response SLA
+     *
+     * @return array Array of PQRS entities
+     */
+    public function getBreachedFirstResponseSLA(): array
+    {
+        $closedStatuses = ['resuelto', 'cerrado'];
+        return $this->getBreachedSLAEntities('Pqrs', $closedStatuses, 'first_response');
+    }
+
+    /**
+     * Get all PQRS with breached resolution SLA
+     *
+     * @return array Array of PQRS entities
+     */
+    public function getBreachedResolutionSLA(): array
+    {
+        $closedStatuses = ['resuelto', 'cerrado'];
+        return $this->getBreachedSLAEntities('Pqrs', $closedStatuses, 'resolution');
     }
 }
