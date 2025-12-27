@@ -30,11 +30,11 @@ $this->assign('title', 'Estadísticas de Tickets');
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 
-<div class="py-4 px-5" style="max-width: 1100px; margin: 0 auto; width: 100%;">
+<div class="statistics-container">
     <!-- Header -->
     <div class="mb-5">
-        <h2 class="fw-normal"><i class="bi bi-bar-chart me-2 text-success"></i>Estadísticas</h2>
-        <p class="text-muted fw-light">Vista general del sistema de tickets</p>
+        <h2 class="fw-normal neuro-text-primary"><i class="bi bi-bar-chart me-2" style="color: var(--neuro-success);"></i>Estadísticas</h2>
+        <p class="neuro-text-secondary fw-light">Vista general del sistema de tickets</p>
     </div>
 
     <!-- Date Range Filter (commented out for now - can be enabled later) -->
@@ -110,31 +110,37 @@ $this->assign('title', 'Estadísticas de Tickets');
     <!-- Comments Statistics -->
     <div class="row">
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="bi bi-chat-dots text-primary" style="font-size: 2.5rem;"></i>
-                    <h3 class="mt-2 mb-0"><?= number_format($totalComments) ?></h3>
-                    <p class="text-muted mb-0 fw-light">Total Comentarios</p>
+            <div class="card neuro-card neuro-hover" data-animate-in="fade-up" data-delay="700">
+                <div class="card-body text-center py-4">
+                    <div class="neuro-icon-wrapper mb-3">
+                        <i class="bi bi-chat-dots neuro-icon" style="color: var(--neuro-primary);"></i>
+                    </div>
+                    <h3 class="neuro-counter mb-2" data-counter data-target="<?= $totalComments ?>" aria-live="polite" aria-atomic="true">0</h3>
+                    <p class="neuro-label mb-0">Total Comentarios</p>
                 </div>
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="bi bi-eye text-success" style="font-size: 2.5rem;"></i>
-                    <h3 class="mt-2 mb-0"><?= number_format($publicComments) ?></h3>
-                    <p class="text-muted mb-0 fw-light">Comentarios Públicos</p>
+            <div class="card neuro-card neuro-hover" data-animate-in="fade-up" data-delay="800">
+                <div class="card-body text-center py-4">
+                    <div class="neuro-icon-wrapper mb-3">
+                        <i class="bi bi-eye neuro-icon" style="color: var(--neuro-success);"></i>
+                    </div>
+                    <h3 class="neuro-counter mb-2" data-counter data-target="<?= $publicComments ?>" aria-live="polite" aria-atomic="true">0</h3>
+                    <p class="neuro-label mb-0">Comentarios Públicos</p>
                 </div>
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="bi bi-eye-slash text-warning" style="font-size: 2.5rem;"></i>
-                    <h3 class="mt-2 mb-0"><?= number_format($internalComments) ?></h3>
-                    <p class="text-muted mb-0 fw-light">Comentarios Internos</p>
+            <div class="card neuro-card neuro-hover" data-animate-in="fade-up" data-delay="900">
+                <div class="card-body text-center py-4">
+                    <div class="neuro-icon-wrapper mb-3">
+                        <i class="bi bi-eye-slash neuro-icon" style="color: var(--neuro-warning);"></i>
+                    </div>
+                    <h3 class="neuro-counter mb-2" data-counter data-target="<?= $internalComments ?>" aria-live="polite" aria-atomic="true">0</h3>
+                    <p class="neuro-label mb-0">Comentarios Internos</p>
                 </div>
             </div>
         </div>

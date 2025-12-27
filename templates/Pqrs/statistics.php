@@ -31,11 +31,11 @@ $this->assign('title', 'Estadísticas de PQRS');
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 
-<div class="py-4 px-5" style="max-width: 1100px; margin: 0 auto; width: 100%;">
+<div class="statistics-container">
     <!-- Header -->
     <div class="mb-5">
-        <h2 class="fw-normal"><i class="bi bi-bar-chart me-2 text-success"></i>Estadísticas PQRS</h2>
-        <p class="text-muted fw-light">Vista general del sistema de peticiones, quejas, reclamos y sugerencias</p>
+        <h2 class="fw-normal neuro-text-primary"><i class="bi bi-bar-chart me-2" style="color: var(--neuro-success);"></i>Estadísticas PQRS</h2>
+        <p class="neuro-text-secondary fw-light">Vista general del sistema de peticiones, quejas, reclamos y sugerencias</p>
     </div>
 
     <!-- Date Range Filter (commented out for now) -->

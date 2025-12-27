@@ -14,15 +14,18 @@ $entityLabels = [
 $label = $entityLabels[$entityType] ?? 'entidades';
 ?>
 
-<div class="card border-0 shadow-sm">
-    <div class="card-header bg-white border-bottom">
-        <h5 class="mb-0 fw-semibold"><i class="bi bi-trophy"></i> Top Agentes</h5>
+<div class="neuro-card" data-animate-in="fade-up" data-delay="700">
+    <div class="neuro-chart-header">
+        <h5 class="neuro-chart-title">
+            <i class="bi bi-trophy me-2" style="color: var(--neuro-warning);"></i>
+            Top Agentes
+        </h5>
     </div>
-    <div class="card-body">
+    <div class="pt-3">
         <?php if (!empty($topAgents) && count($topAgents) > 0): ?>
             <div class="table-responsive">
-                <table class="table table-sm table-hover align-middle mb-0">
-                    <thead class="table-light">
+                <table class="neuro-table table table-sm align-middle mb-0">
+                    <thead>
                         <tr>
                             <th style="width: 60px;" class="text-center">Ranking</th>
                             <th>Agente</th>
@@ -44,7 +47,7 @@ $label = $entityLabels[$entityType] ?? 'entidades';
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <strong><?= h($agent->agent_name ?? ($agent->Assignees->first_name . ' ' . $agent->Assignees->last_name)) ?></strong>
+                                    <strong class="neuro-text-primary"><?= h($agent->agent_name ?? ($agent->Assignees->first_name . ' ' . $agent->Assignees->last_name)) ?></strong>
                                 </td>
                                 <td class="text-center">
                                     <span class="badge bg-primary"><?= number_format($agent->count) ?></span>
@@ -55,7 +58,7 @@ $label = $entityLabels[$entityType] ?? 'entidades';
                 </table>
             </div>
         <?php else: ?>
-            <p class="text-muted mb-0">No hay datos de agentes disponibles.</p>
+            <p class="neuro-text-muted mb-0">No hay datos de agentes disponibles.</p>
         <?php endif; ?>
     </div>
 </div>

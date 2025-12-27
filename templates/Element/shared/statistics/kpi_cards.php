@@ -28,49 +28,59 @@ $icon = $entityIcons[$entityType] ?? 'bi-inbox';
 <div class="row mb-5">
     <!-- Total -->
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-                <i class="bi <?= $icon ?> text-primary" style="font-size: 2.5rem;"></i>
-                <h3 class="mt-2 mb-0"><?= number_format($total) ?></h3>
-                <p class="text-muted mb-0 fw-light">Total <?= h($label) ?></p>
+        <div class="card neuro-card neuro-hover" data-animate-in="fade-up" data-delay="0">
+            <div class="card-body text-center py-4">
+                <div class="neuro-icon-wrapper mb-3">
+                    <i class="bi <?= $icon ?> neuro-icon" style="color: var(--neuro-primary);"></i>
+                </div>
+                <h3 class="neuro-counter mb-2" data-counter data-target="<?= $total ?>" aria-live="polite" aria-atomic="true">0</h3>
+                <p class="neuro-label mb-0">Total <?= h($label) ?></p>
             </div>
         </div>
     </div>
 
     <!-- Recent (7 days) -->
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-                <i class="bi bi-clock-history text-info" style="font-size: 2.5rem;"></i>
-                <h3 class="mt-2 mb-0"><?= number_format($recentCount) ?></h3>
-                <p class="text-muted mb-0 fw-light">Últimos 7 días</p>
+        <div class="card neuro-card neuro-hover" data-animate-in="fade-up" data-delay="100">
+            <div class="card-body text-center py-4">
+                <div class="neuro-icon-wrapper mb-3">
+                    <i class="bi bi-clock-history neuro-icon" style="color: var(--neuro-info);"></i>
+                </div>
+                <h3 class="neuro-counter mb-2" data-counter data-target="<?= $recentCount ?>" aria-live="polite" aria-atomic="true">0</h3>
+                <p class="neuro-label mb-0">Últimos 7 días</p>
             </div>
         </div>
     </div>
 
     <!-- Unassigned -->
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-                <i class="bi bi-person-x-fill text-danger" style="font-size: 2.5rem;"></i>
-                <h3 class="mt-2 mb-0"><?= number_format($unassignedCount) ?></h3>
-                <p class="text-muted mb-0 fw-light">Sin Asignar</p>
+        <div class="card neuro-card neuro-hover" data-animate-in="fade-up" data-delay="200">
+            <div class="card-body text-center py-4">
+                <div class="neuro-icon-wrapper mb-3">
+                    <i class="bi bi-person-x-fill neuro-icon" style="color: var(--neuro-danger);"></i>
+                </div>
+                <h3 class="neuro-counter mb-2" data-counter data-target="<?= $unassignedCount ?>" aria-live="polite" aria-atomic="true">0</h3>
+                <p class="neuro-label mb-0">Sin Asignar</p>
             </div>
         </div>
     </div>
 
     <!-- Active Agents OR SLA Compliance (for Compras) -->
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
+        <div class="card neuro-card neuro-hover" data-animate-in="fade-up" data-delay="300">
+            <div class="card-body text-center py-4">
                 <?php if ($entityType === 'compra' && isset($slaMetrics)): ?>
-                    <i class="bi bi-speedometer2 text-success" style="font-size: 2.5rem;"></i>
-                    <h3 class="mt-2 mb-0"><?= h($slaMetrics['compliance_rate']) ?>%</h3>
-                    <p class="text-muted mb-0 fw-light">Cumplimiento SLA</p>
+                    <div class="neuro-icon-wrapper mb-3">
+                        <i class="bi bi-speedometer2 neuro-icon" style="color: var(--neuro-success);"></i>
+                    </div>
+                    <h3 class="neuro-counter mb-2" data-counter data-target="<?= (int)$slaMetrics['compliance_rate'] ?>" aria-live="polite" aria-atomic="true">0</h3>
+                    <p class="neuro-label mb-0">Cumplimiento SLA %</p>
                 <?php else: ?>
-                    <i class="bi bi-people text-success" style="font-size: 2.5rem;"></i>
-                    <h3 class="mt-2 mb-0"><?= number_format($activeAgentsCount) ?></h3>
-                    <p class="text-muted mb-0 fw-light">Agentes Activos</p>
+                    <div class="neuro-icon-wrapper mb-3">
+                        <i class="bi bi-people neuro-icon" style="color: var(--neuro-success);"></i>
+                    </div>
+                    <h3 class="neuro-counter mb-2" data-counter data-target="<?= $activeAgentsCount ?>" aria-live="polite" aria-atomic="true">0</h3>
+                    <p class="neuro-label mb-0">Agentes Activos</p>
                 <?php endif; ?>
             </div>
         </div>

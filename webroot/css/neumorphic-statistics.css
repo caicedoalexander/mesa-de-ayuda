@@ -1,0 +1,383 @@
+/**
+ * Neumorphic Statistics Styles
+ * Modern, minimalist design with soft neumorphism and balanced interactivity
+ *
+ * Features:
+ * - Soft neumorphism with dual shadows
+ * - Light neutral color palette
+ * - Smooth transitions and microinteractions
+ * - Desktop-optimized (1200px+)
+ * - Accessibility-friendly (prefers-reduced-motion)
+ */
+
+/* ============================================
+   CSS VARIABLES
+   ============================================ */
+
+:root {
+  /* Base neumorphic colors */
+  --neuro-bg: #e0e5ec;
+  --neuro-surface: #e0e5ec;
+
+  /* Dual shadows (key to neumorphism effect) */
+  --neuro-shadow-light: #ffffff;
+  --neuro-shadow-dark: #a3b1c6;
+
+  /* Elevation shadows */
+  --neuro-shadow-sm:
+    4px 4px 8px var(--neuro-shadow-dark),
+    -4px -4px 8px var(--neuro-shadow-light);
+
+  --neuro-shadow-md:
+    8px 8px 16px var(--neuro-shadow-dark),
+    -8px -8px 16px var(--neuro-shadow-light);
+
+  --neuro-shadow-lg:
+    12px 12px 24px var(--neuro-shadow-dark),
+    -12px -12px 24px var(--neuro-shadow-light);
+
+  /* Inset shadow (pressed/sunken effect) */
+  --neuro-shadow-inset:
+    inset 4px 4px 8px var(--neuro-shadow-dark),
+    inset -4px -4px 8px var(--neuro-shadow-light);
+
+  /* Accent colors */
+  --neuro-primary: #5e72e4;
+  --neuro-success: #2dce89;
+  --neuro-warning: #fb6340;
+  --neuro-danger: #f5365c;
+  --neuro-info: #11cdef;
+
+  /* Text colors */
+  --neuro-text-primary: #32325d;
+  --neuro-text-secondary: #8898aa;
+  --neuro-text-muted: #adb5bd;
+
+  /* Transitions */
+  --neuro-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --neuro-transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   BASE CONTAINER
+   ============================================ */
+
+.statistics-container {
+  background: var(--neuro-bg);
+  min-height: 100vh;
+}
+
+/* ============================================
+   CARD BASE CLASSES
+   ============================================ */
+
+.neuro-card {
+  background: var(--neuro-surface);
+  border-radius: 16px;
+  box-shadow: var(--neuro-shadow-md);
+  border: none !important; /* Override Bootstrap */
+  transition: var(--neuro-transition);
+}
+
+.neuro-card-sm {
+  box-shadow: var(--neuro-shadow-sm);
+  border-radius: 12px;
+}
+
+/* Hover lift effect */
+.neuro-hover {
+  cursor: pointer;
+}
+
+.neuro-hover:hover {
+  box-shadow: var(--neuro-shadow-lg);
+  transform: translateY(-6px);
+}
+
+/* ============================================
+   KPI CARDS
+   ============================================ */
+
+/* Icon wrapper (sunken circle) */
+.neuro-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: var(--neuro-surface);
+  box-shadow: var(--neuro-shadow-inset);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--neuro-transition);
+}
+
+.neuro-icon {
+  font-size: 2.5rem;
+  transition: var(--neuro-transition);
+}
+
+.neuro-hover:hover .neuro-icon {
+  transform: scale(1.1);
+}
+
+/* Counter (large number) */
+.neuro-counter {
+  font-size: 2.5rem;
+  font-weight: 300;
+  color: var(--neuro-text-primary);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Label text */
+.neuro-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--neuro-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ============================================
+   CHARTS
+   ============================================ */
+
+.neuro-chart-container {
+  background: var(--neuro-surface);
+  box-shadow: var(--neuro-shadow-md);
+  border-radius: 16px;
+  padding: 1.5rem;
+  height: 100%;
+  transition: var(--neuro-transition);
+}
+
+.neuro-chart-container:hover {
+  box-shadow: var(--neuro-shadow-lg);
+}
+
+/* Chart header */
+.neuro-chart-header {
+  border-bottom: 1px solid rgba(163, 177, 198, 0.15);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.neuro-chart-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--neuro-text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* Chart wrapper */
+.neuro-chart-wrapper {
+  position: relative;
+  min-height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================
+   SKELETON LOADERS
+   ============================================ */
+
+.neuro-chart-skeleton {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.neuro-chart-skeleton.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.skeleton-circle {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    var(--neuro-surface) 0%,
+    #d0d5dd 50%,
+    var(--neuro-surface) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  box-shadow: var(--neuro-shadow-inset);
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Canvas fade-in */
+canvas {
+  transition: opacity 0.5s ease;
+}
+
+canvas.loaded {
+  opacity: 1 !important;
+}
+
+/* ============================================
+   TABLES
+   ============================================ */
+
+.neuro-table {
+  background: var(--neuro-surface);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--neuro-shadow-sm);
+}
+
+.neuro-table thead {
+  background: rgba(163, 177, 198, 0.08);
+}
+
+.neuro-table thead th {
+  color: var(--neuro-text-primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: none;
+  padding: 1rem;
+}
+
+.neuro-table tbody tr {
+  border-bottom: 1px solid rgba(163, 177, 198, 0.1);
+  transition: background-color 0.2s ease;
+}
+
+.neuro-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.neuro-table tbody tr:hover {
+  background-color: rgba(163, 177, 198, 0.05);
+}
+
+.neuro-table tbody td {
+  color: var(--neuro-text-primary);
+  padding: 1rem;
+  border: none;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+/* Fade-up entrance */
+[data-animate-in="fade-up"] {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+[data-animate-in="fade-up"].animated {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Fade-in entrance */
+[data-animate-in="fade"] {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+[data-animate-in="fade"].animated {
+  opacity: 1;
+}
+
+/* ============================================
+   RESPONSIVE - DESKTOP OPTIMIZATION
+   ============================================ */
+
+@media (min-width: 1200px) {
+  .statistics-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 3rem;
+  }
+
+  .neuro-card {
+    padding: 2rem;
+  }
+
+  .neuro-counter {
+    font-size: 3rem;
+  }
+
+  .neuro-icon-wrapper {
+    width: 90px;
+    height: 90px;
+  }
+
+  .neuro-icon {
+    font-size: 2.75rem;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .neuro-hover:hover {
+    transform: none !important;
+  }
+
+  [data-animate-in] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+.neuro-card:focus-visible,
+.neuro-hover:focus-visible {
+  outline: 3px solid var(--neuro-primary);
+  outline-offset: 4px;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.neuro-text-primary {
+  color: var(--neuro-text-primary);
+}
+
+.neuro-text-secondary {
+  color: var(--neuro-text-secondary);
+}
+
+.neuro-text-muted {
+  color: var(--neuro-text-muted);
+}
+
+/* GPU acceleration hint */
+.neuro-hover,
+.neuro-card {
+  will-change: transform;
+  transform: translateZ(0);
+}

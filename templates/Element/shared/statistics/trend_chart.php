@@ -19,12 +19,18 @@ $chartId = 'trendChart' . uniqid();
 
 <div class="row mb-5">
     <div class="col-12">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-bottom">
-                <h5 class="mb-0 fw-semibold"><i class="bi bi-graph-up"></i> Tendencia de <?= h($label) ?> (Últimos 30 días)</h5>
+        <div class="neuro-card neuro-chart-container" data-animate-in="fade-up" data-delay="600">
+            <div class="neuro-chart-header">
+                <h5 class="neuro-chart-title">
+                    <i class="bi bi-graph-up me-2" style="color: var(--neuro-warning);"></i>
+                    Tendencia de <?= h($label) ?> (Últimos 30 días)
+                </h5>
             </div>
-            <div class="card-body">
-                <canvas id="<?= $chartId ?>" height="80"></canvas>
+            <div class="neuro-chart-wrapper" data-chart-loader style="min-height: 300px;">
+                <div class="neuro-chart-skeleton">
+                    <div class="skeleton-circle"></div>
+                </div>
+                <canvas id="<?= $chartId ?>" height="80" style="opacity: 0; transition: opacity 0.5s ease;"></canvas>
             </div>
         </div>
     </div>
