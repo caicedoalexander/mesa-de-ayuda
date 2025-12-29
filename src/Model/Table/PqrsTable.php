@@ -186,6 +186,14 @@ class PqrsTable extends Table
             ->dateTime('closed_at')
             ->allowEmptyDateTime('closed_at');
 
+        $validator
+            ->dateTime('first_response_sla_due')
+            ->allowEmptyDateTime('first_response_sla_due');
+
+        $validator
+            ->dateTime('resolution_sla_due')
+            ->allowEmptyDateTime('resolution_sla_due');
+
         return $validator;
     }
 

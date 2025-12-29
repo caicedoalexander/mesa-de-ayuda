@@ -29,6 +29,7 @@ $config = $statusConfig[$entityType];
 $chartId = 'statusChart' . uniqid();
 ?>
 
+<<<<<<< HEAD
 <div class="modern-card chart-card h-100" data-animate="fade-up" data-delay="400">
     <div class="chart-header">
         <h5 class="chart-title">
@@ -38,8 +39,20 @@ $chartId = 'statusChart' . uniqid();
     </div>
     <div class="chart-wrapper" data-chart-loader>
         <div class="chart-skeleton">
+=======
+<div class="neuro-card neuro-chart-container h-100" data-animate-in="fade-up" data-delay="400">
+    <div class="neuro-chart-header">
+        <h5 class="neuro-chart-title">
+            <i class="bi bi-pie-chart me-2" style="color: var(--neuro-info);"></i>
+            Por Estado
+        </h5>
+    </div>
+    <div class="neuro-chart-wrapper" data-chart-loader>
+        <div class="neuro-chart-skeleton">
+            <div class="skeleton-circle"></div>
+>>>>>>> c0d0b3845e543ad02c0c92544fb1b1ded4046e06
         </div>
-        <canvas id="<?= $chartId ?>" height="250" style="opacity: 0;"></canvas>
+        <canvas id="<?= $chartId ?>" height="250" style="opacity: 0; transition: opacity 0.5s ease;"></canvas>
     </div>
 </div>
 

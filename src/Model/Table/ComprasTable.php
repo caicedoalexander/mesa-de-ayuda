@@ -113,6 +113,14 @@ class ComprasTable extends Table
             ->dateTime('first_response_at')
             ->allowEmptyDateTime('first_response_at');
 
+        $validator
+            ->dateTime('first_response_sla_due')
+            ->allowEmptyDateTime('first_response_sla_due');
+
+        $validator
+            ->dateTime('resolution_sla_due')
+            ->allowEmptyDateTime('resolution_sla_due');
+
         return $validator;
     }
 

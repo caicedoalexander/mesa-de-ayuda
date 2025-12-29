@@ -6,7 +6,6 @@ namespace App\Service;
 use App\Model\Entity\Compra;
 use App\Model\Entity\Ticket;
 use App\Service\Traits\TicketSystemTrait;
-use App\Service\Traits\EntityConversionTrait;
 use Cake\I18n\DateTime;
 use Cake\Log\Log;
 use Cake\ORM\Locator\LocatorAwareTrait;
@@ -14,10 +13,11 @@ use Cake\ORM\Locator\LocatorAwareTrait;
 class ComprasService
 {
     use LocatorAwareTrait;
-    use TicketSystemTrait;
+    use TicketSystemTrait {
+        TicketSystemTrait::addComment as protected traitAddComment;
+    }
     use \App\Service\Traits\NotificationDispatcherTrait;
     use \App\Service\Traits\GenericAttachmentTrait;
-    use EntityConversionTrait;
 
     private EmailService $emailService;
     private WhatsappService $whatsappService;
@@ -28,57 +28,6 @@ class ComprasService
         $this->systemConfig = $systemConfig;
         $this->emailService = new EmailService($systemConfig);
         $this->whatsappService = new WhatsappService($systemConfig);
-    }
-
-    /**
-     * Convert compra to ticket (full workflow)
-     *
-     * This method handles the complete conversion workflow:
-     * 1. Creates the ticket from compra
-     * 2. Marks compra as converted
-     * 3. Copies all data (comments, attachments)
-     *
-     * @param Compra $compra Source compra
-     * @param int $userId User performing the conversion
-     * @param \App\Service\TicketService $ticketService Injected TicketService
-     * @return \App\Model\Entity\Ticket|null Created ticket or null on failure
-     */
-    public function convertToTicket(
-        Compra $compra,
-        int $userId,
-        \App\Service\TicketService $ticketService
-    ): ?\App\Model\Entity\Ticket {
-        try {
-            // Create ticket from compra
-            $ticket = $ticketService->createFromCompra($compra, ['user_id' => $userId]);
-
-            if (!$ticket) {
-                Log::error('Failed to create ticket from compra', ['compra_id' => $compra->id]);
-                return null;
-            }
-
-            // Mark compra as converted using trait method
-            $this->markAsConverted('compra', $compra, 'ticket', $ticket, $userId);
-
-            // Copy all data (comments and attachments)
-            $ticketService->copyCompraData($compra, $ticket);
-
-            Log::info('Compra converted to Ticket successfully', [
-                'compra_id' => $compra->id,
-                'compra_number' => $compra->compra_number,
-                'ticket_id' => $ticket->id,
-                'ticket_number' => $ticket->ticket_number,
-            ]);
-
-            return $ticket;
-
-        } catch (\Exception $e) {
-            Log::error('Error in convertToTicket: ' . $e->getMessage(), [
-                'compra_id' => $compra->id,
-                'exception' => $e,
-            ]);
-            return null;
-        }
     }
 
     /**
@@ -140,49 +89,65 @@ class ComprasService
 
     /**
      * Copia datos del ticket a la compra
-     *
-     * REFACTORED: Now uses EntityConversionTrait for generic copying logic
-     *
-     * @param Ticket $ticket Source ticket
-     * @param Compra $compra Destination compra
-     * @return bool Success status
      */
     public function copyTicketData(Ticket $ticket, Compra $compra): bool
     {
         try {
-            // Load ticket with associations
             $ticketsTable = $this->fetchTable('Tickets');
+            $comprasCommentsTable = $this->fetchTable('ComprasComments');
+            $comprasAttachmentsTable = $this->fetchTable('ComprasAttachments');
+
             $ticket = $ticketsTable->get($ticket->id, [
                 'contain' => ['TicketComments', 'Attachments']
             ]);
 
-            // Copy comments using trait
-            $commentsCopied = $this->copyComments('ticket', $ticket, 'compra', $compra);
+            // Copiar comentarios
+            foreach ($ticket->ticket_comments as $comment) {
+                $newComment = $comprasCommentsTable->newEntity([
+                    'compra_id' => $compra->id,
+                    'user_id' => $comment->user_id,
+                    'comment_type' => $comment->comment_type,
+                    'body' => $comment->body,
+                    'is_system_comment' => $comment->is_system_comment,
+                    'sent_as_email' => false,
+                ]);
+                $comprasCommentsTable->save($newComment);
+            }
 
-            // Copy attachments using trait
-            $attachmentsCopied = $this->copyAttachments(
-                'ticket',
-                $ticket,
-                'compra',
-                $compra,
-                $compra->compra_number
-            );
+            // Copiar attachments
+            foreach ($ticket->attachments as $attachment) {
+                $oldPath = WWW_ROOT . $attachment->file_path;
+                $newDir = 'uploads' . DS . 'compras' . DS . $compra->compra_number . DS;
+                $newPath = WWW_ROOT . $newDir;
 
-            Log::info('Copied ticket data to compra', [
-                'ticket_id' => $ticket->id,
-                'compra_id' => $compra->id,
-                'comments_copied' => $commentsCopied,
-                'attachments_copied' => $attachmentsCopied,
-            ]);
+                if (!file_exists($newPath)) {
+                    mkdir($newPath, 0755, true);
+                }
+
+                $newFilePath = $newPath . $attachment->filename;
+                if (file_exists($oldPath)) {
+                    copy($oldPath, $newFilePath);
+                }
+
+                $newAttachment = $comprasAttachmentsTable->newEntity([
+                    'compra_id' => $compra->id,
+                    'compras_comment_id' => null,
+                    'filename' => $attachment->filename,
+                    'original_filename' => $attachment->original_filename,
+                    'file_path' => $newDir . $attachment->filename,
+                    'mime_type' => $attachment->mime_type,
+                    'file_size' => $attachment->file_size,
+                    'is_inline' => $attachment->is_inline,
+                    'content_id' => $attachment->content_id,
+                    'uploaded_by_user_id' => $attachment->uploaded_by,  // Corrected: tickets use 'uploaded_by'
+                ]);
+                $comprasAttachmentsTable->save($newAttachment);
+            }
 
             return true;
 
         } catch (\Exception $e) {
-            Log::error('Error copiando datos: ' . $e->getMessage(), [
-                'ticket_id' => $ticket->id,
-                'compra_id' => $compra->id,
-                'exception' => $e,
-            ]);
+            Log::error('Error copiando datos: ' . $e->getMessage());
             return false;
         }
     }
@@ -228,23 +193,85 @@ class ComprasService
     }
 
     /**
-     * Note: addComment() method is provided by TicketSystemTrait
+     * Agrega comentario a compra
      *
-     * This service uses the trait's addComment() method directly.
-     * When calling from external code, use:
+     * Follows TicketSystemTrait patterns but for Compras entity type
      *
-     * $comprasService->addComment(
-     *     $compraId,
-     *     $userId,
-     *     $body,
-     *     $type,              // 'public' or 'internal'
-     *     $isSystem,          // true for system comments
-     *     $sendNotifications, // false by default
-     *     'compra',           // entityType (REQUIRED: 'ticket', 'pqrs', or 'compra')
-     *     $emailTo,           // optional array
-     *     $emailCc            // optional array
-     * );
+     * @param int $compraId Compra ID
+     * @param int|null $userId User ID
+     * @param string $body Comment body
+     * @param string $type Comment type ('public' or 'internal')
+     * @param bool $isSystem Is system comment
+     * @param bool $sendNotifications Send notifications (Email ONLY, no WhatsApp)
+     * @param array|null $emailTo Array of TO recipients [{'name': '...', 'email': '...'}]
+     * @param array|null $emailCc Array of CC recipients [{'name': '...', 'email': '...'}]
+     * @return \Cake\Datasource\EntityInterface|null
      */
+    public function addComment(
+        int $compraId,
+        ?int $userId,
+        string $body,
+        string $type = 'public',
+        bool $isSystem = false,
+        bool $sendNotifications = false,  // FIXED: Align with trait default
+        ?array $emailTo = null,
+        ?array $emailCc = null
+    ): ?\Cake\Datasource\EntityInterface {
+        $comprasCommentsTable = $this->fetchTable('ComprasComments');
+        $comprasTable = $this->fetchTable('Compras');
+
+        try {
+            $compra = $comprasTable->get($compraId);
+
+            // No sanitization (as per project standards)
+            $sanitizedBody = $body;
+
+            $data = [
+                'compra_id' => $compraId,
+                'user_id' => $userId,
+                'comment_type' => $type,
+                'body' => $sanitizedBody,
+                'is_system_comment' => $isSystem,
+                'sent_as_email' => false,  // Not used for compras
+            ];
+
+            // Add email recipients if provided (only for public comments)
+            if ($type === 'public' && !$isSystem) {
+                if (is_array($emailTo) && count($emailTo) > 0) {
+                    $data['email_to'] = json_encode($emailTo);
+                }
+                if (is_array($emailCc) && count($emailCc) > 0) {
+                    $data['email_cc'] = json_encode($emailCc);
+                }
+            }
+
+            $comment = $comprasCommentsTable->newEntity($data);
+
+            if (!$comprasCommentsTable->save($comment)) {
+                Log::error('Failed to add compra comment', ['errors' => $comment->getErrors()]);
+                return null;
+            }
+
+            // Update first_response_at
+            if (!$isSystem && !$compra->first_response_at && $userId) {
+                $compra->first_response_at = new DateTime();
+                $comprasTable->save($compra);
+            }
+
+            // Send notifications ONLY if requested (Email ONLY, no WhatsApp)
+            if ($sendNotifications && $type === 'public' && !$isSystem) {
+                $this->dispatchUpdateNotifications('compra', $compra, 'comment', [
+                    'comment' => $comment,
+                ]);
+            }
+
+            return $comment;
+
+        } catch (\Exception $e) {
+            Log::error('Error agregando comentario: ' . $e->getMessage());
+            return null;
+        }
+    }
 
     /**
      * Save uploaded file for compra (using GenericAttachmentTrait)
@@ -266,4 +293,3 @@ class ComprasService
         return $result;
     }
 }
-

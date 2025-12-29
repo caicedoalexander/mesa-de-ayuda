@@ -19,62 +19,59 @@ $channelLabels = [
 
 $channelIcons = [
     'web' => 'bi-globe',
-    'email' => 'bi-envelope-fill',
+    'email' => 'bi-envelope',
     'whatsapp' => 'bi-whatsapp',
-    'phone' => 'bi-telephone-fill',
-    'presencial' => 'bi-person-fill',
-];
-
-$channelColors = [
-    'web' => 'var(--brand-green)',
-    'email' => 'var(--brand-orange)',
-    'whatsapp' => '#25D366',
-    'phone' => 'var(--info)',
-    'presencial' => '#6B7280',
+    'phone' => 'bi-telephone',
+    'presencial' => 'bi-person',
 ];
 
 $total = array_sum($channelDistribution);
 ?>
 
+<<<<<<< HEAD
 <div class="modern-card chart-card h-100" data-animate="fade-up" data-delay="900">
     <div class="chart-header">
         <h5 class="chart-title">
             <i class="bi bi-broadcast"></i>
             Por Canal
         </h5>
+=======
+<div class="card border-0 shadow-sm h-100">
+    <div class="card-header bg-white border-bottom">
+        <h5 class="mb-0 fw-semibold"><i class="bi bi-broadcast"></i> Por Canal</h5>
+>>>>>>> c0d0b3845e543ad02c0c92544fb1b1ded4046e06
     </div>
-    <div class="p-3">
+    <div class="card-body">
         <?php if (!empty($channelDistribution)): ?>
-            <?php foreach ($channelDistribution as $channel => $count): ?>
-                <?php
-                $percentage = $total > 0 ? round(($count / $total) * 100, 1) : 0;
-                $label = $channelLabels[$channel] ?? ucfirst($channel);
-                $icon = $channelIcons[$channel] ?? 'bi-circle';
-                $color = $channelColors[$channel] ?? '#6B7280';
-                ?>
-                <div class="metric-card mb-3" style="border-left: 3px solid <?= $color ?>; background: rgba(0,0,0,0.02); border-radius: 10px;">
-                    <div class="d-flex align-items-center gap-3 flex-1">
-                        <div style="width: 40px; height: 40px; border-radius: 10px; background: <?= $color ?>; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.25rem;">
-                            <i class="<?= $icon ?>"></i>
-                        </div>
-                        <div class="flex-1">
-                            <div style="font-weight: 600; color: var(--gray-900); font-size: 0.9375rem;">
-                                <?= h($label) ?>
-                            </div>
-                            <div style="font-size: 0.8125rem; color: var(--gray-500); margin-top: 2px;">
-                                <?= number_format($count) ?> registros
-                            </div>
-                        </div>
-                        <div class="text-end">
-                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--gray-900); line-height: 1;">
-                                <?= $percentage ?>%
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <tbody>
+                        <?php foreach ($channelDistribution as $channel => $count): ?>
+                            <?php
+                            $percentage = $total > 0 ? round(($count / $total) * 100, 1) : 0;
+                            $label = $channelLabels[$channel] ?? ucfirst($channel);
+                            $icon = $channelIcons[$channel] ?? 'bi-circle';
+                            ?>
+                            <tr>
+                                <td style="width: 40px;">
+                                    <i class="<?= $icon ?> text-primary"></i>
+                                </td>
+                                <td>
+                                    <strong><?= h($label) ?></strong>
+                                </td>
+                                <td style="width: 80px;" class="text-end">
+                                    <span class="badge bg-secondary"><?= number_format($count) ?></span>
+                                </td>
+                                <td style="width: 80px;" class="text-end">
+                                    <small class="text-muted"><?= $percentage ?>%</small>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         <?php else: ?>
-            <p class="text-muted text-center py-4 mb-0">No hay datos de canal disponibles.</p>
+            <p class="text-muted mb-0">No hay datos de canal disponibles.</p>
         <?php endif; ?>
     </div>
 </div>

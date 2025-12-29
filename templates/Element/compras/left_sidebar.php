@@ -40,10 +40,43 @@
                 <?php endif; ?>
             </div>
 
+        </section>
+
+        <section class="mb-3">
+            <h3 class="fs-6 fw-semibold mb-3">SLA (Service Level Agreement)</h3>
+
             <div class="mb-3">
-                <label class="small text-muted fw-semibold mb-1">SLA:</label>
-                <div><?= $this->Compras->slaIndicator($compra, true) ?></div>
+                <label class="small text-muted fw-semibold mb-1">Primera Respuesta:</label>
+                <div><?= $this->Compras->slaBadge($compra, 'first_response_sla_due', true) ?></div>
+                <?php if ($compra->first_response_sla_due): ?>
+                    <small class="text-muted">
+                        Vence: <?= $compra->first_response_sla_due->format('d/m/Y H:i') ?>
+                    </small>
+                <?php endif; ?>
             </div>
+
+            <div class="mb-3">
+                <label class="small text-muted fw-semibold mb-1">Resolución:</label>
+                <div><?= $this->Compras->slaBadge($compra, 'resolution_sla_due', true) ?></div>
+                <?php if ($compra->resolution_sla_due): ?>
+                    <small class="text-muted">
+                        Vence: <?= $compra->resolution_sla_due->format('d/m/Y H:i') ?>
+                    </small>
+                <?php endif; ?>
+            </div>
+
+            <?php if ($user && $user->role === 'admin'): ?>
+                <div class="mt-2">
+                    <?= $this->Html->link(
+                        '<i class="bi bi-arrow-clockwise"></i> Recalcular SLA',
+                        ['action' => 'recalculateSla', $compra->id],
+                        [
+                            'class' => 'btn btn-sm btn-outline-secondary w-100',
+                            'escape' => false
+                        ]
+                    ) ?>
+                </div>
+            <?php endif; ?>
         </section>
 
         <section class="mb-3">
