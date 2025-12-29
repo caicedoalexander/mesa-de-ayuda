@@ -39,15 +39,14 @@ $this->assign('title', 'Estadísticas de Tickets');
 <div class="statistics-container">
     <!-- Header -->
     <div class="mb-4">
-        <h1 class="stats-title">Estadísticas</h1>
-        <p class="stats-subtitle">Sistema de tickets</p>
+        <h1 class="stats-title"><i class="bi bi-bar-chart-fill"></i> Estadísticas</h1>
     </div>
 
-    <!-- Date Range Filter (commented out for now - can be enabled later) -->
-    <!-- <?= $this->element('shared/statistics/date_range_filter', [
+    <!-- Date Range Filter -->
+    <?= $this->element('shared/statistics/date_range_filter', [
         'filters' => $filters,
         'action' => 'statistics'
-    ]) ?> -->
+    ]) ?>
 
     <!-- KPI Cards -->
     <?= $this->element('shared/statistics/kpi_cards', [
@@ -113,8 +112,17 @@ $this->assign('title', 'Estadísticas de Tickets');
         </div>
     </div>
 
+    <!-- Channel Distribution -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-12">
+            <?= $this->element('shared/statistics/channel_distribution', [
+                'channelDistribution' => $channelDistribution
+            ]) ?>
+        </div>
+    </div>
+
     <!-- Comments Statistics -->
-    <div class="row g-4">
+    <div class="row g-3 mb-4 pb-4">
         <div class="col-md-4">
             <div class="modern-card accent-green kpi-card" data-animate="fade-up" data-delay="400">
                 <div class="kpi-icon-wrapper">

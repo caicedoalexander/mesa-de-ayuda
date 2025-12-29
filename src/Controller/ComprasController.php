@@ -69,7 +69,7 @@ class ComprasController extends AppController
     public function index()
     {
         $this->indexEntity('compra', [
-            'paginationLimit' => 25,
+            'paginationLimit' => 10,
         ]);
     }
 
@@ -128,7 +128,7 @@ class ComprasController extends AppController
      */
     public function assign($id = null)
     {
-        return $this->assignEntity('compra', (int)$id, $this->request->getData('agent_id'));
+        return $this->assignEntity('compra', (int)$id, $this->request->getData('assignee_id'));
     }
 
     /**
@@ -273,7 +273,7 @@ class ComprasController extends AppController
      */
     public function statistics()
     {
-        $this->renderStatistics('compra', ['defaultRange' => '30days']);
+        $this->renderStatistics('compra', ['defaultRange' => 'all']);
     }
 
 }

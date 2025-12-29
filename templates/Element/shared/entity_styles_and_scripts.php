@@ -290,7 +290,8 @@ $label = $entityLabels[$entityType];
         const statusDropdown = document.getElementById('status-dropdown');
 
         if (statusIcon) {
-            statusIcon.className = `bi ${config.icon} text-${config.color}`;
+            statusIcon.className = `bi ${config.icon}`;
+            statusIcon.style.color = config.color;
         }
 
         if (statusLabel) {

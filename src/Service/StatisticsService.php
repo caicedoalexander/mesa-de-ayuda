@@ -36,6 +36,7 @@ class StatisticsService
         );
 
         $priorityDistribution = $this->getPriorityDistribution('Tickets', $baseQuery);
+        $channelDistribution = $this->getChannelDistribution('Tickets', $baseQuery);
 
         $avgResponseTime = $this->getAvgResponseTime('Tickets', $baseQuery);
         $avgResolutionTime = $this->getAvgResolutionTime('Tickets', $baseQuery);
@@ -64,6 +65,7 @@ class StatisticsService
             'total_tickets' => $totalTickets,
             'tickets_by_status' => $statusDistribution,
             'tickets_by_priority' => $priorityDistribution,
+            'channel_counts' => $channelDistribution,
             'recent_tickets' => $recentTickets,
             'recent_resolved' => $recentResolved,
             'unassigned_tickets' => $unassignedTickets,
@@ -114,23 +116,50 @@ class StatisticsService
         $ticketsTable = $this->fetchTable('Tickets');
         $commentsTable = $this->fetchTable('TicketComments');
 
-        // Most active requesters (top 5)
-        $topRequesters = $ticketsTable->find()
-            ->contain(['Requesters'])
-            ->select([
+        // Most active requesters (top 5) with detailed metrics
+        $resolvedStatuses = ['cerrado', 'resuelto'];
+        $activeStatuses = ['abierto', 'en_progreso', 'pendiente'];
+
+        $query = $ticketsTable->find()
+            ->contain(['Requesters']);
+
+        // CASE expressions for counting by status
+        $resolvedCase = $query->newExpr()
+            ->case()
+            ->when(['status IN' => $resolvedStatuses])
+            ->then(1)
+            ->else(0);
+
+        $activeCase = $query->newExpr()
+            ->case()
+            ->when(['status IN' => $activeStatuses])
+            ->then(1)
+            ->else(0);
+
+        $topRequestersRaw = $query->select([
                 'requester_id',
-                'requester_name' => $ticketsTable->find()->func()->concat([
+                'requester_name' => $query->func()->concat([
                     'Requesters.first_name' => 'identifier',
                     ' ',
                     'Requesters.last_name' => 'identifier'
                 ]),
                 'requester_email' => 'Requesters.email',
-                'count' => $ticketsTable->find()->func()->count('*')
+                'total_count' => $query->func()->count('*'),
+                'resolved_count' => $query->func()->sum($resolvedCase),
+                'active_count' => $query->func()->sum($activeCase),
             ])
             ->group(['requester_id', 'Requesters.email'])
-            ->order(['count' => 'DESC'])
+            ->order(['total_count' => 'DESC'])
             ->limit(5)
             ->all();
+
+        // Process requesters data
+        $topRequesters = [];
+        foreach ($topRequestersRaw as $requester) {
+            $requesterData = $requester->toArray();
+            $requesterData['count'] = $requesterData['total_count']; // Keep for backward compatibility
+            $topRequesters[] = (object) $requesterData;
+        }
 
         // Comments stats - optimized with single query
         $commentStats = $commentsTable->find()
@@ -144,19 +173,27 @@ class StatisticsService
             ->toArray();
 
         // Calculate from grouped results
+        // IMPORTANT: Exclude system comments from all counts
         $totalComments = 0;
         $publicComments = 0;
         $internalComments = 0;
 
         foreach ($commentStats as $stat) {
             $count = $stat->count;
-            if (!$stat->is_system_comment) {
-                $totalComments += $count;
+
+            // Skip system-generated comments entirely
+            if ($stat->is_system_comment) {
+                continue;
             }
+
+            // Now count only non-system comments
+            $totalComments += $count;
+
             if ($stat->comment_type === 'public') {
                 $publicComments += $count;
             }
-            if ($stat->comment_type === 'internal' && !$stat->is_system_comment) {
+
+            if ($stat->comment_type === 'internal') {
                 $internalComments += $count;
             }
         }
@@ -312,6 +349,9 @@ class StatisticsService
         // Agent performance (by completed compras)
         $agentPerformance = $this->getAgentPerformance('Compras', ['completado'], 5);
 
+        // Top requesters
+        $topRequesters = $this->getTopRequestersCompras(5);
+
         // Compras-specific metrics
         $slaMetrics = $this->getSLAMetrics($baseQuery);
         $approvalMetrics = $this->getApprovalMetrics($baseQuery);
@@ -327,6 +367,7 @@ class StatisticsService
             'avg_resolution_days' => $avgResolutionDays,
             'top_agents' => $agentPerformance['top_agents'],
             'active_agents_count' => $agentPerformance['active_agents_count'],
+            'top_requesters' => $topRequesters,
             'sla_metrics' => $slaMetrics,
             'approval_metrics' => $approvalMetrics,
             'date_from' => $parsedFilters['start_date'],
@@ -454,5 +495,86 @@ class StatisticsService
             'total_decided' => $totalDecided,
             'approval_rate' => $approvalRate,
         ];
+    }
+
+    /**
+     * Get top requesters for Compras (NEW)
+     *
+     * @param int $limit Number of top requesters to return
+     * @return array Top requesters data
+     */
+    private function getTopRequestersCompras(int $limit = 5): array
+    {
+        $comprasTable = $this->fetchTable('Compras');
+        $usersTable = $this->fetchTable('Users');
+
+        // Define status categories
+        $completedStatuses = ['completado'];
+        $activeStatuses = ['nuevo', 'en_revision', 'aprobado', 'en_proceso'];
+
+        $query = $comprasTable->find();
+
+        // CASE expressions for counting by status
+        $completedCase = $query->newExpr()
+            ->case()
+            ->when(['status IN' => $completedStatuses])
+            ->then(1)
+            ->else(0);
+
+        $activeCase = $query->newExpr()
+            ->case()
+            ->when(['status IN' => $activeStatuses])
+            ->then(1)
+            ->else(0);
+
+        $topRequestersRaw = $query->select([
+                'requester_id',
+                'total_count' => $query->func()->count('*'),
+                'resolved_count' => $query->func()->sum($completedCase),
+                'active_count' => $query->func()->sum($activeCase),
+            ])
+            ->where(['requester_id IS NOT' => null])
+            ->group(['requester_id'])
+            ->order(['total_count' => 'DESC'])
+            ->limit($limit)
+            ->all();
+
+        // Load full user objects for requesters
+        $userIds = [];
+        foreach ($topRequestersRaw as $requester) {
+            if ($requester->requester_id) {
+                $userIds[] = $requester->requester_id;
+            }
+        }
+
+        // Fetch all users at once
+        $users = [];
+        if (!empty($userIds)) {
+            $usersCollection = $usersTable->find()
+                ->where(['id IN' => $userIds])
+                ->all();
+            foreach ($usersCollection as $user) {
+                $users[$user->id] = $user;
+            }
+        }
+
+        // Process requesters data and attach user objects
+        $topRequesters = [];
+        foreach ($topRequestersRaw as $requester) {
+            $requesterData = $requester->toArray();
+            $requesterData['count'] = $requesterData['total_count']; // Keep for backward compatibility
+
+            // Attach user info if available
+            if (isset($users[$requester->requester_id])) {
+                $user = $users[$requester->requester_id];
+                $requesterData['requester_name'] = $user->first_name . ' ' . $user->last_name;
+                $requesterData['requester_email'] = $user->email;
+                $requesterData['requester'] = $user; // Full user object for profile image
+            }
+
+            $topRequesters[] = (object) $requesterData;
+        }
+
+        return $topRequesters;
     }
 }

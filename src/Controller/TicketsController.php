@@ -157,7 +157,7 @@ class TicketsController extends AppController
      */
     public function assign($id = null)
     {
-        return $this->assignEntity('ticket', (int) $id, $this->request->getData('agent_id'));
+        return $this->assignEntity('ticket', (int) $id, $this->request->getData('assignee_id'));
     }
 
     /**

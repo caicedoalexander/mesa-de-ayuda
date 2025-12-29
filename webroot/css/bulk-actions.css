@@ -12,7 +12,7 @@ table, thead, tbody, th, td {
 }
 
 .table-scroll {
-    max-height: 350px;
+    height: max-content;
     overflow-y: auto;
     position: relative;
     z-index: 1;

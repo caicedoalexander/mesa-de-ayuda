@@ -12,7 +12,7 @@
             <div class="mb-3">
                 <label class="small text-muted fw-semibold mb-1">Estado:</label>
                 <div>
-                    <?= $this->Compras->statusBadge($compra->status) ?>
+                    <?= $this->Status->statusBadge($compra->status, 'compra') ?>
                     <?php if ($isLocked): ?>
                         <i class="bi bi-lock-fill text-muted" title="Solicitud cerrada"></i>
                     <?php endif; ?>
@@ -21,19 +21,23 @@
 
             <div class="mb-3">
                 <label class="small text-muted fw-semibold mb-1">Prioridad:</label>
+                <div class="mb-2">
+                    <?= $this->Status->priorityBadge($compra->priority) ?>
+                </div>
+                <?php if (!$isLocked): ?>
                 <?= $this->Form->create(null, ['url' => ['action' => 'changePriority', $compra->id], 'class' => '']) ?>
                 <?= $this->Form->select('priority', [
-                    'baja' => '🟢 Baja',
-                    'media' => '🟡 Media',
-                    'alta' => '🟠 Alta',
-                    'urgente' => '🔴 Urgente'
+                    'baja' => 'Cambiar a Baja',
+                    'media' => 'Cambiar a Media',
+                    'alta' => 'Cambiar a Alta',
+                    'urgente' => 'Cambiar a Urgente'
                 ], [
-                    'value' => $compra->priority,
+                    'empty' => '-- Cambiar prioridad --',
                     'class' => 'form-select form-select-sm',
-                    'disabled' => $isLocked,
                     'onchange' => 'this.form.submit()'
                 ]) ?>
                 <?= $this->Form->end() ?>
+                <?php endif; ?>
             </div>
 
             <div class="mb-3">

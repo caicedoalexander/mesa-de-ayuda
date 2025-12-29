@@ -22,9 +22,6 @@
     <!-- Custom Styles -->
     <?= $this->Html->css(['styles']) ?>
 
-    <!-- Neumorphic Statistics Styles -->
-    <?= $this->Html->css('neumorphic-statistics') ?>
-
     <!-- jQuery (required for Select2) -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 

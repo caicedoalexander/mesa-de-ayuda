@@ -15,6 +15,7 @@
  * @var float $avgResolutionDays
  * @var float $avgResolutionHours
  * @var array $topAgents
+ * @var array $topRequesters
  * @var array $slaMetrics
  * @var array $approvalMetrics
  * @var array $filters
@@ -38,15 +39,15 @@ $this->assign('title', 'Estadísticas de Compras');
 <div class="statistics-container">
     <!-- Header -->
     <div class="mb-4">
-        <h1 class="stats-title">Estadísticas de Compras</h1>
-        <p class="stats-subtitle">Gestión de compras y procurement</p>
+        <h1 class="stats-title"><i class="bi bi-bar-chart-fill"></i> Estadísticas</h1>
+        <p class="stats-subtitle">Gestión de compras</p>
     </div>
 
-    <!-- Date Range Filter (commented out for now) -->
-    <!-- <?= $this->element('shared/statistics/date_range_filter', [
+    <!-- Date Range Filter -->
+    <?= $this->element('shared/statistics/date_range_filter', [
         'filters' => $filters,
         'action' => 'statistics'
-    ]) ?> -->
+    ]) ?>
 
     <!-- KPI Cards (includes SLA compliance in 4th card) -->
     <?= $this->element('shared/statistics/kpi_cards', [
@@ -115,12 +116,20 @@ $this->assign('title', 'Estadísticas de Compras');
         'entityType' => 'compra'
     ]) ?>
 
-    <!-- Agent Performance Table -->
-    <div class="row">
-        <div class="col-md-12">
+    <!-- Performance Tables Row -->
+    <div class="row g-3 mb-4 pb-4">
+        <!-- Top Agents -->
+        <div class="col-md-6">
             <?= $this->element('shared/statistics/agent_performance_table', [
                 'topAgents' => $topAgents,
                 'entityType' => 'compra'
+            ]) ?>
+        </div>
+
+        <!-- Top Requesters -->
+        <div class="col-md-6">
+            <?= $this->element('Tickets/requester_stats', [
+                'topRequesters' => $topRequesters
             ]) ?>
         </div>
     </div>

@@ -52,7 +52,7 @@
     <ul class="list-group">
         <li class="list-group-item">
             <?= $this->Html->link(
-                '<span class="badge bg-warning me-2 shadow-sm">●</span>Nuevas <span class="count">' . $counts['nuevas'] . '</span>',
+                '<span class="badge me-2 shadow-sm" style="background-color: #ffc107; color: white;">●</span>Nuevas <span class="count">' . $counts['nuevas'] . '</span>',
                 ['action' => 'index', '?' => ['view' => 'nuevas']],
                 ['class' => $view === 'nuevas' ? 'active' : '', 'escape' => false]
             ) ?>
@@ -60,7 +60,7 @@
 
         <li class="list-group-item">
             <?= $this->Html->link(
-                '<span class="badge bg-info me-2 shadow-sm">●</span>En Revisión <span class="count">' . $counts['en_revision'] . '</span>',
+                '<span class="badge me-2 shadow-sm" style="background-color: #0dcaf0; color: white;">●</span>En Revisión <span class="count">' . $counts['en_revision'] . '</span>',
                 ['action' => 'index', '?' => ['view' => 'en_revision']],
                 ['class' => $view === 'en_revision' ? 'active' : '', 'escape' => false]
             ) ?>
@@ -68,7 +68,7 @@
 
         <li class="list-group-item">
             <?= $this->Html->link(
-                '<span class="badge bg-primary me-2 shadow-sm">●</span>En Proceso <span class="count">' . $counts['en_proceso'] . '</span>',
+                '<span class="badge me-2 shadow-sm" style="background-color: #0d6efd; color: white;">●</span>En Proceso <span class="count">' . $counts['en_proceso'] . '</span>',
                 ['action' => 'index', '?' => ['view' => 'en_proceso']],
                 ['class' => $view === 'en_proceso' ? 'active' : '', 'escape' => false]
             ) ?>
@@ -76,7 +76,7 @@
 
         <li class="list-group-item">
             <?= $this->Html->link(
-                '<span class="badge bg-success me-2 shadow-sm">●</span>Resueltas <span class="count">' . $counts['resueltas'] . '</span>',
+                '<span class="badge me-2 shadow-sm" style="background-color: #198754; color: white;">●</span>Resueltas <span class="count">' . $counts['resueltas'] . '</span>',
                 ['action' => 'index', '?' => ['view' => 'resueltas']],
                 ['class' => $view === 'resueltas' ? 'active' : '', 'escape' => false]
             ) ?>
@@ -84,7 +84,7 @@
 
         <li class="list-group-item">
             <?= $this->Html->link(
-                '<span class="badge bg-secondary me-2 shadow-sm">●</span>Cerradas <span class="count">' . $counts['cerradas'] . '</span>',
+                '<span class="badge me-2 shadow-sm" style="background-color: #6c757d; color: white;">●</span>Cerradas <span class="count">' . $counts['cerradas'] . '</span>',
                 ['action' => 'index', '?' => ['view' => 'cerradas']],
                 ['class' => $view === 'cerradas' ? 'active' : '', 'escape' => false]
             ) ?>

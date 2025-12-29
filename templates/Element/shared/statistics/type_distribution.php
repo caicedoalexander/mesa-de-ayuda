@@ -35,6 +35,7 @@ foreach ($typeDistribution as $type => $count) {
 <div class="modern-card chart-card h-100" data-animate="fade-up" data-delay="600">
     <div class="chart-header">
         <h5 class="chart-title">
+            <i class="bi bi-tags-fill"></i>
             Por Tipo
         </h5>
     </div>
@@ -67,13 +68,13 @@ foreach ($typeDistribution as $type => $count) {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    position: 'bottom',
+                    position: 'left',
                     labels: {
-                        padding: 15,
+                        padding: 8,
                         font: {
-                            size: 12,
+                            size: 14,
                             family: "'Plus Jakarta Sans', sans-serif",
-                            weight: '600'
+                            weight: '400'
                         },
                         usePointStyle: true,
                         pointStyle: 'circle'

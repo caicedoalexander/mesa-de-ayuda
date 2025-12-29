@@ -12,6 +12,7 @@
 <div class="modern-card chart-card h-100" data-animate="fade-up" data-delay="600">
     <div class="chart-header">
         <h5 class="chart-title">
+            <i class="bi bi-speedometer"></i>
             Rendimiento
         </h5>
     </div>

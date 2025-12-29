@@ -11,13 +11,13 @@
 
             <div class="mb-3">
                 <label class="small text-muted fw-semibold mb-1">Tipo:</label>
-                <div><?= $this->Pqrs->typeBadge($pqrs->type) ?></div>
+                <div><?= $this->Status->typeBadge($pqrs->type) ?></div>
             </div>
 
             <div class="mb-3">
                 <label class="small text-muted text-muted fw-semibold mb-1">Estado:</label>
                 <div>
-                    <?= $this->Pqrs->statusBadge($pqrs->status) ?>
+                    <?= $this->Status->statusBadge($pqrs->status, 'pqrs') ?>
                     <?php if ($isLocked): ?>
                         <i class="bi bi-lock-fill text-muted" title="Solicitud cerrada"></i>
                     <?php endif; ?>
@@ -26,19 +26,23 @@
 
             <div class="mb-3">
                 <label class="small text-muted text-muted fw-semibold mb-1">Prioridad:</label>
+                <div class="mb-2">
+                    <?= $this->Status->priorityBadge($pqrs->priority) ?>
+                </div>
+                <?php if (!$isLocked): ?>
                 <?= $this->Form->create(null, ['url' => ['action' => 'changePriority', $pqrs->id], 'class' => 'm-0']) ?>
                 <?= $this->Form->select('priority', [
-                    'baja' => '🟢 Baja',
-                    'media' => '🟡 Media',
-                    'alta' => '🟠 Alta',
-                    'urgente' => '🔴 Urgente'
+                    'baja' => 'Cambiar a Baja',
+                    'media' => 'Cambiar a Media',
+                    'alta' => 'Cambiar a Alta',
+                    'urgente' => 'Cambiar a Urgente'
                 ], [
-                    'value' => $pqrs->priority,
+                    'empty' => '-- Cambiar prioridad --',
                     'class' => 'form-select form-select-sm',
-                    'disabled' => $isLocked,
                     'onchange' => 'this.form.submit()'
                 ]) ?>
                 <?= $this->Form->end() ?>
+                <?php endif; ?>
             </div>
 
             <div>

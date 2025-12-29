@@ -21,7 +21,7 @@ $userId = $user ? $user->get('id') : null;
     <?= $this->cell('PqrsSidebar::display', [$view, $userRole, $userId]) ?>
 </div>
 
-<div class="py-4 px-5 w-100">
+<div class="pt-4 pb-2 px-5 w-100 d-flex flex-column">
     <div class="d-flex gap-3 align-items-center mb-3">
         <i class="bi bi-chat-square-text" style="font-size: 25px;"></i>
         <h2 class="fw-normal fs-3">
@@ -63,7 +63,7 @@ $userId = $user ? $user->get('id') : null;
     </div>
 
     <?php if ($pqrs->count() > 0): ?>
-        <div class="table-responsive table-scroll">
+        <div class="table-responsive table-scroll mb-auto">
             <table class="table table-hover mb-0">
                 <thead class="bg-white" style="position: sticky; top: 0; z-index: 5;">
                     <tr>
@@ -93,11 +93,11 @@ $userId = $user ? $user->get('id') : null;
                                     value="<?= $item->id ?>" />
                             </td>
 
-                            <td class="py-1 align-middle text-uppercase fw-bold" style="font-size: 14px; width: 100px;">
-                                <?= h($item->type) ?>
+                            <td class="py-1 align-middle" style="font-size: 14px; width: 100px;">
+                                <?= $this->Status->typeBadge($item->type) ?>
                             </td>
                             <td class="py-1 align-middle" style="font-size: 14px; width: 80px;">
-                                <?= $this->Pqrs->statusBadge($item->status) ?>
+                                <?= $this->Status->statusBadge($item->status, 'pqrs') ?>
                             </td>
                             <td class="py-1 align-middle text-truncate" style="min-width: 200px; max-width: 200px;">
                                 <?= $this->Html->link(
@@ -136,7 +136,7 @@ $userId = $user ? $user->get('id') : null;
         </div>
 
         <!-- Pagination -->
-        <nav aria-label="Paginación" class="mt-3">
+        <nav aria-label="Paginación">
             <?= $this->element('pagination') ?>
         </nav>
     <?php else: ?>

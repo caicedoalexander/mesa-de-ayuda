@@ -95,9 +95,9 @@ class ResponseService
                     $entityId,
                     $userId,
                     $commentBody,
+                    'ticket',  // entityType
                     $commentType,
                     false,     // isSystem
-                    'ticket',  // entityType
                     $emailTo,  // email_to
                     $emailCc   // email_cc
                 );
@@ -106,9 +106,9 @@ class ResponseService
                     $entityId,
                     $userId,
                     $commentBody,
+                    'compra',  // entityType
                     $commentType,
                     false,     // isSystem
-                    'compra',  // entityType
                     $emailTo,  // email_to
                     $emailCc   // email_cc
                 );
@@ -117,9 +117,9 @@ class ResponseService
                     $entityId,
                     $userId,
                     $commentBody,
+                    'pqrs',    // entityType
                     $commentType,
                     false,     // isSystem
-                    'pqrs',    // entityType
                     $emailTo,  // email_to
                     $emailCc   // email_cc
                 );

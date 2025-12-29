@@ -60,7 +60,7 @@
             if (!history || history.length === 0) {
                 content.innerHTML = `<p class="text-muted small">No hay historial de cambios para ${getEntityLabel(entityType)}.</p>`;
             } else {
-                content.innerHTML = renderHistory(history);
+                content.innerHTML = renderHistory(history, entityType);
             }
 
             // Show content
@@ -86,11 +86,135 @@
     }
 
     /**
+     * Get badge HTML for status/priority/type values
+     * @param {string} fieldName - Field name (status, priority, type)
+     * @param {string} value - Field value
+     * @param {string} entityType - Entity type (ticket, pqrs, compra)
+     * @param {boolean} strikethrough - Apply strikethrough styling
+     * @returns {string} Badge HTML or plain text
+     */
+    function getFieldBadge(fieldName, value, entityType, strikethrough = false) {
+        if (!value) return '';
+
+        const colors = getFieldColors();
+        let color = null;
+        let label = value;
+
+        // Get color based on field type
+        if (fieldName === 'status') {
+            color = colors.status[entityType]?.[value.toLowerCase()];
+            label = colors.statusLabels[entityType]?.[value.toLowerCase()] || value;
+        } else if (fieldName === 'priority') {
+            color = colors.priority[value.toLowerCase()];
+            label = colors.priorityLabels[value.toLowerCase()] || value;
+        } else if (fieldName === 'type') {
+            color = colors.type[value.toLowerCase()];
+            label = colors.typeLabels[value.toLowerCase()] || value;
+        }
+
+        // Return badge if color found, otherwise plain text
+        if (color) {
+            const style = strikethrough
+                ? `background-color: ${color}; color: white; border-radius: 8px; padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; opacity: 0.6; text-decoration: line-through;`
+                : `background-color: ${color}; color: white; border-radius: 8px; padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 600; text-transform: uppercase;`;
+            return `<span class="badge" style="${style}">${escapeHtml(label)}</span>`;
+        }
+
+        return strikethrough
+            ? `<span class="text-decoration-line-through">${escapeHtml(value)}</span>`
+            : `<span>${escapeHtml(value)}</span>`;
+    }
+
+    /**
+     * Get color definitions matching StatusHelper.php
+     * @returns {Object} Color and label definitions
+     */
+    function getFieldColors() {
+        return {
+            priority: {
+                'baja': '#6c757d',
+                'media': '#0dcaf0',
+                'alta': '#ffc107',
+                'urgente': '#dc3545'
+            },
+            priorityLabels: {
+                'baja': 'Baja',
+                'media': 'Media',
+                'alta': 'Alta',
+                'urgente': 'Urgente'
+            },
+            status: {
+                ticket: {
+                    'nuevo': '#ffc107',
+                    'abierto': '#dc3545',
+                    'pendiente': '#0d6efd',
+                    'resuelto': '#198754',
+                    'convertido': '#6c757d'
+                },
+                pqrs: {
+                    'nuevo': '#ffc107',
+                    'en_revision': '#0dcaf0',
+                    'en_proceso': '#0d6efd',
+                    'resuelto': '#198754',
+                    'cerrado': '#6c757d'
+                },
+                compra: {
+                    'nuevo': '#ffc107',
+                    'en_revision': '#0dcaf0',
+                    'aprobado': '#198754',
+                    'en_proceso': '#0d6efd',
+                    'completado': '#28a745',
+                    'rechazado': '#dc3545',
+                    'convertido': '#6c757d'
+                }
+            },
+            statusLabels: {
+                ticket: {
+                    'nuevo': 'Nuevo',
+                    'abierto': 'Abierto',
+                    'pendiente': 'Pendiente',
+                    'resuelto': 'Resuelto',
+                    'convertido': 'Convertido'
+                },
+                pqrs: {
+                    'nuevo': 'Nuevo',
+                    'en_revision': 'En Revisión',
+                    'en_proceso': 'En Proceso',
+                    'resuelto': 'Resuelto',
+                    'cerrado': 'Cerrado'
+                },
+                compra: {
+                    'nuevo': 'Nuevo',
+                    'en_revision': 'En Revisión',
+                    'aprobado': 'Aprobado',
+                    'en_proceso': 'En Proceso',
+                    'completado': 'Completado',
+                    'rechazado': 'Rechazado',
+                    'convertido': 'Convertido'
+                }
+            },
+            type: {
+                'peticion': '#3B82F6',
+                'queja': '#F59E0B',
+                'reclamo': '#EF4444',
+                'sugerencia': '#00A85E'
+            },
+            typeLabels: {
+                'peticion': 'Petición',
+                'queja': 'Queja',
+                'reclamo': 'Reclamo',
+                'sugerencia': 'Sugerencia'
+            }
+        };
+    }
+
+    /**
      * Render history HTML from JSON data
      * @param {Array} history - History entries
+     * @param {string} entityType - Entity type (ticket, pqrs, compra)
      * @returns {string} HTML string
      */
-    function renderHistory(history) {
+    function renderHistory(history, entityType) {
         let html = '<div class="timeline">';
 
         history.forEach(entry => {
@@ -125,14 +249,24 @@
                 html += `<div class="small text-muted mb-1">${escapeHtml(entry.description)}</div>`;
             } else {
                 const fieldName = entry.field_name.replace(/_/g, ' ');
+                const isColoredField = ['status', 'priority', 'type'].includes(entry.field_name);
+
                 html += `<div class="small text-muted mb-1">`;
                 html += `<strong>${escapeHtml(fieldName.charAt(0).toUpperCase() + fieldName.slice(1))}:</strong> `;
 
-                if (entry.old_value) {
-                    html += `<span class="text-decoration-line-through">${escapeHtml(entry.old_value)}</span> → `;
+                if (isColoredField) {
+                    // Show colored badges for status/priority/type
+                    if (entry.old_value) {
+                        html += getFieldBadge(entry.field_name, entry.old_value, entityType, true) + ' → ';
+                    }
+                    html += getFieldBadge(entry.field_name, entry.new_value, entityType, false);
+                } else {
+                    // Plain text for other fields
+                    if (entry.old_value) {
+                        html += `<span class="text-decoration-line-through">${escapeHtml(entry.old_value)}</span> → `;
+                    }
+                    html += `<span>${escapeHtml(entry.new_value)}</span>`;
                 }
-
-                html += `<span>${escapeHtml(entry.new_value)}</span>`;
                 html += `</div>`;
             }
 

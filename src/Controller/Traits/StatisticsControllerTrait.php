@@ -108,6 +108,7 @@ trait StatisticsControllerTrait
                     // Charts
                     'statusDistribution' => $stats['tickets_by_status'] ?? [],
                     'priorityDistribution' => $stats['tickets_by_priority'] ?? [],
+                    'channelDistribution' => $stats['channel_counts'] ?? [],
                     'chartLabels' => $trends['chart_labels'] ?? [],
                     'chartData' => $trends['chart_data'] ?? [],
 
@@ -183,6 +184,7 @@ trait StatisticsControllerTrait
                     'avgResolutionDays' => $stats['avg_resolution_days'] ?? 0,
                     'avgResolutionHours' => $stats['avg_resolution_hours'] ?? 0,
                     'topAgents' => $stats['top_agents'] ?? [],
+                    'topRequesters' => $stats['top_requesters'] ?? [],
                 ]);
                 break;
         }

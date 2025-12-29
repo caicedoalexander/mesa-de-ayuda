@@ -16,6 +16,7 @@ $chartId = 'priorityChart' . uniqid();
 <div class="modern-card chart-card h-100" data-animate="fade-up" data-delay="500">
     <div class="chart-header">
         <h5 class="chart-title">
+            <i class="bi bi-flag-fill"></i>
             Por Prioridad
         </h5>
     </div>
@@ -51,7 +52,19 @@ $chartId = 'priorityChart' . uniqid();
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'bottom' },
+                legend: { 
+                    position: 'left',
+                    labels: {
+                        padding: 8,
+                        font: {
+                            size: 14,
+                            family: "'Plus Jakarta Sans', sans-serif",
+                            weight: '400'
+                        },
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
                 tooltip: {
                     callbacks: {
                         label: function(context) {

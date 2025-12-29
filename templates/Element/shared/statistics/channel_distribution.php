@@ -39,6 +39,7 @@ $total = array_sum($channelDistribution);
 <div class="modern-card chart-card h-100" data-animate="fade-up" data-delay="900">
     <div class="chart-header">
         <h5 class="chart-title">
+            <i class="bi bi-broadcast"></i>
             Por Canal
         </h5>
     </div>

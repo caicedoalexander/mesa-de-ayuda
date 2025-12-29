@@ -5,7 +5,7 @@
  */
 ?>
 <?php if ($this->Paginator->hasPrev() || $this->Paginator->hasNext()): ?>
-<div class="pagination fw-light">
+<div class="pagination fw-light mt-2">
     <div class="pagination-info">
         <?= $this->Paginator->counter('Mostrando {{start}} - {{end}} de {{count}} registros') ?>
     </div>
@@ -28,7 +28,6 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 4px;
 }
 
 .pagination-info {

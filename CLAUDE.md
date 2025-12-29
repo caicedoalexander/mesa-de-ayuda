@@ -4,306 +4,262 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a unified helpdesk/ticketing system built on **CakePHP 5.x** that integrates three core modules:
-- **Tickets/Soporte**: Internal IT helpdesk with email-to-ticket conversion via Gmail API
-- **PQRS**: External customer complaints/requests (public-facing, no authentication required)
-- **Compras**: Procurement workflow with SLA tracking and approval processes
+**Mesa de Ayuda** is an integrated corporate management system built on **CakePHP 5.x** that manages three core business workflows:
+1. **Tickets** - Internal helpdesk for employee support
+2. **PQRS** - External public complaints/requests system (Peticiones, Quejas, Reclamos, Sugerencias)
+3. **Compras** - Purchase requisitions and procurement workflow
 
-The system integrates with external services (n8n for AI automation, WhatsApp via Evolution API, Gmail API) and follows a service-oriented architecture with extensive use of traits for code reuse.
+The system integrates with Gmail (OAuth), WhatsApp (Evolution API), and n8n for workflow automation.
 
 ## Development Commands
 
-### Database
+### Running the Application
 ```bash
-# Run all migrations
-bin/cake migrations migrate
-
-# Rollback last migration
-bin/cake migrations rollback
-
-# Create new migration
-bin/cake bake migration CreateTableName
-
-# Check migration status
-bin/cake migrations status
-
-# Seed database (if seed migrations exist)
-bin/cake migrations seed
+bin/cake server                    # Start development server (http://localhost:8080)
 ```
 
-### Server
+### Database Migrations
 ```bash
-# Start development server (default: http://localhost:8765)
-bin/cake server
-
-# Start on specific port
-bin/cake server -p 8080
-
-# Start on specific host
-bin/cake server -H 0.0.0.0
+bin/cake migrations migrate        # Run pending migrations
+bin/cake migrations rollback       # Rollback last migration
+bin/cake migrations status         # Check migration status
+bin/cake migrations seed           # Run database seeders
 ```
 
-### Testing
+### Code Quality & Testing
 ```bash
-# Run all tests
-composer test
-# or
-vendor/bin/phpunit
+composer check                     # Run all checks (tests + cs-check + stan)
+composer test                      # Run PHPUnit tests
+composer cs-check                  # Check code style (PHPCS)
+composer cs-fix                    # Auto-fix code style issues (PHPCBF)
+composer stan                      # Run PHPStan static analysis (level 5)
 
 # Run specific test file
-vendor/bin/phpunit tests/TestCase/Controller/TicketsControllerTest.php
-
-# Run specific test method
-vendor/bin/phpunit --filter testAdd tests/TestCase/Controller/TicketsControllerTest.php
-
-# Run with coverage (requires xdebug)
-vendor/bin/phpunit --coverage-html tmp/coverage
-```
-
-### Code Quality
-```bash
-# Check code style (PSR-12 + CakePHP standards)
-composer cs-check
-
-# Auto-fix code style issues
-composer cs-fix
-
-# Run both tests and code style check
-composer check
-```
-
-### Console Commands
-```bash
-# Import Gmail messages and create tickets
-bin/cake import_gmail
-
-# List all available commands
-bin/cake
-
-# Clear all caches
-bin/cake cache clear_all
+vendor/bin/phpunit tests/TestCase/Model/Table/TicketsTableTest.php
 ```
 
 ### Code Generation (Bake)
 ```bash
-# Generate controller
-bin/cake bake controller ControllerName
-
-# Generate model (Table + Entity)
-bin/cake bake model ModelName
-
-# Generate all for a model
-bin/cake bake all ModelName
+bin/cake bake model Tickets        # Generate model + table + entity + tests
+bin/cake bake controller Tickets   # Generate controller
+bin/cake bake template Tickets     # Generate view templates
 ```
 
-## Architecture & Key Patterns
+## Architecture Overview
 
-### Service-Oriented Architecture
+### Service Layer Pattern
 
-All business logic lives in **service classes** (`src/Service/`), not controllers. Controllers are thin and delegate to services:
+The system uses a **service-oriented architecture** to encapsulate business logic outside controllers. Services are the primary place to implement complex workflows.
 
-- **TicketService**: Ticket lifecycle, email-to-ticket conversion, file handling
-- **PqrsService**: PQRS creation from public forms
-- **ComprasService**: Purchase requests with SLA tracking, ticket conversion
-- **GmailService**: OAuth2 Gmail API integration (fetch, parse, send emails)
-- **N8nService**: Webhook integration for AI-powered automation
-- **WhatsappService**: WhatsApp notifications via Evolution API
-- **EmailService**: Template-based email notifications
-- **ResponseService**: Unified comment/response handling across modules
+**Key Services** (`src/Service/`):
+- `TicketService` - Ticket lifecycle management
+- `PqrsService` - PQRS management
+- `ComprasService` - Purchase requisition management
+- `ResponseService` - **Unified comment/response handler** for all entities (delegates to entity-specific services)
+- `EmailService` - Gmail OAuth integration
+- `WhatsappService` - WhatsApp notifications via Evolution API
+- `GmailService` - Email-to-ticket conversion, thread management
+- `N8nService` - n8n webhook automation
+- `StatisticsService` - Analytics and reporting
 
-### Shared Functionality via Traits
+**Service Initialization**:
+Controllers use `ServiceInitializerTrait` to lazily initialize services with cached system config:
+```php
+use App\Controller\Traits\ServiceInitializerTrait;
 
-The three modules (Tickets, PQRS, Compras) share 80%+ of their code through traits:
+class TicketsController extends AppController {
+    use ServiceInitializerTrait;
 
-**Service Traits** (`src/Service/Traits/`):
-- **TicketSystemTrait**: Core business logic (changeStatus, addComment, assign, changePriority)
-- **NotificationDispatcherTrait**: Orchestrates email + WhatsApp notifications
-- **GenericAttachmentTrait**: File upload handling with security validation
-- **SettingsEncryptionTrait**: Encrypt/decrypt sensitive settings (API keys, tokens)
+    private TicketService $ticketService;
+
+    public function initialize(): void {
+        parent::initialize();
+        $this->initializeServices(); // Sets up all service properties
+    }
+}
+```
+
+### Shared Trait Architecture
+
+To eliminate code duplication across the three entity types (Tickets, PQRS, Compras), the system heavily uses **traits**:
 
 **Controller Traits** (`src/Controller/Traits/`):
-- **TicketSystemControllerTrait**: Shared controller actions (assign, changeStatus, addComment)
-- **StatisticsControllerTrait**: Dashboard metrics
-- **ViewDataNormalizerTrait**: Data normalization for views
+- `TicketSystemControllerTrait` - Shared controller actions (assign, changeStatus, changePriority, addComment, downloadAttachment)
+- `StatisticsControllerTrait` - Statistics page rendering
+- `ViewDataNormalizerTrait` - Normalizes entity data for consistent view rendering
+- `ServiceInitializerTrait` - Lazy service initialization with system config
 
-### Database Schema Pattern
+**Service Traits** (`src/Service/Traits/`):
+- `TicketSystemTrait` - Shared service logic (changeStatus, changePriority, assign, recordHistory)
+- `StatisticsServiceTrait` - Analytics calculations
+- `NotificationDispatcherTrait` - Send email/WhatsApp notifications
+- `GenericAttachmentTrait` - File upload/download handling
+- `EntityConversionTrait` - Convert tickets to purchase requisitions
 
-Each module follows identical structure:
-1. **Main entity table** (`tickets`, `pqrs`, `compras`) - Core entity data
-2. **Comments table** (`ticket_comments`, `pqrs_comments`, `compras_comments`) - Public/internal comments
-3. **Attachments table** (`attachments`, `pqrs_attachments`, `compras_attachments`) - File uploads
-4. **History table** (`ticket_history`, `pqrs_history`, `compras_history`) - Complete audit trail
+**Usage Pattern**:
+```php
+// Controller uses trait to handle common actions
+class TicketsController extends AppController {
+    use TicketSystemControllerTrait;
 
-### Entity Numbering
+    public function assign($id = null) {
+        // Trait method handles generic logic
+        return $this->assignEntity('ticket', (int)$id, $this->request->getData('agent_id'));
+    }
+}
+```
 
-All entities use sequential, prefixed numbers:
-- Tickets: `TKT-2025-00001`
-- PQRS: `PQRS-2025-00001`
-- Compras: `CPR-2025-00001`
+### Template Element Reusability
 
-Format: `{PREFIX}-{YEAR}-{SEQUENTIAL_NUMBER}`
+Templates extensively use **shared elements** (`templates/Element/shared/`) to avoid duplication:
+- `entity_header.php` - Header with title, status, priority badges
+- `comments_list.php` - Comment thread display
+- `reply_editor.php` - Reply form with attachments and email recipient selection
+- `statistics/*` - Chart and metric components
+- `bulk_actions_bar.php` / `bulk_modals.php` - Bulk operation UI
 
-### Conversion Workflows
+Entity-specific elements are in `templates/Element/{tickets,pqrs,compras}/`.
 
-Built-in entity conversion flows:
-- **Ticket → Compra**: Convert support ticket to purchase request via `ComprasService::createFromTicket()`
-- **Compra → Ticket**: Reverse conversion via `TicketService::createFromCompra()`
-- Conversions copy all comments, attachments, and preserve full history
+### Database Schema Design
 
-### External Integrations
+All three entity types follow a **consistent pattern**:
+- Main entity table (tickets, pqrs, compras)
+- Comments table (ticket_comments, pqrs_comments, compras_comments)
+- Attachments table (attachments, pqrs_attachments, compras_attachments)
+- History table (ticket_history, pqrs_history, compras_history)
 
-**Gmail API Integration** (`src/Service/GmailService.php`):
-- OAuth2 with refresh tokens (encrypted in `system_settings` table)
-- Email-to-ticket conversion via `ImportGmailCommand`
-- Handles attachments, inline images (Content-ID mapping), thread tracking
-- Send replies via Gmail API (preserves conversation threads)
-
-**n8n Webhook Integration** (`src/Service/N8nService.php`):
-- Sends ticket data to n8n on creation for AI processing
-- AI can suggest tags/classification based on content
-- Non-blocking (failures don't prevent ticket creation)
-
-**WhatsApp Notifications** (`src/Service/WhatsappService.php`):
-- Notifications via Evolution API
-- **Critical rule**: WhatsApp only sent on entity **creation**, never on updates/comments
-- Separate phone numbers per module (configured in `system_settings`)
-
-### Configuration Management
-
-Settings stored in `system_settings` table with key-value pairs:
-- **Sensitive values** (API keys, tokens) are encrypted using `SettingsEncryptionTrait`
-- Settings are cached in `_cake_core_` cache to avoid redundant queries
-- Access via `SettingsTable::get('key_name')`
-
-### Security: File Upload Validation
-
-All file uploads go through `GenericAttachmentTrait::saveGenericUploadedFile()` with:
-- Whitelist-based MIME type validation
-- Forbidden executable extensions (`.exe`, `.bat`, `.js`, `.sh`, etc.)
-- Double extension detection (prevents `file.pdf.exe`)
-- MIME type verification via `finfo` (not just extension)
-- File size limits (10MB general, 5MB images)
-- Path traversal prevention
-- UUID-based filenames for security
-- Entity-specific directory structure: `webroot/uploads/{entity_type}/{entity_number}/`
+**Common Fields**:
+- `status` - Workflow state (nuevo, en_progreso, resuelto, cerrado, rechazado, etc.)
+- `priority` - urgente, alta, media, baja
+- `channel` - Entry point (email, whatsapp, web, phone)
+- `assigned_to` - Foreign key to users table
+- `email_to`, `email_cc`, `email_from` - Email recipient tracking for replies
 
 ### Authentication & Authorization
 
-Uses **CakePHP Authentication** plugin with strict role-based access control.
+**Roles** (defined in users.role enum):
+- `admin` - Full system access
+- `agent` - Can manage tickets and PQRS
+- `requester` - Can create and view own tickets
+- `compras` - Can manage purchase requisitions
+- `servicio_cliente` - Customer service for PQRS
 
-**Available Roles**: `admin`, `agent`, `requester`, `servicio_cliente`, `compras`
+**Role-based redirects**:
+Controllers use `AppController::redirectByRole()` to ensure users land on appropriate modules:
+```php
+public function beforeFilter(\Cake\Event\EventInterface $event) {
+    parent::beforeFilter($event);
+    return $this->redirectByRole(['admin', 'agent', 'requester'], 'tickets');
+}
+```
 
-**Module Access Matrix**:
-- **Tickets Module**: `admin`, `agent`, `requester` only
-  - Users with `compras` role → redirected to Compras
-  - Users with `servicio_cliente` role → redirected to PQRS
+**Layouts**:
+- `templates/layout/admin.php`
+- `templates/layout/agent.php`
+- `templates/layout/compras.php`
+- `templates/layout/servicio_cliente.php`
 
-- **PQRS Module**: `admin`, `servicio_cliente` only
-  - Users with `compras` role → redirected to Compras
-  - Users with `agent` or `requester` role → redirected to Tickets
-  - Public access allowed for form submission (`create`, `success` actions)
+### External Integration Points
 
-- **Compras Module**: `admin`, `compras` only
-  - Users with `servicio_cliente` role → redirected to PQRS
-  - Users with other roles → redirected to Tickets
+**Gmail OAuth Flow**:
+1. Admin configures Gmail OAuth credentials in system settings
+2. `GmailService` handles token refresh and API calls
+3. Email-to-ticket conversion via `TicketService::createFromEmail()`
 
-**Implementation**:
-- Each controller has a `beforeFilter()` method that checks user role
-- Unauthorized access attempts show error message and redirect to appropriate module
-- Admin role has full access to all modules
-- Permission checks also verify entity ownership (e.g., requesters can only view their own tickets)
+**WhatsApp Notifications**:
+- Uses Evolution API (configured in system_settings)
+- `WhatsappService` sends transactional messages on status changes
 
-### Notification Strategy
+**n8n Webhooks**:
+- Bidirectional communication for workflow automation
+- Tickets/PQRS can trigger n8n workflows
+- n8n can update entity status via webhooks
 
-**WhatsApp**: High-priority creation events only
-- Sent when: Ticket/PQRS/Compra created
-- Never sent for: Updates, comments, status changes
+### Frontend JavaScript Modules
 
-**Email**: All events
-- Sent for: Creation, updates, comments, status changes, assignments
-- Template-based (stored in `email_templates` table)
-- Rendered via `NotificationRenderer`
+Key JS files (`webroot/js/`):
+- `bulk-actions-module.js` - Bulk select/update UI
+- `entity-history-lazy.js` - Lazy-load activity timeline
+- `modern-statistics.js` - Chart rendering (Chart.js)
+- `email-recipients.js` - Dynamic To/CC field management
+- `flash-messages.js` - Toast notifications
 
-## Configuration Setup
+## Configuration Files
 
-1. **Copy example config**:
-   ```bash
-   cp config/app_local.example.php config/app_local.php
-   ```
+### System Settings
+Settings are stored in `system_settings` table and cached. Sensitive values (API keys, OAuth tokens) are encrypted using `SettingsEncryptionTrait`.
 
-2. **Configure database** in `config/app_local.php`:
-   ```php
-   'Datasources' => [
-       'default' => [
-           'host' => 'localhost',
-           'username' => 'your_username',
-           'password' => 'your_password',
-           'database' => 'your_database',
-       ],
-   ],
-   ```
+Access in controllers/services via:
+```php
+$systemConfig = \Cake\Cache\Cache::read('system_settings', '_cake_core_');
+```
 
-3. **Set security salt** in `config/app_local.php`:
-   ```php
-   'Security' => [
-       'salt' => 'your-random-salt-here',
-   ],
-   ```
+### Environment Variables
+Required in `config/app_local.php` or `.env`:
+- Database credentials (DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD)
+- Security salt and cipher seed
+- Debug mode toggle
 
-4. **External integrations** (stored in `system_settings` table after migrations):
-   - Gmail OAuth2 credentials (client ID, secret, refresh token)
-   - WhatsApp Evolution API (instance name, API key, phone numbers)
-   - n8n webhook URL and API key
+## Important Patterns & Conventions
 
-## Code Style & Conventions
+### Entity Type Parameter
+Many shared methods use `$type` parameter to distinguish entities:
+```php
+// Valid values: 'ticket', 'pqrs', 'compra'
+$responseService->processResponse($type, $entityId, $userId, $data, $files);
+```
 
-- **PHP 8.5+** with strict types: All files start with `declare(strict_types=1);`
-- **Type hints everywhere**: Parameters, return types, properties
-- **PSR-12** coding standard + CakePHP conventions
-- **Logging**: Use `Cake\Log\Log::debug()`, `Log::error()` extensively
-- **Entity assertions**: Use `assert($entity instanceof EntityClass)` after ORM queries for type safety
-- **Naming conventions**:
-  - Services: `{Module}Service.php`
-  - Entities: Singular (`Ticket`, `Pqr`, `Compra`)
-  - Tables: Plural (`TicketsTable`, `PqrsTable`, `ComprasTable`)
-  - Traits: `{Purpose}Trait.php`
-  - Commands: `{Action}Command.php`
+### Status Change Flow
+Always use service methods to change status (never update entities directly):
+```php
+$success = $ticketService->changeStatus($ticket, 'resuelto', $userId, $comment, true);
+```
+This ensures:
+- History tracking
+- Timestamp updates (resolved_at, closed_at)
+- Notifications sent
+- Cache invalidation
 
-## Important Implementation Notes
+### Attachment Handling
+File uploads go through `GenericAttachmentTrait::handleAttachments()`:
+- Sanitizes filenames
+- Stores in `webroot/files/{tickets,pqrs,compras}/{id}/`
+- Records in appropriate attachments table
 
-### When Adding New Features
+### Email Recipient Tracking
+When replying to entities, additional recipients are tracked:
+```php
+// Frontend sends JSON arrays via email-recipients.js
+'email_to' => '["user1@example.com","user2@example.com"]'
+'email_cc' => '["cc@example.com"]'
 
-1. **Add business logic to services**, not controllers
-2. **Use existing traits** when implementing similar functionality across modules
-3. **Log all changes** to history tables via `{Entity}HistoryTable`
-4. **Send notifications** via `NotificationDispatcherTrait`
-5. **Validate file uploads** using `GenericAttachmentTrait`
-6. **Encrypt sensitive config** using `SettingsEncryptionTrait`
+// Backend decodes and stores in comment record
+```
 
-### When Working with Emails
+## Testing Approach
 
-- Email parsing preserves HTML formatting (fallback to plain text)
-- Inline images use Content-ID mapping (stored in attachments with `is_inline` flag)
-- Reply emails preserve thread context via `gmail_thread_id`
-- Recipients stored as JSON arrays (`email_to`, `email_cc`) for reply-all
+Tests follow CakePHP conventions:
+- Table tests in `tests/TestCase/Model/Table/`
+- Controller tests in `tests/TestCase/Controller/`
+- Use fixtures for test data
 
-### When Working with Comments
+**Current test coverage is minimal**. When adding tests:
+1. Create fixtures in `tests/Fixture/`
+2. Use `IntegrationTestTrait` for controller tests
+3. Mock external services (EmailService, WhatsappService, N8nService)
 
-- Comments have `comment_type`: `public` (visible to requester) or `internal` (agent-only)
-- System comments (`is_system_comment = true`) are auto-generated for status changes
-- Ticket comments can be sent as email replies (`sent_as_email` flag)
-- All comments trigger email notifications (not WhatsApp)
+## Common Pitfalls
 
-### Performance Considerations
+1. **Don't bypass service layer** - Controllers should delegate to services, not contain business logic
+2. **Cache invalidation** - When updating system_settings, clear cache: `Cache::delete('system_settings', '_cake_core_')`
+3. **Entity type consistency** - Use singular 'ticket'/'pqrs'/'compra' not plural in code
+4. **Service instantiation** - Always pass `$systemConfig` to service constructors to avoid redundant DB queries
+5. **HTML sanitization** - User input is sanitized via HTMLPurifier in services before storage
 
-- System settings are cached (clear cache after updating settings)
-- History records loaded via AJAX, not on page load
-- Gmail API calls have 200ms sleep delays between messages
-- Lazy-load services (e.g., N8nService initialized only when needed)
+## Code Style
 
-## Testing Notes
-
-- Test database configured in `config/app_local.php` under `Datasources.test`
-- Default test DB: SQLite in `tmp/tests.sqlite`
-- Fixtures should be placed in `tests/Fixture/`
-- Use `IntegrationTestCase` for controller tests, `TestCase` for unit tests
+- **PHP 8.1+** with strict types (`declare(strict_types=1);`)
+- **PSR-12** via CakePHP Code Sniffer
+- **PHPStan level 5** static analysis
+- Type hints required on all method signatures
+- Use `FrozenTime` (CakePHP Chronos) for datetime handling, not native DateTime

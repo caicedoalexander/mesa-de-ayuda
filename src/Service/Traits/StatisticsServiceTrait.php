@@ -196,44 +196,109 @@ trait StatisticsServiceTrait
      * @param string $tableName Table name (e.g., 'Tickets', 'Pqrs', 'Compras')
      * @param array $resolvedStatuses Status values that count as "resolved"
      * @param int $limit Number of top agents to return
+     * @param array $agentRoles Roles that count as agents (defaults based on table)
      * @return array ['top_agents' => [...], 'active_agents_count' => int]
      */
-    protected function getAgentPerformance(string $tableName, array $resolvedStatuses = [], int $limit = 5): array
+    protected function getAgentPerformance(string $tableName, array $resolvedStatuses = [], int $limit = 5, array $agentRoles = []): array
     {
         $table = $this->fetchTable($tableName);
         $usersTable = $this->fetchTable('Users');
 
-        // Active agents count
+        // Determine agent roles based on module if not specified
+        if (empty($agentRoles)) {
+            $agentRoles = match($tableName) {
+                'Tickets' => ['agent'],  // Tickets: only agents (not admin)
+                'Pqrs' => ['servicio_cliente'],  // PQRS: customer service agents
+                'Compras' => ['compras'],  // Compras: procurement agents
+                default => ['agent']
+            };
+        }
+
+        // Active agents count - only count relevant roles for this module
         $activeAgents = $usersTable->find()
             ->where([
-                'role IN' => ['admin', 'agent', 'compras', 'servicio_cliente'],
+                'role IN' => $agentRoles,
                 'is_active' => true
             ])
             ->count();
 
-        // Build query for top agents
-        $query = $table->find()
-            ->contain(['Assignees'])
-            ->where(['assignee_id IS NOT' => null])
-            ->select([
-                'assignee_id',
-                'agent_name' => $table->find()->func()->concat([
-                    'Assignees.first_name' => 'identifier',
-                    ' ',
-                    'Assignees.last_name' => 'identifier'
-                ]),
-                'count' => $table->find()->func()->count('*')
-            ])
-            ->group(['assignee_id'])
-            ->order(['count' => 'DESC'])
-            ->limit($limit);
-
-        // If resolved statuses provided, filter by them
-        if (!empty($resolvedStatuses)) {
-            $query->where(['status IN' => $resolvedStatuses]);
+        // Define resolved statuses - use parameter if provided, otherwise use defaults
+        if (empty($resolvedStatuses)) {
+            $resolvedStatuses = match($tableName) {
+                'Tickets' => ['cerrado', 'resuelto'],
+                'Pqrs' => ['resuelto', 'cerrado'],
+                'Compras' => ['completado'],  // Only successfully completed purchases
+                default => ['cerrado', 'resuelto']
+            };
         }
 
-        $topAgents = $query->all();
+        // Build query for top agents with detailed performance metrics
+        $query = $table->find()
+            ->where(['assignee_id IS NOT' => null]);
+
+        // Add select fields with CASE expression for resolved count
+        $caseExpression = $query->newExpr()
+            ->case()
+            ->when(['status IN' => $resolvedStatuses])
+            ->then(1)
+            ->else(0);
+
+        $query->select([
+            'assignee_id',
+            'assigned_count' => $query->func()->count('*'),
+            'resolved_count' => $query->func()->sum($caseExpression),
+        ])
+        ->group(['assignee_id'])
+        ->order(['assigned_count' => 'DESC'])
+        ->limit($limit);
+
+        // Note: We don't filter by status here - we want to show all assigned tickets
+        // The CASE expression already counts only resolved ones
+
+        $topAgentsRaw = $query->all();
+
+        // Load full user objects for each agent
+        $userIds = [];
+        foreach ($topAgentsRaw as $agent) {
+            if ($agent->assignee_id) {
+                $userIds[] = $agent->assignee_id;
+            }
+        }
+
+        // Fetch all users at once
+        $users = [];
+        if (!empty($userIds)) {
+            $usersCollection = $usersTable->find()
+                ->where(['id IN' => $userIds])
+                ->all();
+            foreach ($usersCollection as $user) {
+                $users[$user->id] = $user;
+            }
+        }
+
+        // Calculate resolution rate for each agent and attach user object
+        $topAgents = [];
+        foreach ($topAgentsRaw as $agent) {
+            $assignedCount = $agent->assigned_count ?? 0;
+            $resolvedCount = $agent->resolved_count ?? 0;
+
+            // Calculate resolution rate (percentage)
+            $resolutionRate = $assignedCount > 0
+                ? round(($resolvedCount / $assignedCount) * 100, 1)
+                : 0;
+
+            // Add resolution_rate and user object
+            $agent->resolution_rate = $resolutionRate;
+            $agent->count = $assignedCount; // Keep for backward compatibility
+
+            // Attach full user object
+            if (isset($users[$agent->assignee_id])) {
+                $agent->assignee = $users[$agent->assignee_id];
+                $agent->agent_name = $users[$agent->assignee_id]->first_name . ' ' . $users[$agent->assignee_id]->last_name;
+            }
+
+            $topAgents[] = $agent;
+        }
 
         return [
             'top_agents' => $topAgents,

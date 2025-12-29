@@ -19,7 +19,7 @@ $userId = $user ? $user->get('id') : null;
     <?= $this->cell('ComprasSidebar::display', [$view, $userRole, $userId]) ?>
 </div>
 
-<div class="py-4 px-5 w-100">
+<div class="pt-4 pb-2 px-5 w-100 d-flex flex-column">
     <div class="d-flex gap-3 align-items-center mb-3">
         <i class="bi bi-cart" style="font-size: 25px;"></i>
         <h2 class="fw-normal m-0 fs-3">
@@ -64,7 +64,7 @@ $userId = $user ? $user->get('id') : null;
     </div>
 
     <?php if ($compras->count() > 0): ?>
-        <div class="table-responsive table-scroll">
+        <div class="table-responsive table-scroll mb-auto">
             <table class="table table-hover mb-0">
                 <thead style="position: sticky; top: 0; z-index: 10;">
                     <tr>
@@ -100,7 +100,7 @@ $userId = $user ? $user->get('id') : null;
                             </td>
 
                             <td class="py-0 align-middle" style="width: 120px; font-size: 14px;">
-                                <?= $this->Compras->statusBadge($compra->status) ?>
+                                <?= $this->Status->statusBadge($compra->status, 'compra') ?>
                             </td>
 
                             <td class="py-0 fw-light align-middle text-truncate"
@@ -156,7 +156,10 @@ $userId = $user ? $user->get('id') : null;
             </table>
         </div>
 
-        <?= $this->element('pagination') ?>
+        <!-- Pagination -->
+        <nav aria-label="Paginación">
+            <?= $this->element('pagination') ?>
+        </nav>
 
     <?php else: ?>
         <div class="table-container">

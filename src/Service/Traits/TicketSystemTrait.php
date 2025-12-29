@@ -78,10 +78,10 @@ trait TicketSystemTrait
 
         // Add system comment (always internal)
         if ($comment) {
-            $this->addComment($entity->id, $userId, $comment, 'internal', true, $entityType);
+            $this->addComment($entity->id, $userId, $comment, $entityType, 'internal', true);
         } else {
             $systemComment = "El estado cambió de '{$oldStatus}' a '{$newStatus}'";
-            $this->addComment($entity->id, $userId, $systemComment, 'internal', true, $entityType);
+            $this->addComment($entity->id, $userId, $systemComment, $entityType, 'internal', true);
         }
 
         // Send notifications ONLY if requested
@@ -123,9 +123,9 @@ trait TicketSystemTrait
         int $entityId,
         ?int $userId,
         string $body,
+        string $entityType, // REQUIRED: 'ticket', 'pqrs', or 'compra'
         string $type = 'public',
         bool $isSystem = false,
-        string $entityType, // REQUIRED: 'ticket', 'pqrs', or 'compra'
         ?array $emailTo = null,
         ?array $emailCc = null
     ): ?\Cake\Datasource\EntityInterface {
@@ -203,13 +203,25 @@ trait TicketSystemTrait
         $entity->assignee_id = $assigneeId;
 
         if (!$table->save($entity)) {
-            Log::error('Failed to assign entity', ['errors' => $entity->getErrors()]);
+            Log::error('Failed to assign entity', [
+                'entity_id' => $entity->id,
+                'validation_errors' => $entity->getErrors()
+            ]);
             return false;
         }
 
         // Get assignee names for history
-        $oldAssigneeName = $oldAssigneeId ? $usersTable->get($oldAssigneeId)->name : 'Sin asignar';
-        $newAssigneeName = $assigneeId ? $usersTable->get($assigneeId)->name : 'Sin asignar';
+        $oldAssigneeName = 'Sin asignar';
+        if ($oldAssigneeId) {
+            $oldUser = $usersTable->get($oldAssigneeId);
+            $oldAssigneeName = $oldUser->first_name . ' ' . $oldUser->last_name;
+        }
+
+        $newAssigneeName = 'Sin asignar';
+        if ($assigneeId) {
+            $newUser = $usersTable->get($assigneeId);
+            $newAssigneeName = $newUser->first_name . ' ' . $newUser->last_name;
+        }
 
         // Determine entity type from source
         $entityType = $this->getEntityTypeFromSource($entity->getSource());
@@ -230,7 +242,7 @@ trait TicketSystemTrait
 
         // Add system comment
         $systemComment = "Asignado a {$newAssigneeName}";
-        $this->addComment($entity->id, $userId, $systemComment, 'internal', true, $entityType);
+        $this->addComment($entity->id, $userId, $systemComment, $entityType, 'internal', true);
 
         return true;
     }
@@ -283,7 +295,7 @@ trait TicketSystemTrait
 
         // Add system comment
         $systemComment = "Prioridad cambiada de '{$oldPriority}' a '{$newPriority}'";
-        $this->addComment($entity->id, $userId, $systemComment, 'internal', true, $entityType);
+        $this->addComment($entity->id, $userId, $systemComment, $entityType, 'internal', true);
 
         return true;
     }
@@ -451,9 +463,9 @@ trait TicketSystemTrait
             $sourceEntity->id,
             $userId,
             "{$sourceTypeName} convertido a {$targetTypeName} #{$targetNumber}",
+            $sourceType, // entityType
             'internal',
-            true,       // isSystem
-            $sourceType // entityType
+            true        // isSystem
         );
 
         // Log to history

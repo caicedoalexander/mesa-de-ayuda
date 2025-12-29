@@ -32,12 +32,12 @@ $chartId = 'statusChart' . uniqid();
 <div class="modern-card chart-card h-100" data-animate="fade-up" data-delay="400">
     <div class="chart-header">
         <h5 class="chart-title">
+            <i class="bi bi-activity"></i>
             Por Estado
         </h5>
     </div>
     <div class="chart-wrapper" data-chart-loader>
         <div class="chart-skeleton">
-            <div class="skeleton-spinner"></div>
         </div>
         <canvas id="<?= $chartId ?>" height="250" style="opacity: 0;"></canvas>
     </div>
@@ -67,7 +67,19 @@ $chartId = 'statusChart' . uniqid();
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'bottom' },
+                legend: { 
+                    position: 'left',
+                    labels: {
+                        padding: 8,
+                        font: {
+                            size: 14,
+                            family: "'Plus Jakarta Sans', sans-serif",
+                            weight: '400'
+                        },
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                 },
                 tooltip: {
                     callbacks: {
                         label: function(context) {

@@ -22,6 +22,7 @@ $chartId = 'trendChart' . uniqid();
         <div class="modern-card chart-card" data-animate="fade-up" data-delay="600">
             <div class="chart-header">
                 <h5 class="chart-title">
+                    <i class="bi bi-graph-up"></i>
                     Tendencia (30 días)
                 </h5>
             </div>
@@ -48,11 +49,11 @@ $chartId = 'trendChart' . uniqid();
                 data: <?= json_encode($chartData) ?>,
                 borderColor: '#00A85E',
                 backgroundColor: 'rgba(0, 168, 94, 0.1)',
-                borderWidth: 3,
+                borderWidth: 2,
                 fill: true,
-                tension: 0.4,
-                pointRadius: 4,
-                pointHoverRadius: 6,
+                tension: 0.5,
+                pointRadius: 5,
+                pointHoverRadius: 5,
                 pointBackgroundColor: '#00A85E',
                 pointBorderColor: '#fff',
                 pointBorderWidth: 2
@@ -64,7 +65,17 @@ $chartId = 'trendChart' . uniqid();
             plugins: {
                 legend: {
                     display: true,
-                    position: 'top'
+                    position: 'bottom',
+                    labels: {
+                        padding: 8,
+                        font: {
+                            size: 14,
+                            family: "'Plus Jakarta Sans', sans-serif",
+                            weight: '400'
+                        },
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
                 }
             },
             scales: {

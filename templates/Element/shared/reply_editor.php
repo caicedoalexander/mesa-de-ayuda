@@ -176,14 +176,14 @@ $requesterEmail = in_array($entityType, ['ticket', 'compra'])
                                 data-bs-toggle="dropdown"
                                 aria-expanded="false"
                                 data-current-status="<?= h($entity->status) ?>">
-                            <i class="bi bi-circle-fill text-<?= h($currentConfig['color'] ?? 'secondary') ?>" id="status-icon"></i>
+                            <i class="bi bi-circle-fill" id="status-icon" style="color: <?= h($currentConfig['color'] ?? '#6c757d') ?>;"></i>
                             <span id="status-label" class="text-dark fw-bold small">Enviar como <?= h($currentConfig['label'] ?? 'Estado') ?></span>
                         </button>
                         <ul class="dropdown-menu rounded shadow-sm p-0 mb-2" aria-labelledby="status-dropdown">
                             <?php foreach ($statuses as $statusKey => $statusConfig): ?>
                             <li>
                                 <a class="dropdown-item fw-bold d-flex align-items-center py-1 gap-2" style="font-size: 14px;" href="#" onclick="setStatus('<?= h($statusKey) ?>'); return false;">
-                                    <i class="bi bi-circle-fill text-<?= h($statusConfig['color']) ?>"></i>
+                                    <i class="bi bi-circle-fill" style="color: <?= h($statusConfig['color']) ?>;"></i>
                                     <span><?= h($statusConfig['label']) ?></span>
                                 </a>
                             </li>

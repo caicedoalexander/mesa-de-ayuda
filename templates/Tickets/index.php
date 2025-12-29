@@ -22,7 +22,7 @@ $userId = $user ? $user->get('id') : null;
     <?= $this->cell('TicketsSidebar::display', [$view, $userRole, $userId]) ?>
 </div>
 
-<div class="py-4 px-5 w-100">
+<div class="pt-4 pb-2 px-5 w-100 d-flex flex-column">
     <div class="d-flex gap-3 align-items-center mb-3">
         <img src="<?= $this->Url->build('img/ticket.png') ?>" height="35">
         <h2 class="fw-normal m-0 fs-3">
@@ -64,7 +64,7 @@ $userId = $user ? $user->get('id') : null;
     </div>
 
     <?php if ($tickets->count() > 0): ?>
-        <div class="table-responsive table-scroll">
+        <div class="table-responsive table-scroll mb-auto">
             <table class="table table-hover mb-0">
                 <thead class="" style="position: sticky; top: 0; z-index: 10;">
                     <tr>
@@ -94,7 +94,7 @@ $userId = $user ? $user->get('id') : null;
                             </td>
 
                             <td class="py-0 align-middle " style="width: 100px; font-size: 14px;">
-                                <?= $this->Status->badge($ticket->status) ?>
+                                <?= $this->Status->statusBadge($ticket->status, 'ticket') ?>
                             </td>
 
                             <td class="py-0 fw-light align-middle text-truncate"
@@ -144,7 +144,10 @@ $userId = $user ? $user->get('id') : null;
             </table>
         </div>
 
-        <?= $this->element('pagination') ?>
+        <!-- Pagination -->
+        <nav aria-label="Paginación">
+            <?= $this->element('pagination') ?>
+        </nav>
 
     <?php else: ?>
         <div class="table-container">
@@ -153,7 +156,6 @@ $userId = $user ? $user->get('id') : null;
             </div>
         </div>
     <?php endif; ?>
-
 </div>
 
 <!-- Modales para acciones rápidas -->

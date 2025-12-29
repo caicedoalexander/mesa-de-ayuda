@@ -224,7 +224,7 @@ class PqrsController extends AppController
      */
     public function statistics()
     {
-        $this->renderStatistics('pqrs', ['defaultRange' => '30days']);
+        $this->renderStatistics('pqrs', ['defaultRange' => 'all']);
     }
 
     /**
