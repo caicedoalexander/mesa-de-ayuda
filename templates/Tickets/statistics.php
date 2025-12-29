@@ -26,15 +26,21 @@
 $this->assign('title', 'Estadísticas de Tickets');
 ?>
 
+<!-- Include Modern Statistics CSS -->
+<?= $this->Html->css('modern-statistics') ?>
+
 <!-- Include Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 
+<!-- Include Modern Statistics JavaScript -->
+<?= $this->Html->script('modern-statistics') ?>
+
 <div class="statistics-container">
     <!-- Header -->
-    <div class="mb-5">
-        <h2 class="fw-normal neuro-text-primary"><i class="bi bi-bar-chart me-2" style="color: var(--neuro-success);"></i>Estadísticas</h2>
-        <p class="neuro-text-secondary fw-light">Vista general del sistema de tickets</p>
+    <div class="mb-4">
+        <h1 class="stats-title">Estadísticas</h1>
+        <p class="stats-subtitle">Sistema de tickets</p>
     </div>
 
     <!-- Date Range Filter (commented out for now - can be enabled later) -->
@@ -54,7 +60,7 @@ $this->assign('title', 'Estadísticas de Tickets');
     ]) ?>
 
     <!-- Charts Row -->
-    <div class="row mb-5">
+    <div class="row g-3 mb-4">
         <!-- Status Chart -->
         <div class="col-md-4">
             <?= $this->element('shared/statistics/status_chart', [
@@ -90,7 +96,7 @@ $this->assign('title', 'Estadísticas de Tickets');
     ]) ?>
 
     <!-- Tables Row -->
-    <div class="row mb-5">
+    <div class="row g-3 mb-4">
         <!-- Top Agents -->
         <div class="col-md-6">
             <?= $this->element('shared/statistics/agent_performance_table', [
@@ -108,40 +114,34 @@ $this->assign('title', 'Estadísticas de Tickets');
     </div>
 
     <!-- Comments Statistics -->
-    <div class="row">
+    <div class="row g-4">
         <div class="col-md-4">
-            <div class="card neuro-card neuro-hover" data-animate-in="fade-up" data-delay="700">
-                <div class="card-body text-center py-4">
-                    <div class="neuro-icon-wrapper mb-3">
-                        <i class="bi bi-chat-dots neuro-icon" style="color: var(--neuro-primary);"></i>
-                    </div>
-                    <h3 class="neuro-counter mb-2" data-counter data-target="<?= $totalComments ?>" aria-live="polite" aria-atomic="true">0</h3>
-                    <p class="neuro-label mb-0">Total Comentarios</p>
+            <div class="modern-card accent-green kpi-card" data-animate="fade-up" data-delay="400">
+                <div class="kpi-icon-wrapper">
+                    <i class="bi bi-chat-dots kpi-icon text-blue"></i>
                 </div>
+                <h3 class="kpi-number" data-counter data-target="<?= $totalComments ?>" aria-live="polite" aria-atomic="true">0</h3>
+                <p class="kpi-label mb-0">Total Comentarios</p>
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="card neuro-card neuro-hover" data-animate-in="fade-up" data-delay="800">
-                <div class="card-body text-center py-4">
-                    <div class="neuro-icon-wrapper mb-3">
-                        <i class="bi bi-eye neuro-icon" style="color: var(--neuro-success);"></i>
-                    </div>
-                    <h3 class="neuro-counter mb-2" data-counter data-target="<?= $publicComments ?>" aria-live="polite" aria-atomic="true">0</h3>
-                    <p class="neuro-label mb-0">Comentarios Públicos</p>
+            <div class="modern-card accent-orange kpi-card" data-animate="fade-up" data-delay="500">
+                <div class="kpi-icon-wrapper">
+                    <i class="bi bi-eye kpi-icon text-green"></i>
                 </div>
+                <h3 class="kpi-number" data-counter data-target="<?= $publicComments ?>" aria-live="polite" aria-atomic="true">0</h3>
+                <p class="kpi-label mb-0">Comentarios Públicos</p>
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="card neuro-card neuro-hover" data-animate-in="fade-up" data-delay="900">
-                <div class="card-body text-center py-4">
-                    <div class="neuro-icon-wrapper mb-3">
-                        <i class="bi bi-eye-slash neuro-icon" style="color: var(--neuro-warning);"></i>
-                    </div>
-                    <h3 class="neuro-counter mb-2" data-counter data-target="<?= $internalComments ?>" aria-live="polite" aria-atomic="true">0</h3>
-                    <p class="neuro-label mb-0">Comentarios Internos</p>
+            <div class="modern-card accent-gradient kpi-card" data-animate="fade-up" data-delay="600">
+                <div class="kpi-icon-wrapper">
+                    <i class="bi bi-eye-slash kpi-icon text-orange"></i>
                 </div>
+                <h3 class="kpi-number" data-counter data-target="<?= $internalComments ?>" aria-live="polite" aria-atomic="true">0</h3>
+                <p class="kpi-label mb-0">Comentarios Internos</p>
             </div>
         </div>
     </div>

@@ -27,15 +27,21 @@
 $this->assign('title', 'Estadísticas de PQRS');
 ?>
 
+<!-- Include Modern Statistics CSS -->
+<?= $this->Html->css('modern-statistics') ?>
+
 <!-- Include Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 
+<!-- Include Modern Statistics JavaScript -->
+<?= $this->Html->script('modern-statistics') ?>
+
 <div class="statistics-container">
     <!-- Header -->
-    <div class="mb-5">
-        <h2 class="fw-normal neuro-text-primary"><i class="bi bi-bar-chart me-2" style="color: var(--neuro-success);"></i>Estadísticas PQRS</h2>
-        <p class="neuro-text-secondary fw-light">Vista general del sistema de peticiones, quejas, reclamos y sugerencias</p>
+    <div class="mb-4">
+        <h1 class="stats-title">Estadísticas PQRS</h1>
+        <p class="stats-subtitle">Peticiones, quejas, reclamos y sugerencias</p>
     </div>
 
     <!-- Date Range Filter (commented out for now) -->
@@ -55,41 +61,41 @@ $this->assign('title', 'Estadísticas de PQRS');
     ]) ?>
 
     <!-- Secondary KPIs -->
-    <div class="row mb-5">
+    <div class="row g-3 mb-4">
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="bi bi-check-circle text-success" style="font-size: 2.5rem;"></i>
-                    <h3 class="mt-2 mb-0"><?= number_format($totalResolved) ?></h3>
-                    <p class="text-muted mb-0 fw-light">Total Resueltos</p>
+            <div class="modern-card accent-green kpi-card" data-animate="fade-up" data-delay="400">
+                <div class="kpi-icon-wrapper">
+                    <i class="bi bi-check-circle kpi-icon text-green"></i>
                 </div>
+                <h3 class="kpi-number" data-counter data-target="<?= $totalResolved ?>" aria-live="polite">0</h3>
+                <p class="kpi-label mb-0">Total Resueltos</p>
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="bi bi-hourglass-split text-warning" style="font-size: 2.5rem;"></i>
-                    <h3 class="mt-2 mb-0"><?= number_format($totalPending) ?></h3>
-                    <p class="text-muted mb-0 fw-light">Pendientes</p>
+            <div class="modern-card accent-orange kpi-card" data-animate="fade-up" data-delay="500">
+                <div class="kpi-icon-wrapper">
+                    <i class="bi bi-hourglass-split kpi-icon text-orange"></i>
                 </div>
+                <h3 class="kpi-number" data-counter data-target="<?= $totalPending ?>" aria-live="polite">0</h3>
+                <p class="kpi-label mb-0">Pendientes</p>
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="bi bi-clock-history text-info" style="font-size: 2.5rem;"></i>
-                    <h3 class="mt-2 mb-0"><?= $avgResolutionDays ?> días</h3>
-                    <p class="text-muted mb-0 fw-light">Tiempo Prom. Resolución</p>
-                    <small class="text-muted">(<?= $avgResolutionHours ?> horas)</small>
+            <div class="modern-card accent-gradient kpi-card" data-animate="fade-up" data-delay="600">
+                <div class="kpi-icon-wrapper">
+                    <i class="bi bi-clock-history kpi-icon text-blue"></i>
                 </div>
+                <h3 class="kpi-number mb-2"><?= $avgResolutionDays ?> días</h3>
+                <p class="kpi-label mb-1">Tiempo Prom. Resolución</p>
+                <small style="color: var(--gray-500); font-size: 0.75rem;">(<?= $avgResolutionHours ?> horas)</small>
             </div>
         </div>
     </div>
 
     <!-- Charts Row -->
-    <div class="row mb-5">
+    <div class="row g-3 mb-4">
         <!-- Status Chart -->
         <div class="col-md-4">
             <?= $this->element('shared/statistics/status_chart', [

@@ -180,6 +180,33 @@ class TicketsTable extends Table
     }
 
     /**
+     * Generate unique ticket number in format TKT-YYYY-NNNNN
+     *
+     * @return string
+     */
+    public function generateTicketNumber(): string
+    {
+        $year = date('Y');
+        $prefix = "TKT-{$year}-";
+
+        // Get last ticket number for this year
+        $lastTicket = $this->find()
+            ->where(['ticket_number LIKE' => $prefix . '%'])
+            ->orderBy(['id' => 'DESC'])
+            ->first();
+
+        if ($lastTicket) {
+            // Extract sequence number and increment
+            $parts = explode('-', $lastTicket->ticket_number);
+            $sequence = (int) $parts[2] + 1;
+        } else {
+            $sequence = 1;
+        }
+
+        return $prefix . str_pad((string) $sequence, 5, '0', STR_PAD_LEFT);
+    }
+
+    /**
      * Find tickets with filters
      *
      * @param \Cake\ORM\Query\SelectQuery $query Query object

@@ -9,6 +9,7 @@ use Cake\Log\Log;
 use Cake\I18n\FrozenTime;
 use HTMLPurifier;
 use HTMLPurifier_Config;
+use App\Service\Traits\EntityConversionTrait;
 
 /**
  * Ticket Service
@@ -26,6 +27,7 @@ class TicketService
     use \App\Service\Traits\TicketSystemTrait;
     use \App\Service\Traits\NotificationDispatcherTrait;
     use \App\Service\Traits\GenericAttachmentTrait;
+    use EntityConversionTrait;
 
     private EmailService $emailService;
     private WhatsappService $whatsappService;
@@ -98,7 +100,7 @@ class TicketService
         $description = $emailData['body_html'] ?: $emailData['body_text'];
 
         // Generate ticket number
-        $ticketNumber = $this->generateTicketNumber();
+        $ticketNumber = $ticketsTable->generateTicketNumber();
 
         // Ensure subject is not empty
         $subject = trim($emailData['subject'] ?? '');
@@ -204,34 +206,6 @@ class TicketService
     }
 
     /**
-     * Generate unique ticket number in format TKT-YYYY-NNNNN
-     *
-     * @return string
-     */
-    private function generateTicketNumber(): string
-    {
-        $ticketsTable = $this->fetchTable('Tickets');
-        $year = date('Y');
-        $prefix = "TKT-{$year}-";
-
-        // Get last ticket number for this year
-        $lastTicket = $ticketsTable->find()
-            ->where(['ticket_number LIKE' => $prefix . '%'])
-            ->orderBy(['id' => 'DESC'])
-            ->first();
-
-        if ($lastTicket) {
-            // Extract sequence number and increment
-            $parts = explode('-', $lastTicket->ticket_number);
-            $sequence = (int) $parts[2] + 1;
-        } else {
-            $sequence = 1;
-        }
-
-        return $prefix . str_pad((string) $sequence, 5, '0', STR_PAD_LEFT);
-    }
-
-    /**
      * Process email attachments (now using GenericAttachmentTrait)
      *
      * @param \Cake\Datasource\EntityInterface $ticket Ticket entity
@@ -242,7 +216,7 @@ class TicketService
     private function processEmailAttachments(\Cake\Datasource\EntityInterface $ticket, array $attachments, int $userId): void
     {
         assert($ticket instanceof \App\Model\Entity\Ticket);
-        $gmailService = new GmailService($this->getGmailConfig());
+        $gmailService = new GmailService(GmailService::loadConfigFromDatabase());
 
         foreach ($attachments as $attachmentData) {
             try {
@@ -278,69 +252,6 @@ class TicketService
     }
 
     /**
-    /**
-     * Send notifications for a comment (call this AFTER attachments are processed)
-     *
-     * @param int $ticketId Ticket ID
-     * @param int $commentId Comment ID
-     * @return bool Success status
-     */
-    public function sendCommentNotifications(int $ticketId, int $commentId): bool
-    {
-        try {
-            $commentsTable = $this->fetchTable('TicketComments');
-            $comment = $commentsTable->get($commentId);
-            assert($comment instanceof \App\Model\Entity\TicketComment);
-
-            // Only send for public, non-system comments
-            if ($comment->comment_type === 'public' && !$comment->is_system_comment) {
-                $ticket = $this->fetchTable('Tickets')->get($ticketId, contain: ['Requesters', 'Attachments']);
-                assert($ticket instanceof \App\Model\Entity\Ticket);
-
-                // Send comment notification (Email ONLY, no WhatsApp)
-                $this->dispatchUpdateNotifications('ticket', $ticket, 'comment', [
-                    'comment' => $comment,
-                ]);
-
-                return true;
-            }
-
-            return true;
-        } catch (\Exception $e) {
-            Log::error('Failed to send comment notifications', [
-                'ticket_id' => $ticketId,
-                'comment_id' => $commentId,
-                'error' => $e->getMessage()
-            ]);
-            return false;
-        }
-    }
-
-    /**
-     * Get Gmail configuration from system settings (with automatic decryption)
-     *
-     * @return array
-     */
-    private function getGmailConfig(): array
-    {
-        $settingsTable = $this->fetchTable('SystemSettings');
-        $settings = $settingsTable->find()
-            ->where(['setting_key IN' => ['gmail_refresh_token', 'gmail_client_secret_path']])
-            ->all();
-
-        $config = [];
-        foreach ($settings as $setting) {
-            $key = str_replace('gmail_', '', $setting->setting_key);
-            // Decrypt sensitive values using SettingsEncryptionTrait
-            $config[$key] = $this->shouldEncrypt($setting->setting_key)
-                ? $this->decryptSetting($setting->setting_value, $setting->setting_key)
-                : $setting->setting_value;
-        }
-
-        return $config;
-    }
-
-    /**
      * Save uploaded file (using GenericAttachmentTrait for form uploads)
      *
      * This method provides a consistent interface for ResponseService while leveraging
@@ -365,6 +276,57 @@ class TicketService
         $result = $this->saveGenericUploadedFile('ticket', $ticket, $file, $commentId, $userId);
         assert($result instanceof \App\Model\Entity\Attachment || $result === null);
         return $result;
+    }
+
+    /**
+     * Convert ticket to compra (full workflow)
+     *
+     * This method handles the complete conversion workflow:
+     * 1. Creates the compra from ticket
+     * 2. Marks ticket as converted
+     * 3. Copies all data (comments, attachments)
+     *
+     * @param \App\Model\Entity\Ticket $ticket Source ticket
+     * @param int $userId User performing the conversion
+     * @param \App\Service\ComprasService $comprasService Injected ComprasService
+     * @return \App\Model\Entity\Compra|null Created compra or null on failure
+     */
+    public function convertToCompra(
+        \App\Model\Entity\Ticket $ticket,
+        int $userId,
+        \App\Service\ComprasService $comprasService
+    ): ?\App\Model\Entity\Compra {
+        try {
+            // Create compra from ticket
+            $compra = $comprasService->createFromTicket($ticket, ['user_id' => $userId]);
+
+            if (!$compra) {
+                Log::error('Failed to create compra from ticket', ['ticket_id' => $ticket->id]);
+                return null;
+            }
+
+            // Mark ticket as converted using trait method
+            $this->markAsConverted('ticket', $ticket, 'compra', $compra, $userId);
+
+            // Copy all data (comments and attachments)
+            $comprasService->copyTicketData($ticket, $compra);
+
+            Log::info('Ticket converted to Compra successfully', [
+                'ticket_id' => $ticket->id,
+                'ticket_number' => $ticket->ticket_number,
+                'compra_id' => $compra->id,
+                'compra_number' => $compra->compra_number,
+            ]);
+
+            return $compra;
+
+        } catch (\Exception $e) {
+            Log::error('Error in convertToCompra: ' . $e->getMessage(), [
+                'ticket_id' => $ticket->id,
+                'exception' => $e,
+            ]);
+            return null;
+        }
     }
 
     /**
@@ -444,6 +406,8 @@ class TicketService
     /**
      * Copy compra data (comments and attachments) to ticket
      *
+     * REFACTORED: Now uses EntityConversionTrait for generic copying logic
+     *
      * @param \App\Model\Entity\Compra $compra Source compra
      * @param \App\Model\Entity\Ticket $ticket Destination ticket
      * @return bool Success status
@@ -451,61 +415,39 @@ class TicketService
     public function copyCompraData(\App\Model\Entity\Compra $compra, \App\Model\Entity\Ticket $ticket): bool
     {
         try {
+            // Load compra with associations
             $comprasTable = $this->fetchTable('Compras');
-            $ticketCommentsTable = $this->fetchTable('TicketComments');
-            $attachmentsTable = $this->fetchTable('Attachments');
-
             $compra = $comprasTable->get($compra->id, [
                 'contain' => ['ComprasComments', 'ComprasAttachments']
             ]);
 
-            // Copy comments
-            foreach ($compra->compras_comments as $comment) {
-                $newComment = $ticketCommentsTable->newEntity([
-                    'ticket_id' => $ticket->id,
-                    'user_id' => $comment->user_id,
-                    'comment_type' => $comment->comment_type,
-                    'body' => $comment->body,
-                    'is_system_comment' => $comment->is_system_comment,
-                    'sent_as_email' => false,
-                ]);
-                $ticketCommentsTable->save($newComment);
-            }
+            // Copy comments using trait
+            $commentsCopied = $this->copyComments('compra', $compra, 'ticket', $ticket);
 
-            // Copy attachments
-            foreach ($compra->compras_attachments as $attachment) {
-                $oldPath = WWW_ROOT . $attachment->file_path;
-                $newDir = 'uploads' . DS . 'attachments' . DS . $ticket->ticket_number . DS;
-                $newPath = WWW_ROOT . $newDir;
+            // Copy attachments using trait
+            $attachmentsCopied = $this->copyAttachments(
+                'compra',
+                $compra,
+                'ticket',
+                $ticket,
+                $ticket->ticket_number
+            );
 
-                if (!file_exists($newPath)) {
-                    mkdir($newPath, 0755, true);
-                }
-
-                $newFilePath = $newPath . $attachment->filename;
-                if (file_exists($oldPath)) {
-                    copy($oldPath, $newFilePath);
-                }
-
-                $newAttachment = $attachmentsTable->newEntity([
-                    'ticket_id' => $ticket->id,
-                    'comment_id' => null,
-                    'filename' => $attachment->filename,
-                    'original_filename' => $attachment->original_filename,
-                    'file_path' => $newDir . $attachment->filename,
-                    'mime_type' => $attachment->mime_type,
-                    'file_size' => $attachment->file_size,
-                    'is_inline' => $attachment->is_inline,
-                    'content_id' => $attachment->content_id,
-                    'uploaded_by' => $attachment->uploaded_by_user_id,
-                ]);
-                $attachmentsTable->save($newAttachment);
-            }
+            Log::info('Copied compra data to ticket', [
+                'compra_id' => $compra->id,
+                'ticket_id' => $ticket->id,
+                'comments_copied' => $commentsCopied,
+                'attachments_copied' => $attachmentsCopied,
+            ]);
 
             return true;
 
         } catch (\Exception $e) {
-            Log::error('Error copiando datos de compra a ticket: ' . $e->getMessage());
+            Log::error('Error copiando datos de compra a ticket: ' . $e->getMessage(), [
+                'compra_id' => $compra->id,
+                'ticket_id' => $ticket->id,
+                'exception' => $e,
+            ]);
             return false;
         }
     }

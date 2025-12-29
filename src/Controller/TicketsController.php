@@ -5,6 +5,7 @@ namespace App\Controller;
 
 use App\Controller\Traits\StatisticsControllerTrait;
 use App\Controller\Traits\TicketSystemControllerTrait;
+use App\Controller\Traits\ServiceInitializerTrait;
 use App\Service\TicketService;
 use App\Service\EmailService;
 use App\Service\WhatsappService;
@@ -21,14 +22,19 @@ class TicketsController extends AppController
 {
     use StatisticsControllerTrait;
     use TicketSystemControllerTrait;
+    use ServiceInitializerTrait;
+
     private TicketService $ticketService;
     private EmailService $emailService;
     private WhatsappService $whatsappService;
     private ResponseService $responseService;
     private StatisticsService $statisticsService;
+    private \App\Service\ComprasService $comprasService;
 
     /**
      * beforeFilter callback - Redirect users based on their role
+     *
+     * REFACTORED: Uses AppController::redirectByRole() to eliminate duplicated code
      *
      * @param \Cake\Event\EventInterface<\Cake\Controller\Controller> $event Event
      * @return \Cake\Http\Response|null|void
@@ -37,27 +43,14 @@ class TicketsController extends AppController
     {
         parent::beforeFilter($event);
 
-        $user = $this->Authentication->getIdentity();
-
-        if ($user) {
-            $role = $user->get('role');
-
-            // Redirect compras users to their module
-            if ($role === 'compras') {
-                $this->Flash->error(__('No tienes permiso para acceder al módulo de tickets.'));
-                return $this->redirect(['controller' => 'Compras', 'action' => 'index']);
-            }
-
-            // Redirect servicio_cliente users to PQRS module
-            if ($role === 'servicio_cliente') {
-                $this->Flash->error(__('No tienes permiso para acceder al módulo de tickets.'));
-                return $this->redirect(['controller' => 'Pqrs', 'action' => 'index']);
-            }
-        }
+        // Allow admin, agent, and requester roles for Tickets module
+        return $this->redirectByRole(['admin', 'agent', 'requester'], 'tickets');
     }
 
     /**
      * Initialize
+     *
+     * REFACTORED: Uses ServiceInitializerTrait for clean service initialization
      *
      * @return void
      */
@@ -65,15 +58,8 @@ class TicketsController extends AppController
     {
         parent::initialize();
 
-        // Get cached system config from parent (set in AppController::beforeFilter)
-        $systemConfig = $this->viewBuilder()->getVar('systemConfig');
-
-        // Initialize services with cached config to avoid redundant DB queries
-        $this->ticketService = new TicketService($systemConfig);
-        $this->emailService = new EmailService($systemConfig);
-        $this->whatsappService = new WhatsappService($systemConfig);
-        $this->statisticsService = new StatisticsService();
-        $this->responseService = new ResponseService($systemConfig);
+        // Initialize all ticket system services using trait
+        $this->initializeTicketSystemServices();
     }
     /**
      * Index method - List tickets with filters
@@ -376,14 +362,17 @@ class TicketsController extends AppController
     /**
      * Convert ticket to compra
      *
+     * REFACTORED: Business logic moved to TicketService::convertToCompra()
+     *
      * @param int|null $id Ticket id
-     * @return \Cake\Http\Response|null Redirects to compra view
+     * @return \Cake\Http\Response|null Redirects to tickets index
      */
     public function convertToCompra($id = null)
     {
         $this->request->allowMethod(['post']);
 
         $user = $this->Authentication->getIdentity();
+
         // Allow admin and agent to convert tickets
         $allowedRoles = ['admin', 'agent'];
         if (!$user || !in_array($user->role, $allowedRoles)) {
@@ -392,52 +381,21 @@ class TicketsController extends AppController
         }
 
         try {
+            // Load ticket with necessary associations
             $ticket = $this->Tickets->get($id, [
                 'contain' => ['TicketComments', 'Attachments']
             ]);
 
-            $systemConfig = $this->viewBuilder()->getVar('systemConfig');
-            $comprasService = new \App\Service\ComprasService($systemConfig);
-
-            // Create compra without assignee (will be assigned in Compras module)
-            $compra = $comprasService->createFromTicket($ticket);
+            // Perform conversion via service (handles all business logic)
+            $compra = $this->ticketService->convertToCompra(
+                $ticket,
+                (int) $user->id,
+                $this->comprasService
+            );
 
             if ($compra) {
-
-                $ticket->status = 'convertido';
-                $ticket->resolved_at = new \Cake\I18n\DateTime();
-
-                $ticketCommentsTable = $this->fetchTable('TicketComments');
-                $ticketCommentsTable->save($ticketCommentsTable->newEntity([
-                    'ticket_id' => $ticket->id,
-                    'user_id' => $user->id,
-                    'comment_type' => 'internal',
-                    'body' => "Ticket convertido a Compra",
-                    'is_system_comment' => true,
-                    'sent_as_email' => false,
-                ]));
-
-                $ticketHistoryTable = $this->fetchTable('TicketHistory');
-                $ticketHistoryTable->save($ticketHistoryTable->newEntity([
-                    'ticket_id' => $ticket->id,
-                    'changed_by' => $user->id,
-                    'field_name' => 'converted_to_compra',
-                    'old_value' => null,
-                    'new_value' => $compra->compra_number,
-                    'description' => "Convertido a Compra #{$compra->compra_number}",
-                ]));
-                
-                $this->Tickets->save($ticket);
-                $comprasService->copyTicketData($ticket, $compra);
-
-                $this->Flash->success(__(
-                    'Ticket convertido exitosamente a Compra'
-                ));
-
-                return $this->redirect([
-                    'controller' => 'Tickets',
-                    'action' => 'index',
-                ]);
+                $this->Flash->success(__('Ticket convertido exitosamente a Compra'));
+                return $this->redirect(['controller' => 'Tickets', 'action' => 'index']);
             }
 
             $this->Flash->error(__('Error al convertir ticket a compra.'));

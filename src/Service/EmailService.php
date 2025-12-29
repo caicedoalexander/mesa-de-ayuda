@@ -53,6 +53,7 @@ class EmailService
         } else {
             // Fallback to DB query with cache
             try {
+                
                 $systemTitle = \Cake\Cache\Cache::remember('system_title', function () {
                     $settingsTable = $this->fetchTable('SystemSettings');
                     $setting = $settingsTable->find()
@@ -92,43 +93,16 @@ class EmailService
      */
     public function sendStatusChangeNotification($ticket, string $oldStatus, string $newStatus): bool
     {
-        try {
-            // Load ticket with requester and assignee
-            $ticketsTable = $this->fetchTable('Tickets');
-            $ticket = $ticketsTable->get($ticket->id, contain: ['Requesters', 'Assignees']);
+        // Load ticket with associations to get assignee
+        $ticketsTable = $this->fetchTable('Tickets');
+        $ticket = $ticketsTable->get($ticket->id, contain: ['Requesters', 'Assignees']);
 
-            // Use unified status change template
-            $template = $this->getTemplate('ticket_estado');
-
-            if (!$template) {
-                Log::error('Email template not found: ticket_estado');
-                return false;
-            }
-
-            // Replace variables
-            $variables = array_merge($this->getSystemVariables(), [
-                'ticket_number' => $ticket->ticket_number,
-                'subject' => $ticket->subject,
-                'requester_name' => $ticket->requester->name,
-                'old_status' => $this->renderer->getStatusLabel($oldStatus),
-                'new_status' => $this->renderer->getStatusLabel($newStatus),
-                'assignee_name' => $ticket->assignee ? $ticket->assignee->name : 'No asignado',
-                'updated_date' => $this->renderer->formatDate($ticket->modified),
-                'ticket_url' => $this->renderer->getTicketUrl($ticket->id),
-            ]);
-
-            $subject = $this->replaceVariables($template->subject, $variables);
-            $body = $this->replaceVariables($template->body_html, $variables);
-
-            // Send email to requester
-            return $this->sendEmail($ticket->requester->email, $subject, $body);
-        } catch (\Exception $e) {
-            Log::error('Failed to send status change notification', [
-                'ticket_id' => $ticket->id,
-                'error' => $e->getMessage(),
-            ]);
-            return false;
-        }
+        return $this->sendGenericTemplateEmail('ticket', 'ticket_estado', $ticket, [
+            'old_status' => $this->renderer->getStatusLabel($oldStatus),
+            'new_status' => $this->renderer->getStatusLabel($newStatus),
+            'assignee_name' => $ticket->assignee ? $ticket->assignee->name : 'No asignado',
+            'updated_date' => $this->renderer->formatDate($ticket->modified),
+        ]);
     }
 
     /**
@@ -499,56 +473,22 @@ class EmailService
      */
     public function sendPqrsStatusChangeNotification($pqrs, string $oldStatus, string $newStatus): bool
     {
-        try {
-            // Get template from database
-            $template = $this->getTemplate('pqrs_estado');
-            if (!$template) {
-                Log::error('Email template not found: pqrs_estado');
-                return false;
+        // Build assignee info if there's an assignee
+        $assigneeInfo = '';
+        if (!empty($pqrs->assignee_id)) {
+            $pqrsTable = $this->fetchTable('Pqrs');
+            $pqrsWithAssignee = $pqrsTable->get($pqrs->id, contain: ['Assignees']);
+            if ($pqrsWithAssignee->assignee) {
+                $assigneeInfo = "<p><strong>Asignado a:</strong> {$pqrsWithAssignee->assignee->name}</p>";
             }
-
-            // Build assignee info if there's an assignee
-            $assigneeInfo = '';
-            if (!empty($pqrs->assignee_id)) {
-                $pqrsTable = $this->fetchTable('Pqrs');
-                $pqrsWithAssignee = $pqrsTable->get($pqrs->id, contain: ['Assignees']);
-                if ($pqrsWithAssignee->assignee) {
-                    $assigneeInfo = "<p><strong>Asignado a:</strong> {$pqrsWithAssignee->assignee->name}</p>";
-                }
-            }
-
-            // Replace variables in subject
-            $subject = str_replace('{{pqrs_number}}', $pqrs->pqrs_number, $template->subject);
-
-            // Replace variables in body
-            $body = str_replace([
-                '{{pqrs_number}}',
-                '{{pqrs_type}}',
-                '{{subject}}',
-                '{{requester_name}}',
-                '{{old_status}}',
-                '{{new_status}}',
-                '{{assignee_info}}',
-                '{{system_title}}',
-            ], [
-                $pqrs->pqrs_number,
-                $this->renderer->getTypeLabel($pqrs->type),
-                $pqrs->subject,
-                $pqrs->requester_name,
-                $this->renderer->getStatusLabel($oldStatus),
-                $this->renderer->getStatusLabel($newStatus),
-                $assigneeInfo,
-                'Mesa de Ayuda',
-            ], $template->body_html);
-
-            return $this->sendEmail($pqrs->requester_email, $subject, $body);
-        } catch (\Exception $e) {
-            Log::error('Failed to send PQRS status change notification', [
-                'pqrs_id' => $pqrs->id,
-                'error' => $e->getMessage(),
-            ]);
-            return false;
         }
+
+        return $this->sendGenericTemplateEmail('pqrs', 'pqrs_estado', $pqrs, [
+            'old_status' => $this->renderer->getStatusLabel($oldStatus),
+            'new_status' => $this->renderer->getStatusLabel($newStatus),
+            'assignee_info' => $assigneeInfo,
+            'system_title' => 'Mesa de Ayuda',
+        ]);
     }
 
     /**
@@ -646,7 +586,7 @@ class EmailService
      * @param string $newStatus New status
      * @return bool Success status
      */
-    public function sendPqrsResponseNotification($pqrs, $comment, string $oldStatus, string $newStatus): bool
+    public function sendPqrsResponseNotification($pqrs, $comment, string $oldStatus, string $newStatus, array $additionalTo = [], array $additionalCc = []): bool
     {
         try {
             // Load entities with associations
@@ -716,8 +656,8 @@ class EmailService
             $subject = $this->replaceVariables($template->subject, $variables);
             $body = $this->replaceVariables($template->body_html, $variables);
 
-            // Send email to requester with attachments
-            return $this->sendEmail($pqrs->requester_email, $subject, $body, $commentAttachments);
+            // Send email to requester with attachments and additional recipients
+            return $this->sendEmail($pqrs->requester_email, $subject, $body, $commentAttachments, $additionalTo, $additionalCc);
         } catch (\Exception $e) {
             Log::error('Failed to send PQRS response notification', [
                 'pqrs_id' => $pqrs->id,
@@ -772,39 +712,91 @@ class EmailService
      */
     public function sendCompraStatusChangeNotification($compra, string $oldStatus, string $newStatus): bool
     {
+        // Load compra with associations to get assignee
+        $comprasTable = $this->fetchTable('Compras');
+        $compra = $comprasTable->get($compra->id, contain: ['Requesters', 'Assignees']);
+
+        return $this->sendGenericTemplateEmail('compra', 'compra_estado', $compra, [
+            'old_status' => $this->renderer->getStatusLabel($oldStatus),
+            'new_status' => $this->renderer->getStatusLabel($newStatus),
+            'assignee_name' => $compra->assignee ? $compra->assignee->name : 'No asignado',
+            'updated_date' => $this->renderer->formatDate($compra->modified),
+        ]);
+    }
+
+    /**
+     * Send Compra new comment notification
+     *
+     * @param \App\Model\Entity\Compra $compra Compra entity
+     * @param \App\Model\Entity\ComprasComment $comment Comment entity
+     * @return bool Success status
+     */
+    public function sendCompraCommentNotification($compra, $comment): bool
+    {
         try {
-            // Load compra with requester and assignee
+            // Only send for public comments
+            if ($comment->comment_type !== 'public') {
+                return true;
+            }
+
+            // Load entities with associations
             $comprasTable = $this->fetchTable('Compras');
-            $compra = $comprasTable->get($compra->id, contain: ['Requesters', 'Assignees']);
+            $compra = $comprasTable->get($compra->id, contain: ['Requesters', 'ComprasAttachments']);
 
-            // Get template
-            $template = $this->getTemplate('compra_estado');
+            $commentsTable = $this->fetchTable('ComprasComments');
+            $comment = $commentsTable->get($comment->id, contain: ['Users']);
 
+            // Get comment attachments (non-inline only)
+            $commentAttachments = [];
+            if (!empty($compra->compras_attachments)) {
+                foreach ($compra->compras_attachments as $attachment) {
+                    if ($attachment->compras_comment_id === $comment->id && !$attachment->is_inline) {
+                        $commentAttachments[] = $attachment;
+                    }
+                }
+            }
+
+            // Get template from database
+            $template = $this->getTemplate('compra_comentario');
             if (!$template) {
-                Log::error('Email template not found: compra_estado');
+                Log::error('Email template not found: compra_comentario');
                 return false;
             }
 
-            // Replace variables
+            $author = $comment->user ? $comment->user->name : 'Sistema';
+
+            // Get agent profile image URL
+            $userHelper = new \App\View\Helper\UserHelper($this->getView());
+            $agentProfileImageUrl = $comment->user && $comment->user->profile_image
+                ? $userHelper->profileImage($comment->user->profile_image)
+                : $userHelper->defaultAvatar();
+
+            // Convert relative URL to absolute URL for email
+            $agentProfileImageUrl = $this->getAbsoluteUrl($agentProfileImageUrl);
+
+            // Replace variables in subject and body
             $variables = array_merge($this->getSystemVariables(), [
                 'compra_number' => $compra->compra_number,
                 'subject' => $compra->subject,
                 'requester_name' => $compra->requester->name,
-                'old_status' => $this->renderer->getStatusLabel($oldStatus),
-                'new_status' => $this->renderer->getStatusLabel($newStatus),
-                'assignee_name' => $compra->assignee ? $compra->assignee->name : 'No asignado',
-                'updated_date' => $this->renderer->formatDate($compra->modified),
+                'comment_author' => $author,
+                'comment_body' => $comment->body,
+                'attachments_list' => $this->renderer->renderAttachmentsHtml($commentAttachments),
                 'compra_url' => $this->getCompraUrl($compra->id),
+                'system_title' => 'Sistema de Compras',
+                'agent_profile_image_url' => $agentProfileImageUrl,
+                'agent_name' => $author,
             ]);
 
             $subject = $this->replaceVariables($template->subject, $variables);
             $body = $this->replaceVariables($template->body_html, $variables);
 
-            // Send email to requester
-            return $this->sendEmail($compra->requester->email, $subject, $body);
+            // Send email to requester with attachments
+            return $this->sendEmail($compra->requester->email, $subject, $body, $commentAttachments);
         } catch (\Exception $e) {
-            Log::error('Failed to send compra status change notification', [
+            Log::error('Failed to send compra comment notification', [
                 'compra_id' => $compra->id,
+                'comment_id' => $comment->id,
                 'error' => $e->getMessage(),
             ]);
             return false;
@@ -823,7 +815,7 @@ class EmailService
      * @param string $newStatus New status
      * @return bool Success status
      */
-    public function sendCompraResponseNotification($compra, $comment, string $oldStatus, string $newStatus): bool
+    public function sendCompraResponseNotification($compra, $comment, string $oldStatus, string $newStatus, array $additionalTo = [], array $additionalCc = []): bool
     {
         try {
             // Load entities with associations
@@ -893,8 +885,8 @@ class EmailService
             $subject = $this->replaceVariables($template->subject, $variables);
             $body = $this->replaceVariables($template->body_html, $variables);
 
-            // Send email to requester with attachments
-            return $this->sendEmail($compra->requester->email, $subject, $body, $commentAttachments);
+            // Send email to requester with attachments and additional recipients
+            return $this->sendEmail($compra->requester->email, $subject, $body, $commentAttachments, $additionalTo, $additionalCc);
         } catch (\Exception $e) {
             Log::error('Failed to send compra response notification', [
                 'compra_id' => $compra->id,

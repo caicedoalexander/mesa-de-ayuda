@@ -13,18 +13,17 @@ $priorityColors = ['#6c757d', '#0dcaf0', '#ffc107', '#dc3545'];
 $chartId = 'priorityChart' . uniqid();
 ?>
 
-<div class="neuro-card neuro-chart-container h-100" data-animate-in="fade-up" data-delay="500">
-    <div class="neuro-chart-header">
-        <h5 class="neuro-chart-title">
-            <i class="bi bi-exclamation-triangle me-2" style="color: var(--neuro-warning);"></i>
+<div class="modern-card chart-card h-100" data-animate="fade-up" data-delay="500">
+    <div class="chart-header">
+        <h5 class="chart-title">
             Por Prioridad
         </h5>
     </div>
-    <div class="neuro-chart-wrapper" data-chart-loader>
-        <div class="neuro-chart-skeleton">
-            <div class="skeleton-circle"></div>
+    <div class="chart-wrapper" data-chart-loader>
+        <div class="chart-skeleton">
+            <div class="skeleton-spinner"></div>
         </div>
-        <canvas id="<?= $chartId ?>" height="250" style="opacity: 0; transition: opacity 0.5s ease;"></canvas>
+        <canvas id="<?= $chartId ?>" height="250" style="opacity: 0;"></canvas>
     </div>
 </div>
 

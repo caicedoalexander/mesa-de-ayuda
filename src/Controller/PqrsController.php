@@ -5,6 +5,7 @@ namespace App\Controller;
 
 use App\Controller\Traits\StatisticsControllerTrait;
 use App\Controller\Traits\TicketSystemControllerTrait;
+use App\Controller\Traits\ServiceInitializerTrait;
 use App\Service\PqrsService;
 use App\Service\StatisticsService;
 use App\Service\ResponseService;
@@ -23,6 +24,8 @@ class PqrsController extends AppController
 {
     use StatisticsControllerTrait;
     use TicketSystemControllerTrait;
+    use ServiceInitializerTrait;
+
     private PqrsService $pqrsService;
     private ResponseService $responseService;
     private StatisticsService $statisticsService;
@@ -31,6 +34,8 @@ class PqrsController extends AppController
      * beforeFilter callback
      *
      * Allow public access to create action and restrict access by role
+     *
+     * REFACTORED: Uses AppController::redirectByRole() to eliminate duplicated code
      *
      * @param \Cake\Event\EventInterface<\Cake\Controller\Controller> $event Event
      * @return \Cake\Http\Response|null|void
@@ -42,28 +47,14 @@ class PqrsController extends AppController
         // Allow public access to create action (form submission)
         $this->Authentication->addUnauthenticatedActions(['create', 'success']);
 
-        $user = $this->Authentication->getIdentity();
-
-        if ($user) {
-            $role = $user->get('role');
-
-            // Redirect compras users to their module
-            if ($role === 'compras') {
-                $this->Flash->error(__('No tienes permiso para acceder al módulo de PQRS.'));
-                return $this->redirect(['controller' => 'Compras', 'action' => 'index']);
-            }
-
-            // Redirect agent and requester users to Tickets module
-            // (servicio_cliente and admin should have access to PQRS)
-            if (in_array($role, ['agent', 'requester'])) {
-                $this->Flash->error(__('No tienes permiso para acceder al módulo de PQRS.'));
-                return $this->redirect(['controller' => 'Tickets', 'action' => 'index']);
-            }
-        }
+        // Allow admin and servicio_cliente roles for PQRS module
+        return $this->redirectByRole(['admin', 'servicio_cliente'], 'PQRS');
     }
 
     /**
      * Initialize
+     *
+     * REFACTORED: Uses ServiceInitializerTrait for clean service initialization
      *
      * @return void
      */
@@ -71,13 +62,8 @@ class PqrsController extends AppController
     {
         parent::initialize();
 
-        // Get cached system config from parent (set in AppController::beforeFilter)
-        $systemConfig = $this->viewBuilder()->getVar('systemConfig');
-
-        // Initialize services with cached config to avoid redundant DB queries
-        $this->pqrsService = new PqrsService($systemConfig);
-        $this->statisticsService = new StatisticsService();
-        $this->responseService = new ResponseService($systemConfig);
+        // Initialize all PQRS services using trait
+        $this->initializePqrsServices();
     }
 
     /**
