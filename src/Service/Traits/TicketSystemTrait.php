@@ -20,9 +20,7 @@ trait TicketSystemTrait
     /**
      * Change entity status
      *
-     * REFACTORED: Now supports all 3 entity types (Ticket, PQRS, Compra)
-     *
-     * @param \Cake\Datasource\EntityInterface $entity Ticket, PQRS, or Compra entity
+     * @param \Cake\Datasource\EntityInterface $entity Ticket or PQRS entity
      * @param string $newStatus New status
      * @param int|null $userId User making the change
      * @param string|null $comment Optional comment
@@ -59,10 +57,10 @@ trait TicketSystemTrait
             return false;
         }
 
-        // Determine entity type from source
-        $entityType = $this->getEntityTypeFromSource($entity->getSource());
-        $historyTable = $this->getHistoryTableName($entityType);
-        $foreignKey = $this->getForeignKeyName($entityType);
+        // Determine history table and foreign key
+        $isPqrs = $entity->getSource() === 'Pqrs';
+        $historyTable = $isPqrs ? 'PqrsHistory' : 'TicketHistory';
+        $foreignKey = $isPqrs ? 'pqrs_id' : 'ticket_id';
 
         // Log the change
         $this->logHistory(
@@ -78,16 +76,16 @@ trait TicketSystemTrait
 
         // Add system comment (always internal)
         if ($comment) {
-            $this->addComment($entity->id, $userId, $comment, 'internal', true, $entityType);
+            $this->addComment($entity->id, $userId, $comment, 'internal', true, false, $isPqrs);
         } else {
             $systemComment = "El estado cambió de '{$oldStatus}' a '{$newStatus}'";
-            $this->addComment($entity->id, $userId, $systemComment, 'internal', true, $entityType);
+            $this->addComment($entity->id, $userId, $systemComment, 'internal', true, false, $isPqrs);
         }
 
         // Send notifications ONLY if requested
         // NOTE: WhatsApp is ONLY sent on entity creation, not status changes
         if ($sendNotifications) {
-            $method = $this->getStatusChangeNotificationMethod($entityType);
+            $method = $isPqrs ? 'sendPqrsStatusChangeNotification' : 'sendStatusChangeNotification';
 
             // Send Email ONLY (WhatsApp removed - only sent on creation)
             try {
@@ -103,18 +101,13 @@ trait TicketSystemTrait
     /**
      * Add comment to entity
      *
-     * REFACTORED: Now supports all 3 entity types using string instead of bool
-     *
-     * NOTE: This method does NOT send notifications. Notifications are handled
-     * by ResponseService via NotificationDispatcherTrait for proper coordination
-     * of comment + status change + file uploads.
-     *
      * @param int $entityId Entity ID
      * @param int|null $userId User ID (null for public/anonymous comments)
      * @param string $body Comment body
      * @param string $type 'public' or 'internal'
      * @param bool $isSystem Is this a system-generated comment?
-     * @param string $entityType Entity type: 'ticket', 'pqrs', or 'compra'
+     * @param bool $sendNotifications Whether to send notifications
+     * @param bool $isPqrs Whether this is for PQRS (true) or Ticket (false)
      * @param array|null $emailTo Array of TO recipients [{'name': '...', 'email': '...'}]
      * @param array|null $emailCc Array of CC recipients [{'name': '...', 'email': '...'}]
      * @return \Cake\Datasource\EntityInterface|null Created comment or null
@@ -125,14 +118,15 @@ trait TicketSystemTrait
         string $body,
         string $type = 'public',
         bool $isSystem = false,
-        string $entityType, // REQUIRED: 'ticket', 'pqrs', or 'compra'
+        bool $sendNotifications = false,
+        bool $isPqrs = false,
         ?array $emailTo = null,
         ?array $emailCc = null
     ): ?\Cake\Datasource\EntityInterface {
-        $commentsTableName = $this->getCommentsTableName($entityType);
+        $commentsTableName = $isPqrs ? 'PqrsComments' : 'TicketComments';
         $commentsTable = $this->fetchTable($commentsTableName);
 
-        $entityTableName = $this->getEntityTableName($entityType);
+        $entityTableName = $isPqrs ? 'Pqrs' : 'Tickets';
         $entityTable = $this->fetchTable($entityTableName);
         $entity = $entityTable->get($entityId);
 
@@ -156,13 +150,11 @@ trait TicketSystemTrait
             }
         }
 
-        // Set foreign key based on entity type
-        $foreignKey = $this->getForeignKeyName($entityType);
-        $data[$foreignKey] = $entityId;
-
-        // Add sent_as_email field for PQRS and Compras
-        if ($entityType === 'pqrs' || $entityType === 'compra') {
+        if ($isPqrs) {
+            $data['pqrs_id'] = $entityId;
             $data['sent_as_email'] = false;
+        } else {
+            $data['ticket_id'] = $entityId;
         }
 
         $comment = $commentsTable->newEntity($data);
@@ -178,15 +170,26 @@ trait TicketSystemTrait
             $entityTable->save($entity);
         }
 
+        // Only send notifications if explicitly requested
+        // NOTE: WhatsApp is ONLY sent on entity creation, not comments
+        if ($sendNotifications && $type === 'public' && !$isSystem) {
+            $method = $isPqrs ? 'sendPqrsNewCommentNotification' : 'sendNewCommentNotification';
+
+            // Email ONLY (WhatsApp removed - only sent on creation)
+            try {
+                $this->emailService->$method($entity, $comment);
+            } catch (\Exception $e) {
+                Log::error('Failed to send comment email notification: ' . $e->getMessage());
+            }
+        }
+
         return $comment;
     }
 
     /**
      * Assign entity to a user
      *
-     * REFACTORED: Now supports all 3 entity types (Ticket, PQRS, Compra)
-     *
-     * @param \Cake\Datasource\EntityInterface $entity Ticket, PQRS, or Compra entity
+     * @param \Cake\Datasource\EntityInterface $entity Ticket or PQRS entity
      * @param int|null $assigneeId User ID to assign to (null to unassign)
      * @param int|null $userId User making the assignment
      * @return bool Success
@@ -211,10 +214,10 @@ trait TicketSystemTrait
         $oldAssigneeName = $oldAssigneeId ? $usersTable->get($oldAssigneeId)->name : 'Sin asignar';
         $newAssigneeName = $assigneeId ? $usersTable->get($assigneeId)->name : 'Sin asignar';
 
-        // Determine entity type from source
-        $entityType = $this->getEntityTypeFromSource($entity->getSource());
-        $historyTable = $this->getHistoryTableName($entityType);
-        $foreignKey = $this->getForeignKeyName($entityType);
+        // Determine history table and foreign key
+        $isPqrs = $entity->getSource() === 'Pqrs';
+        $historyTable = $isPqrs ? 'PqrsHistory' : 'TicketHistory';
+        $foreignKey = $isPqrs ? 'pqrs_id' : 'ticket_id';
 
         // Log the change
         $this->logHistory(
@@ -230,7 +233,7 @@ trait TicketSystemTrait
 
         // Add system comment
         $systemComment = "Asignado a {$newAssigneeName}";
-        $this->addComment($entity->id, $userId, $systemComment, 'internal', true, $entityType);
+        $this->addComment($entity->id, $userId, $systemComment, 'internal', true, false, $isPqrs);
 
         return true;
     }
@@ -238,9 +241,7 @@ trait TicketSystemTrait
     /**
      * Change entity priority
      *
-     * REFACTORED: Now supports all 3 entity types (Ticket, PQRS, Compra)
-     *
-     * @param \Cake\Datasource\EntityInterface $entity Ticket, PQRS, or Compra entity
+     * @param \Cake\Datasource\EntityInterface $entity Ticket or PQRS entity
      * @param string $newPriority New priority
      * @param int|null $userId User making the change
      * @return bool Success
@@ -264,10 +265,10 @@ trait TicketSystemTrait
             return false;
         }
 
-        // Determine entity type from source
-        $entityType = $this->getEntityTypeFromSource($entity->getSource());
-        $historyTable = $this->getHistoryTableName($entityType);
-        $foreignKey = $this->getForeignKeyName($entityType);
+        // Determine history table and foreign key
+        $isPqrs = $entity->getSource() === 'Pqrs';
+        $historyTable = $isPqrs ? 'PqrsHistory' : 'TicketHistory';
+        $foreignKey = $isPqrs ? 'pqrs_id' : 'ticket_id';
 
         // Log the change
         $this->logHistory(
@@ -283,7 +284,7 @@ trait TicketSystemTrait
 
         // Add system comment
         $systemComment = "Prioridad cambiada de '{$oldPriority}' a '{$newPriority}'";
-        $this->addComment($entity->id, $userId, $systemComment, 'internal', true, $entityType);
+        $this->addComment($entity->id, $userId, $systemComment, 'internal', true, false, $isPqrs);
 
         return true;
     }
@@ -320,177 +321,4 @@ trait TicketSystemTrait
             $historyTable->save($history);
         }
     }
-
-    /**
-     * Helper methods for entity type mapping
-     * These methods provide consistent naming across all 3 entity types
-     */
-
-    /**
-     * Get entity type from table source name
-     *
-     * @param string $source Source name (Tickets, Pqrs, Compras)
-     * @return string Entity type (ticket, pqrs, compra)
-     */
-    private function getEntityTypeFromSource(string $source): string
-    {
-        return match ($source) {
-            'Tickets' => 'ticket',
-            'Pqrs' => 'pqrs',
-            'Compras' => 'compra',
-            default => throw new \InvalidArgumentException("Unknown source: {$source}"),
-        };
-    }
-
-    /**
-     * Get entity table name from entity type
-     *
-     * @param string $entityType Entity type (ticket, pqrs, compra)
-     * @return string Table name
-     */
-    private function getEntityTableName(string $entityType): string
-    {
-        return match ($entityType) {
-            'ticket' => 'Tickets',
-            'pqrs' => 'Pqrs',
-            'compra' => 'Compras',
-            default => throw new \InvalidArgumentException("Unknown entity type: {$entityType}"),
-        };
-    }
-
-    /**
-     * Get comments table name from entity type
-     *
-     * @param string $entityType Entity type (ticket, pqrs, compra)
-     * @return string Comments table name
-     */
-    private function getCommentsTableName(string $entityType): string
-    {
-        return match ($entityType) {
-            'ticket' => 'TicketComments',
-            'pqrs' => 'PqrsComments',
-            'compra' => 'ComprasComments',
-            default => throw new \InvalidArgumentException("Unknown entity type: {$entityType}"),
-        };
-    }
-
-    /**
-     * Get history table name from entity type
-     *
-     * @param string $entityType Entity type (ticket, pqrs, compra)
-     * @return string History table name
-     */
-    private function getHistoryTableName(string $entityType): string
-    {
-        return match ($entityType) {
-            'ticket' => 'TicketHistory',
-            'pqrs' => 'PqrsHistory',
-            'compra' => 'ComprasHistory',
-            default => throw new \InvalidArgumentException("Unknown entity type: {$entityType}"),
-        };
-    }
-
-    /**
-     * Get foreign key name from entity type
-     *
-     * @param string $entityType Entity type (ticket, pqrs, compra)
-     * @return string Foreign key name
-     */
-    private function getForeignKeyName(string $entityType): string
-    {
-        return match ($entityType) {
-            'ticket' => 'ticket_id',
-            'pqrs' => 'pqrs_id',
-            'compra' => 'compra_id',
-            default => throw new \InvalidArgumentException("Unknown entity type: {$entityType}"),
-        };
-    }
-
-    /**
-     * Mark entity as converted to another entity type
-     *
-     * Generic method to handle conversion workflow:
-     * 1. Update source entity status to 'convertido'
-     * 2. Set resolved_at timestamp
-     * 3. Save entity
-     * 4. Add internal system comment
-     * 5. Log to history
-     *
-     * @param string $sourceType Source entity type ('ticket' or 'compra')
-     * @param \Cake\Datasource\EntityInterface $sourceEntity Source entity being converted
-     * @param string $targetType Target entity type ('ticket' or 'compra')
-     * @param \Cake\Datasource\EntityInterface $targetEntity Newly created target entity
-     * @param int $userId User performing the conversion
-     * @return void
-     */
-    protected function markAsConverted(
-        string $sourceType,
-        \Cake\Datasource\EntityInterface $sourceEntity,
-        string $targetType,
-        \Cake\Datasource\EntityInterface $targetEntity,
-        int $userId
-    ): void {
-        $sourceTableName = $this->getEntityTableName($sourceType);
-        $sourceTable = $this->fetchTable($sourceTableName);
-
-        // Update source entity status
-        $sourceEntity->status = 'convertido';
-        $sourceEntity->resolved_at = new \Cake\I18n\DateTime();
-        $sourceTable->save($sourceEntity);
-
-        // Get entity numbers for messages
-        $sourceNumber = $this->getEntityNumber($sourceType, $sourceEntity);
-        $targetNumber = $this->getEntityNumber($targetType, $targetEntity);
-
-        // Get readable type names
-        $sourceTypeName = ucfirst($sourceType);
-        $targetTypeName = ucfirst($targetType);
-
-        // Add internal system comment
-        $this->addComment(
-            $sourceEntity->id,
-            $userId,
-            "{$sourceTypeName} convertido a {$targetTypeName} #{$targetNumber}",
-            'internal',
-            true,       // isSystem
-            $sourceType // entityType
-        );
-
-        // Log to history
-        $historyTable = $this->getHistoryTableName($sourceType);
-        $foreignKey = $this->getForeignKeyName($sourceType);
-
-        $this->logHistory(
-            $historyTable,
-            $foreignKey,
-            $sourceEntity->id,
-            "converted_to_{$targetType}",
-            null,
-            $targetNumber,
-            $userId,
-            "Convertido a {$targetTypeName} #{$targetNumber}"
-        );
-    }
-
-    /**
-     * NOTE: getEntityNumber() method is provided by GenericAttachmentTrait
-     * to avoid duplication.
-     */
-
-    /**
-     * Get status change notification method name
-     *
-     * @param string $entityType Entity type (ticket, pqrs, compra)
-     * @return string Email service method name
-     */
-    private function getStatusChangeNotificationMethod(string $entityType): string
-    {
-        return match ($entityType) {
-            'ticket' => 'sendStatusChangeNotification',
-            'pqrs' => 'sendPqrsStatusChangeNotification',
-            'compra' => 'sendCompraStatusChangeNotification',
-            default => throw new \InvalidArgumentException("Unknown entity type: {$entityType}"),
-        };
-    }
-
 }

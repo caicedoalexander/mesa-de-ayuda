@@ -44,6 +44,9 @@
     <!-- Marquee Text Animation -->
     <?= $this->Html->script('marquee') ?>
 
+    <!-- Statistics Animations -->
+    <?= $this->Html->script('statistics-animations') ?>
+
     <?= $this->fetch('meta') ?>
     <?= $this->fetch('css') ?>
     <?= $this->fetch('script') ?>

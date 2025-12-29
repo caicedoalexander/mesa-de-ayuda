@@ -25,21 +25,15 @@
 $this->assign('title', 'Estadísticas de Compras');
 ?>
 
-<!-- Include Modern Statistics CSS -->
-<?= $this->Html->css('modern-statistics') ?>
-
 <!-- Include Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 
-<!-- Include Modern Statistics JavaScript -->
-<?= $this->Html->script('modern-statistics') ?>
-
 <div class="statistics-container">
     <!-- Header -->
-    <div class="mb-4">
-        <h1 class="stats-title">Estadísticas de Compras</h1>
-        <p class="stats-subtitle">Gestión de compras y procurement</p>
+    <div class="mb-5">
+        <h2 class="fw-normal neuro-text-primary"><i class="bi bi-bar-chart me-2" style="color: var(--neuro-success);"></i>Estadísticas de Compras</h2>
+        <p class="neuro-text-secondary fw-light">Vista general del sistema de gestión de compras</p>
     </div>
 
     <!-- Date Range Filter (commented out for now) -->
@@ -69,21 +63,21 @@ $this->assign('title', 'Estadísticas de Compras');
     ]) ?>
 
     <!-- Performance Metric -->
-    <div class="row mb-4">
+    <div class="row mb-5">
         <div class="col-md-12">
-            <div class="modern-card accent-gradient kpi-card" data-animate="fade-up" data-delay="700">
-                <div class="kpi-icon-wrapper">
-                    <i class="bi bi-speedometer kpi-icon text-blue"></i>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-speedometer text-primary" style="font-size: 2.5rem;"></i>
+                    <h3 class="mt-2 mb-0"><?= $avgResolutionDays ?> días</h3>
+                    <p class="text-muted mb-0 fw-light">Tiempo Promedio de Resolución</p>
+                    <small class="text-muted">(<?= $avgResolutionHours ?> horas)</small>
                 </div>
-                <h3 class="kpi-number mb-2"><?= $avgResolutionDays ?> días</h3>
-                <p class="kpi-label mb-1">Tiempo Promedio de Resolución</p>
-                <small style="color: var(--gray-500); font-size: 0.75rem;">(<?= $avgResolutionHours ?> horas)</small>
             </div>
         </div>
     </div>
 
     <!-- Charts Row -->
-    <div class="row g-3 mb-4">
+    <div class="row mb-5">
         <!-- Status Chart -->
         <div class="col-md-4">
             <?= $this->element('shared/statistics/status_chart', [

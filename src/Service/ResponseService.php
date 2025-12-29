@@ -96,10 +96,11 @@ class ResponseService
                     $userId,
                     $commentBody,
                     $commentType,
-                    false,     // isSystem
-                    'ticket',  // entityType
-                    $emailTo,  // email_to
-                    $emailCc   // email_cc
+                    false,
+                    false, // Don't send notifications yet
+                    false, // isPqrs
+                    $emailTo, // email_to
+                    $emailCc  // email_cc
                 );
             } elseif ($type === 'compra') {
                 $comment = $this->comprasService->addComment(
@@ -107,10 +108,10 @@ class ResponseService
                     $userId,
                     $commentBody,
                     $commentType,
-                    false,     // isSystem
-                    'compra',  // entityType
-                    $emailTo,  // email_to
-                    $emailCc   // email_cc
+                    false,
+                    false, // Don't send notifications yet
+                    $emailTo, // email_to
+                    $emailCc  // email_cc
                 );
             } else {
                 $comment = $this->pqrsService->addComment(
@@ -118,10 +119,11 @@ class ResponseService
                     $userId,
                     $commentBody,
                     $commentType,
-                    false,     // isSystem
-                    'pqrs',    // entityType
-                    $emailTo,  // email_to
-                    $emailCc   // email_cc
+                    false,
+                    false, // Don't send notifications yet
+                    true,  // isPqrs
+                    $emailTo, // email_to
+                    $emailCc  // email_cc
                 );
             }
 
@@ -213,11 +215,6 @@ class ResponseService
      *
      * NOTE: WhatsApp notifications are ONLY sent on entity creation (not here).
      * Only email notifications are sent for comments and status changes.
-     *
-     * Notification Logic:
-     * - Comment + Status Change → 'response' (unified notification)
-     * - Comment only → 'comment' (independent notification)
-     * - Status Change only → 'status_change' (independent notification)
      */
     private function sendNotifications(
         string $type,
@@ -233,8 +230,8 @@ class ResponseService
     ): void {
         $hasPublicComment = $hasComment && $commentType === 'public';
 
-        // Case 1: Comment + Status Change → Unified 'response' notification
-        if ($hasPublicComment && $hasStatusChange && $comment) {
+        if ($hasPublicComment && $comment) {
+            // Unified notification: comment + status change (EMAIL ONLY)
             $this->dispatchUpdateNotifications($type, $entity, 'response', [
                 'comment' => $comment,
                 'old_status' => $oldStatus,
@@ -242,15 +239,8 @@ class ResponseService
                 'additional_to' => $emailTo,
                 'additional_cc' => $emailCc,
             ]);
-        }
-        // Case 2: Comment only → Independent 'comment' notification
-        elseif ($hasPublicComment && $comment) {
-            $this->dispatchUpdateNotifications($type, $entity, 'comment', [
-                'comment' => $comment,
-            ]);
-        }
-        // Case 3: Status Change only → Independent 'status_change' notification
-        elseif ($hasStatusChange) {
+        } elseif ($hasStatusChange) {
+            // Only status change notification (EMAIL ONLY)
             $this->dispatchUpdateNotifications($type, $entity, 'status_change', [
                 'old_status' => $oldStatus,
                 'new_status' => $newStatus,

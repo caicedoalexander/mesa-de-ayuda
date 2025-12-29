@@ -22,7 +22,9 @@ use App\Service\WhatsappService;
 class PqrsService
 {
     use LocatorAwareTrait;
-    use \App\Service\Traits\TicketSystemTrait;
+    use \App\Service\Traits\TicketSystemTrait {
+        \App\Service\Traits\TicketSystemTrait::addComment as protected traitAddComment;
+    }
     use \App\Service\Traits\NotificationDispatcherTrait;
     use \App\Service\Traits\GenericAttachmentTrait;
     use \App\Service\Traits\SLAManagementTrait;
@@ -39,6 +41,37 @@ class PqrsService
     {
         $this->emailService = new EmailService($systemConfig);
         $this->whatsappService = new WhatsappService($systemConfig);
+    }
+
+    /**
+     * Add comment to PQRS (wrapper to ensure isPqrs is always true)
+     *
+     * @param int $pqrsId PQRS ID
+     * @param int|null $userId User ID
+     * @param string $body Comment body
+     * @param string $type Comment type
+     * @param bool $isSystem Is system comment
+     * @param bool $sendNotifications Send notifications
+     * @return \Cake\Datasource\EntityInterface|null
+     */
+    public function addComment(
+        int $pqrsId,
+        ?int $userId,
+        string $body,
+        string $type = 'public',
+        bool $isSystem = false,
+        bool $sendNotifications = false
+    ): ?\Cake\Datasource\EntityInterface {
+        // Call trait method with isPqrs = true
+        return $this->traitAddComment(
+            $pqrsId,
+            $userId,
+            $body,
+            $type,
+            $isSystem,
+            $sendNotifications,
+            true  // Always true for PQRS
+        );
     }
 
     /**
@@ -87,20 +120,43 @@ class PqrsService
 
         // Process attachments
         if (!empty($files)) {
-            foreach ($files as $file) {
-                if ($file && $file->getError() === UPLOAD_ERR_OK) {
-                    $result = $this->saveUploadedFile($pqrs, $file, null, null);
-                    if ($result) {
-                        \Cake\Log\Log::info("Attachment saved for PQRS {$pqrs->pqrs_number}: {$result->original_filename}");
-                    }
-                }
-            }
+            $this->processAttachments($pqrs, $files, null, null);
         }
 
         // Send creation notifications (Email + WhatsApp)
         $this->dispatchCreationNotifications('pqrs', $pqrs);
 
         return $pqrs;
+    }
+
+    /**
+     * Process and save attachments
+     *
+     * @param \App\Model\Entity\Pqr $pqrs PQRS entity
+     * @param array $files Uploaded files
+     * @param int|null $commentId Optional comment ID
+     * @param int|null $userId User ID
+     * @return void
+     */
+    private function processAttachments(
+        \App\Model\Entity\Pqr $pqrs,
+        array $files,
+        ?int $commentId = null,
+        ?int $userId = null
+    ): void {
+        $attachmentsTable = $this->fetchTable('PqrsAttachments');
+
+        foreach ($files as $file) {
+            if (!$file || $file->getError() !== UPLOAD_ERR_OK) {
+                continue;
+            }
+
+            // Validate and save file
+            $result = $this->saveUploadedFile($pqrs, $file, $commentId, $userId);
+            if ($result) {
+                \Cake\Log\Log::info("Attachment saved for PQRS {$pqrs->pqrs_number}: {$result->original_filename}");
+            }
+        }
     }
 
     /**
