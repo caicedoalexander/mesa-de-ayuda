@@ -8,6 +8,7 @@ use Google\Service\Gmail;
 use Google\Service\Gmail\Message;
 use Cake\Log\Log;
 use Cake\ORM\Locator\LocatorAwareTrait;
+use App\Utility\SettingsEncryptionTrait;
 
 /**
  * Gmail Service
@@ -22,10 +23,41 @@ use Cake\ORM\Locator\LocatorAwareTrait;
 class GmailService
 {
     use LocatorAwareTrait;
+    use SettingsEncryptionTrait;
 
     private GoogleClient $client;
     private ?Gmail $service = null;
     private array $config;
+
+    /**
+     * Load Gmail configuration from database
+     *
+     * Centralized method to get Gmail config from system settings with automatic decryption.
+     * Used by TicketService, ImportGmailCommand, and any other class needing Gmail access.
+     *
+     * @return array Configuration array with 'client_secret_path' and 'refresh_token'
+     */
+    public static function loadConfigFromDatabase(): array
+    {
+        // Create temporary instance to use traits
+        $instance = new self([]);
+
+        $settingsTable = $instance->fetchTable('SystemSettings');
+        $settings = $settingsTable->find()
+            ->where(['setting_key IN' => ['gmail_refresh_token', 'gmail_client_secret_path']])
+            ->all();
+
+        $config = [];
+        foreach ($settings as $setting) {
+            $key = str_replace('gmail_', '', $setting->setting_key);
+            // Decrypt sensitive values using SettingsEncryptionTrait
+            $config[$key] = $instance->shouldEncrypt($setting->setting_key)
+                ? $instance->decryptSetting($setting->setting_value, $setting->setting_key)
+                : $setting->setting_value;
+        }
+
+        return $config;
+    }
 
     /**
      * Constructor

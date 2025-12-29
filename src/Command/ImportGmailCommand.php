@@ -78,7 +78,7 @@ class ImportGmailCommand extends Command
 
         try {
             // Get Gmail configuration from settings
-            $config = $this->getGmailConfig();
+            $config = GmailService::loadConfigFromDatabase();
 
             if (empty($config['refresh_token'])) {
                 $io->error('Gmail not configured. Please authorize Gmail in Admin Settings.');
@@ -198,30 +198,6 @@ class ImportGmailCommand extends Command
             Log::error('Gmail import fatal error: ' . $e->getMessage());
             return self::CODE_ERROR;
         }
-    }
-
-    /**
-     * Get Gmail configuration from system settings (with automatic decryption)
-     *
-     * @return array<string, string>
-     */
-    private function getGmailConfig(): array
-    {
-        $settingsTable = $this->fetchTable('SystemSettings');
-        $settings = $settingsTable->find()
-            ->where(['setting_key IN' => ['gmail_refresh_token', 'gmail_client_secret_path']])
-            ->all();
-
-        $config = [];
-        foreach ($settings as $setting) {
-            $key = str_replace('gmail_', '', $setting->setting_key);
-            // Decrypt sensitive values
-            $config[$key] = $this->shouldEncrypt($setting->setting_key)
-                ? $this->decryptSetting($setting->setting_value, $setting->setting_key)
-                : $setting->setting_value;
-        }
-
-        return $config;
     }
 
     /**

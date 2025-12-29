@@ -6,46 +6,50 @@
  */
 ?>
 
-<div class="row mb-5">
-    <div class="col-md-12">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-bottom">
-                <h5 class="mb-0 fw-semibold">
-                    <i class="bi bi-alarm"></i> Métricas SLA (3 días)
-                </h5>
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <h3 style="font-size: 0.875rem; font-weight: 600; color: var(--gray-700); margin-bottom: 0.75rem;">
+            Métricas SLA (3 días)
+        </h3>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+        <div class="modern-card kpi-card" style="border-left: 4px solid var(--danger);" data-animate="fade-up" data-delay="400">
+            <div class="kpi-icon-wrapper" style="background: rgba(239, 68, 68, 0.1);">
+                <i class="bi bi-exclamation-triangle-fill kpi-icon text-red"></i>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="text-center p-3 border rounded bg-light">
-                            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 2rem;"></i>
-                            <h4 class="mt-2 mb-0 text-danger"><?= number_format($slaMetrics['breached_count']) ?></h4>
-                            <p class="text-muted mb-0 small">SLA Vencido</p>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="text-center p-3 border rounded bg-light">
-                            <i class="bi bi-hourglass-split text-warning" style="font-size: 2rem;"></i>
-                            <h4 class="mt-2 mb-0 text-warning"><?= number_format($slaMetrics['at_risk_count']) ?></h4>
-                            <p class="text-muted mb-0 small">En Riesgo (< 24h)</p>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="text-center p-3 border rounded bg-light">
-                            <i class="bi bi-clock text-info" style="font-size: 2rem;"></i>
-                            <h4 class="mt-2 mb-0 text-info"><?= number_format($slaMetrics['active_count']) ?></h4>
-                            <p class="text-muted mb-0 small">SLA Activos</p>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="text-center p-3 border rounded bg-light">
-                            <i class="bi bi-check-circle-fill text-success" style="font-size: 2rem;"></i>
-                            <h4 class="mt-2 mb-0 text-success"><?= h($slaMetrics['compliance_rate']) ?>%</h4>
-                            <p class="text-muted mb-0 small">Tasa de Cumplimiento</p>
-                        </div>
-                    </div>
-                </div>
+            <h3 class="kpi-number" data-counter data-target="<?= $slaMetrics['breached_count'] ?>" aria-live="polite">0</h3>
+            <p class="kpi-label mb-0">SLA Vencido</p>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+        <div class="modern-card kpi-card" style="border-left: 4px solid var(--brand-orange);" data-animate="fade-up" data-delay="500">
+            <div class="kpi-icon-wrapper" style="background: rgba(205, 106, 21, 0.1);">
+                <i class="bi bi-hourglass-split kpi-icon text-orange"></i>
             </div>
+            <h3 class="kpi-number" data-counter data-target="<?= $slaMetrics['at_risk_count'] ?>" aria-live="polite">0</h3>
+            <p class="kpi-label mb-0">En Riesgo (< 24h)</p>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+        <div class="modern-card kpi-card" style="border-left: 4px solid var(--info);" data-animate="fade-up" data-delay="600">
+            <div class="kpi-icon-wrapper" style="background: rgba(59, 130, 246, 0.1);">
+                <i class="bi bi-clock kpi-icon text-blue"></i>
+            </div>
+            <h3 class="kpi-number" data-counter data-target="<?= $slaMetrics['active_count'] ?>" aria-live="polite">0</h3>
+            <p class="kpi-label mb-0">SLA Activos</p>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+        <div class="modern-card kpi-card accent-green" data-animate="fade-up" data-delay="700">
+            <div class="kpi-icon-wrapper">
+                <i class="bi bi-check-circle-fill kpi-icon text-green"></i>
+            </div>
+            <h3 class="kpi-number" data-counter data-target="<?= (int)$slaMetrics['compliance_rate'] ?>" aria-live="polite">0</h3>
+            <p class="kpi-label mb-0">Tasa de Cumplimiento %</p>
         </div>
     </div>
 </div>

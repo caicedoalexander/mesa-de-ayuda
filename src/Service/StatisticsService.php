@@ -276,9 +276,6 @@ class StatisticsService
         // Top agents
         $agentPerformance = $this->getAgentPerformance('Pqrs', ['resuelto', 'cerrado'], 5);
 
-        // SLA metrics
-        $slaMetrics = $this->getPqrsSLAMetrics($baseQuery);
-
         return [
             'total_pqrs' => $totalPqrs,
             'total_resolved' => $totalResolved,
@@ -294,7 +291,6 @@ class StatisticsService
             'avg_resolution_hours' => $avgResolutionHours,
             'top_agents' => $agentPerformance['top_agents'],
             'active_agents_count' => $agentPerformance['active_agents_count'],
-            'sla_metrics' => $slaMetrics,
             'date_from' => $parsedFilters['start_date'],
             'date_to' => $parsedFilters['end_date'],
         ];
@@ -417,85 +413,7 @@ class StatisticsService
     }
 
     /**
-     * Get SLA metrics for PQRS (tracks both first response and resolution SLA)
-     *
-     * @param \Cake\ORM\Query $baseQuery Base query with filters applied
-     * @return array SLA metrics
-     */
-    private function getPqrsSLAMetrics($baseQuery): array
-    {
-        $now = new \DateTime();
-        $closedStatuses = ['resuelto', 'cerrado'];
-
-        // First Response SLA metrics
-        $firstResponseBreachedQuery = clone $baseQuery;
-        $firstResponseBreached = $firstResponseBreachedQuery
-            ->where([
-                'first_response_sla_due <' => $now,
-                'first_response_at IS' => null,
-                'status NOT IN' => $closedStatuses
-            ])
-            ->count();
-
-        // Resolution SLA metrics
-        $resolutionBreachedQuery = clone $baseQuery;
-        $resolutionBreached = $resolutionBreachedQuery
-            ->where([
-                'resolution_sla_due <' => $now,
-                'status NOT IN' => $closedStatuses
-            ])
-            ->count();
-
-        // At risk counts (< 24 hours remaining)
-        $tomorrow = (new \DateTime())->modify('+24 hours');
-
-        $firstResponseAtRiskQuery = clone $baseQuery;
-        $firstResponseAtRisk = $firstResponseAtRiskQuery
-            ->where([
-                'first_response_sla_due >=' => $now,
-                'first_response_sla_due <' => $tomorrow,
-                'first_response_at IS' => null,
-                'status NOT IN' => $closedStatuses
-            ])
-            ->count();
-
-        $resolutionAtRiskQuery = clone $baseQuery;
-        $resolutionAtRisk = $resolutionAtRiskQuery
-            ->where([
-                'resolution_sla_due >=' => $now,
-                'resolution_sla_due <' => $tomorrow,
-                'status NOT IN' => $closedStatuses
-            ])
-            ->count();
-
-        // Active count
-        $activeSLAQuery = clone $baseQuery;
-        $activeCount = $activeSLAQuery
-            ->where(['status NOT IN' => $closedStatuses])
-            ->count();
-
-        // Compliance rates
-        $firstResponseCompliance = $activeCount > 0
-            ? round((($activeCount - $firstResponseBreached) / $activeCount) * 100, 1)
-            : 100.0;
-
-        $resolutionCompliance = $activeCount > 0
-            ? round((($activeCount - $resolutionBreached) / $activeCount) * 100, 1)
-            : 100.0;
-
-        return [
-            'first_response_breached' => $firstResponseBreached,
-            'first_response_at_risk' => $firstResponseAtRisk,
-            'first_response_compliance' => $firstResponseCompliance,
-            'resolution_breached' => $resolutionBreached,
-            'resolution_at_risk' => $resolutionAtRisk,
-            'resolution_compliance' => $resolutionCompliance,
-            'active_count' => $activeCount,
-        ];
-    }
-
-    /**
-     * Get SLA metrics for Compras (tracks both first response and resolution SLA)
+     * Get SLA metrics (Compras-specific)
      *
      * @param \Cake\ORM\Query $baseQuery Base query with filters applied
      * @return array SLA metrics
@@ -503,77 +421,43 @@ class StatisticsService
     private function getSLAMetrics($baseQuery): array
     {
         $now = new \DateTime();
-        $closedStatuses = ['completado', 'rechazado', 'convertido'];
 
-        // First Response SLA metrics
-        $firstResponseBreachedQuery = clone $baseQuery;
-        $firstResponseBreached = $firstResponseBreachedQuery
+        // SLA breached count (past deadline and not completed/rejected/converted)
+        $breachedQuery = clone $baseQuery;
+        $breachedCount = $breachedQuery
             ->where([
-                'first_response_sla_due <' => $now,
-                'first_response_at IS' => null,
-                'status NOT IN' => $closedStatuses
+                'sla_due_date <' => $now,
+                'status NOT IN' => ['completado', 'rechazado', 'convertido']
             ])
             ->count();
 
-        // Resolution SLA metrics
-        $resolutionBreachedQuery = clone $baseQuery;
-        $resolutionBreached = $resolutionBreachedQuery
-            ->where([
-                'resolution_sla_due <' => $now,
-                'status NOT IN' => $closedStatuses
-            ])
-            ->count();
-
-        // At risk counts (< 24 hours remaining)
+        // SLA at risk (< 24 hours remaining)
+        $atRiskQuery = clone $baseQuery;
         $tomorrow = (new \DateTime())->modify('+24 hours');
-
-        $firstResponseAtRiskQuery = clone $baseQuery;
-        $firstResponseAtRisk = $firstResponseAtRiskQuery
+        $atRiskCount = $atRiskQuery
             ->where([
-                'first_response_sla_due >=' => $now,
-                'first_response_sla_due <' => $tomorrow,
-                'first_response_at IS' => null,
-                'status NOT IN' => $closedStatuses
+                'sla_due_date >=' => $now,
+                'sla_due_date <' => $tomorrow,
+                'status NOT IN' => ['completado', 'rechazado', 'convertido']
             ])
             ->count();
 
-        $resolutionAtRiskQuery = clone $baseQuery;
-        $resolutionAtRisk = $resolutionAtRiskQuery
-            ->where([
-                'resolution_sla_due >=' => $now,
-                'resolution_sla_due <' => $tomorrow,
-                'status NOT IN' => $closedStatuses
-            ])
-            ->count();
-
-        // Active count
+        // Total with active SLA
         $activeSLAQuery = clone $baseQuery;
-        $activeCount = $activeSLAQuery
-            ->where(['status NOT IN' => $closedStatuses])
+        $activeSLACount = $activeSLAQuery
+            ->where(['status NOT IN' => ['completado', 'rechazado', 'convertido']])
             ->count();
 
-        // Compliance rates
-        $firstResponseCompliance = $activeCount > 0
-            ? round((($activeCount - $firstResponseBreached) / $activeCount) * 100, 1)
-            : 100.0;
-
-        $resolutionCompliance = $activeCount > 0
-            ? round((($activeCount - $resolutionBreached) / $activeCount) * 100, 1)
+        // Compliance rate
+        $complianceRate = $activeSLACount > 0
+            ? round((($activeSLACount - $breachedCount) / $activeSLACount) * 100, 1)
             : 100.0;
 
         return [
-            'first_response_breached' => $firstResponseBreached,
-            'first_response_at_risk' => $firstResponseAtRisk,
-            'first_response_compliance' => $firstResponseCompliance,
-            'resolution_breached' => $resolutionBreached,
-            'resolution_at_risk' => $resolutionAtRisk,
-            'resolution_compliance' => $resolutionCompliance,
-            'active_count' => $activeCount,
-
-            // Legacy fields for backward compatibility
-            'breached_count' => $resolutionBreached,
-            'at_risk_count' => $resolutionAtRisk,
-            'compliance_rate' => $resolutionCompliance,
+            'breached_count' => $breachedCount,
+            'at_risk_count' => $atRiskCount,
+            'active_count' => $activeSLACount,
+            'compliance_rate' => $complianceRate,
         ];
     }
 

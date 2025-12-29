@@ -302,12 +302,11 @@ $this->assign('title', 'Configuración');
 
     <div class="pb-5">
         <h3 class="fw-normal">Otras Opciones</h3>
-        <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div class="d-flex align-items-center gap-3">
             <?= $this->Html->link('<i class="bi bi-envelope"></i> Plantillas', ['action' => 'emailTemplates'], ['class' => 'btn btn-secondary shadow-sm', 'escapeTitle' => false]) ?>
             <?= $this->Html->link('<i class="bi bi-people"></i> Usuarios', ['action' => 'users'], ['class' => 'btn btn-secondary shadow-sm', 'escapeTitle' => false]) ?>
             <?= $this->Html->link('<i class="bi bi-building"></i> Organizaciones', ['action' => 'organizations'], ['class' => 'btn btn-secondary shadow-sm', 'escapeTitle' => false]) ?>
             <?= $this->Html->link('<i class="bi bi-tags"></i> Etiquetas', ['action' => 'tags'], ['class' => 'btn btn-secondary shadow-sm', 'escapeTitle' => false]) ?>
-            <?= $this->Html->link('<i class="bi bi-clock-history"></i> SLA', ['action' => 'sla'], ['class' => 'btn btn-primary shadow-sm', 'escapeTitle' => false]) ?>
         </div>
     </div>
 </div>

@@ -75,8 +75,7 @@ $userId = $user ? $user->get('id') : null;
                         <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Asunto</th>
                         <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Solicitante</th>
                         <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Asignado a</th>
-                        <th class="w-fit fw-semibold align-middle text-center" style="font-size: 14px;">1ra Resp. SLA</th>
-                        <th class="w-fit fw-semibold align-middle text-center" style="font-size: 14px;">Resolución SLA</th>
+                        <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">SLA</th>
                         <?php if ($view === 'completados'): ?>
                             <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">
                                 <?= $this->Paginator->sort('resolved_at', 'Completado') ?>
@@ -138,12 +137,8 @@ $userId = $user ? $user->get('id') : null;
                                 <?= $this->Form->end() ?>
                             </td>
 
-                            <td class="py-0 align-middle text-center" style="font-size: 14px;">
-                                <?= $this->Compras->slaIcon($compra, 'first_response_sla_due') ?>
-                            </td>
-
-                            <td class="py-0 align-middle text-center" style="font-size: 14px;">
-                                <?= $this->Compras->slaIcon($compra, 'resolution_sla_due') ?>
+                            <td class="py-0 align-middle text-center">
+                                <?= $this->Compras->slaIcon($compra) ?>
                             </td>
 
                             <?php if ($view === 'completados'): ?>

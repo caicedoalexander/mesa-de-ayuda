@@ -59,6 +59,7 @@ if ($entityType === 'ticket' || $entityType === 'compra') {
             <div class="d-flex flex-grow-1 flex-column">
                 <div class="d-flex gap-2 align-items-center">
                     <strong class="d-block"><?= $requesterName ?></strong>
+                    <i>•</i>
                     <small class="text-muted"><?= $this->TimeHuman->time($entity->created) ?></small>
                 </div>
 
@@ -128,7 +129,7 @@ if ($entityType === 'ticket' || $entityType === 'compra') {
             </div>
         </div>
 
-        <div class="lh-base small p-3 rounded" style="background-color: rgba(31, 115, 183, 0.05);">
+        <div class="lh-base small p-3 rounded" style="background-color: rgba(31, 115, 183, 0.1);">
             <?php echo $description; ?>
         </div>
 
@@ -169,18 +170,11 @@ if ($entityType === 'ticket' || $entityType === 'compra') {
                     <div class="d-flex mb-2 gap-2">
                         <?= $this->User->profileImageTag($comment->user, ['width' => '40', 'height' => '40', 'class' => 'rounded-circle flex-shrink-0 object-fit-cover']) ?>
                         <div class="flex-grow-1 d-flex flex-column gap-0">
-                            <div class="d-flex justify-content-between">
+                            <div class="d-flex gap-2 align-items-center">
                                 <strong><?= h($comment->user->name) ?></strong>
-                                <div>
-                                    <?php if ($comment->comment_type === 'internal'): ?>
-                                        <span class="small fw-bold text-white bg-secondary px-2 py-1 ms-2" style="border-radius: 8px;">Nota interna</span>
-                                    <?php endif; ?>
-                                    <?php if (!$comment->is_system_comment): ?>
-                                        <span class="small fw-bold text-primary border border-primary px-2 py-1 ms-2" style="border-radius: 8px;">Agente</span>
-                                    <?php endif; ?>
-                                </div>
+                                <i>•</i>
+                                <small class="text-muted"><?= $this->TimeHuman->time($comment->created) ?></small>
                             </div>
-                            <small class="text-muted"><?= $this->TimeHuman->time($comment->created) ?></small>
 
                             <?php
                             // Show email recipients if available (for public comments with email_to/email_cc)
@@ -212,38 +206,38 @@ if ($entityType === 'ticket' || $entityType === 'compra') {
                                     // Generate unique ID for this comment's recipients section
                                     $commentRecipientsId = 'comment-recipients-' . $comment->id;
                             ?>
-                                <div class="small mt-1">
-                                    <!-- Collapsed View (Default) -->
-                                    <div id="<?= $commentRecipientsId ?>-collapsed" class="recipients-collapsed">
-                                        <div class="d-flex flex-column gap-0" style="font-size: 12px;">
-                                            <span class="">
-                                                <strong>Para:</strong> <?= $commentNamesString ?>
-                                            </span>
-                                            <a href="#" class="text-nowrap" style="font-size: 12px;" onclick="toggleRecipients('<?= $commentRecipientsId ?>'); return false;">
-                                                Mostrar más
-                                            </a>
+                                    <div class="small mt-1">
+                                        <!-- Collapsed View (Default) -->
+                                        <div id="<?= $commentRecipientsId ?>-collapsed" class="recipients-collapsed">
+                                            <div class="d-flex flex-column gap-0" style="font-size: 12px;">
+                                                <span class="">
+                                                    <strong>Para:</strong> <?= $commentNamesString ?>
+                                                </span>
+                                                <a href="#" class="text-nowrap" style="font-size: 12px;" onclick="toggleRecipients('<?= $commentRecipientsId ?>'); return false;">
+                                                    Mostrar más
+                                                </a>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <!-- Expanded View (Hidden by default) -->
-                                    <div id="<?= $commentRecipientsId ?>-expanded" class="recipients-expanded" style="display: none;">
-                                        <?php if (!empty($commentEmailTo)): ?>
+                                        <!-- Expanded View (Hidden by default) -->
+                                        <div id="<?= $commentRecipientsId ?>-expanded" class="recipients-expanded" style="display: none;">
+                                            <?php if (!empty($commentEmailTo)): ?>
+                                                <div class="mb-0" style="font-size: 12px;">
+                                                    <strong>Para:</strong> <?= implode(', ', $commentToListDetailed) ?>
+                                                </div>
+                                            <?php endif; ?>
+                                            <?php if (!empty($commentEmailCc)): ?>
+                                                <div class="mb-0" style="font-size: 12px;">
+                                                    <strong>CC:</strong> <?= implode(', ', $commentCcListDetailed) ?>
+                                                </div>
+                                            <?php endif; ?>
                                             <div class="mb-0" style="font-size: 12px;">
-                                                <strong>Para:</strong> <?= implode(', ', $commentToListDetailed) ?>
+                                                <a href="#" class="text-nowrap" style="font-size: 12px;" onclick="toggleRecipients('<?= $commentRecipientsId ?>'); return false;">
+                                                    Mostrar menos
+                                                </a>
                                             </div>
-                                        <?php endif; ?>
-                                        <?php if (!empty($commentEmailCc)): ?>
-                                            <div class="mb-0" style="font-size: 12px;">
-                                                <strong>CC:</strong> <?= implode(', ', $commentCcListDetailed) ?>
-                                            </div>
-                                        <?php endif; ?>
-                                        <div class="mb-0" style="font-size: 12px;">
-                                            <a href="#" class="text-nowrap" style="font-size: 12px;" onclick="toggleRecipients('<?= $commentRecipientsId ?>'); return false;">
-                                                Mostrar menos
-                                            </a>
                                         </div>
                                     </div>
-                                </div>
                             <?php
                                 endif;
                             endif;
