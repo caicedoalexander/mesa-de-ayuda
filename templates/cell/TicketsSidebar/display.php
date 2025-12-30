@@ -49,21 +49,21 @@
     <ul class="mt-2 list-group">
         <li class="list-group-item">
             <?= $this->Html->link(
-                '<span class="badge me-2 shadow-sm" style="background-color: #ffc107; color: white;">●</span>Nuevos <span class="count">' . $counts['nuevos'] . '</span>',
+                '<span class="badge" style="background-color: #ffc107; color: white;">●</span>Nuevos <span class="count">' . $counts['nuevos'] . '</span>',
                 ['action' => 'index', '?' => ['view' => 'nuevos']],
                 ['class' => $view === 'nuevos' ? 'active' : '', 'escape' => false]
             ) ?>
         </li>
         <li class="list-group-item">
             <?= $this->Html->link(
-                '<span class="badge me-2 shadow-sm" style="background-color: #dc3545; color: white;">●</span>Abiertos <span class="count">' . $counts['abiertos'] . '</span>',
+                '<span class="badge" style="background-color: #dc3545; color: white;">●</span>Abiertos <span class="count">' . $counts['abiertos'] . '</span>',
                 ['action' => 'index', '?' => ['view' => 'abiertos']],
                 ['class' => $view === 'abiertos' ? 'active' : '', 'escape' => false]
             ) ?>
         </li>
         <li class="list-group-item">
             <?= $this->Html->link(
-                '<span class="badge me-2 shadow-sm" style="background-color: #0d6efd; color: white;">●</span>Pendientes <span class="count">' . $counts['pendientes'] . '</span>',
+                '<span class="badge" style="background-color: #0d6efd; color: white;">●</span>Pendientes <span class="count">' . $counts['pendientes'] . '</span>',
                 ['action' => 'index', '?' => ['view' => 'pendientes']],
                 ['class' => $view === 'pendientes' ? 'active' : '', 'escape' => false]
             ) ?>
@@ -71,7 +71,7 @@
 
         <li class="list-group-item">
             <?= $this->Html->link(
-                '<span class="badge me-2 shadow-sm" style="background-color: #198754; color: white;">●</span>Resueltos <span class="count">' . $counts['resueltos'] . '</span>',
+                '<span class="badge" style="background-color: #198754; color: white;">●</span>Resueltos <span class="count">' . $counts['resueltos'] . '</span>',
                 ['action' => 'index', '?' => ['view' => 'resueltos']],
                 ['class' => $view === 'resueltos' ? 'active' : '', 'escape' => false]
             ) ?>
@@ -79,7 +79,7 @@
 
         <li class="list-group-item">
             <?= $this->Html->link(
-                '<span class="badge me-2 shadow-sm" style="background-color: #6c757d; color: white;">⇄</span>Convertidos <span class="count">' . $counts['convertidos'] . '</span>',
+                '<span class="badge" style="background-color: #6c757d; color: white;">⇄</span>Convertidos <span class="count">' . $counts['convertidos'] . '</span>',
                 ['action' => 'index', '?' => ['view' => 'convertidos']],
                 ['class' => $view === 'convertidos' ? 'active' : '', 'escape' => false]
             ) ?>

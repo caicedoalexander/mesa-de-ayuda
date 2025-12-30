@@ -6,269 +6,697 @@
 $this->assign('title', 'Configuración');
 ?>
 
-<div class="p-5" style="max-width: 800px; margin: 0 auto; width: 100%;">
-    <div class="mb-4">
-        <h3><i class="bi bi-gear-fill"></i> Configuración del Sistema</h3>
+<style>
+:root {
+    --admin-green: #00A85E;
+    --admin-orange: #CD6A15;
+    --admin-blue: #0066cc;
+    --gray-50: #F9FAFB;
+    --gray-100: #F3F4F6;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-400: #9CA3AF;
+    --gray-600: #4B5563;
+    --gray-700: #374151;
+    --gray-900: #111827;
+    --radius-lg: 12px;
+    --radius-md: 8px;
+    --radius-sm: 6px;
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-page {
+    padding: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Page Header */
+.page-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+}
+
+.header-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #E6F7F0 0%, #CCF0E1 100%);
+    border: 2px solid var(--admin-green);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.header-icon i {
+    font-size: 28px;
+    color: var(--admin-green);
+}
+
+.header-text h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 0;
+    line-height: 1.2;
+}
+
+/* Config Card */
+.config-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.config-header {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--gray-100);
+}
+
+.config-header img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
+
+.config-header i {
+    font-size: 2rem;
+}
+
+.config-header h3 {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 1.75rem;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 0.5rem;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="password"] {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+    color: var(--gray-900);
+    background: white;
+    transition: var(--transition);
+    font-family: inherit;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="number"]:focus,
+.form-group input[type="password"]:focus {
+    outline: none;
+    border-color: var(--admin-green);
+    box-shadow: 0 0 0 3px rgba(0, 168, 94, 0.1);
+}
+
+.form-group small {
+    display: block;
+    margin-top: 0.375rem;
+    font-size: 0.85rem;
+    color: var(--gray-600);
+}
+
+/* Checkbox Toggle */
+.checkbox-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+    border: 2px solid var(--gray-200);
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.checkbox-toggle:hover {
+    border-color: var(--admin-green);
+    background: #F0FAF5;
+}
+
+.checkbox-toggle input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--admin-green);
+}
+
+.checkbox-toggle label {
+    margin: 0 !important;
+    cursor: pointer;
+    font-weight: 600;
+    flex: 1;
+}
+
+/* Collapsible Fields */
+.collapsible-fields {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--gray-200);
+}
+
+/* Alert Box */
+.alert-box {
+    background: linear-gradient(135deg, #E6F7F0 0%, #CCF0E1 100%);
+    border-left: 4px solid var(--admin-green);
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-md);
+    margin-top: 1rem;
+}
+
+.alert-box.warning {
+    background: linear-gradient(135deg, #FEF3EC 0%, #FCE7D9 100%);
+    border-left-color: var(--admin-orange);
+}
+
+.alert-box i {
+    color: var(--admin-green);
+    margin-right: 0.5rem;
+}
+
+.alert-box.warning i {
+    color: var(--admin-orange);
+}
+
+.alert-box strong {
+    color: var(--gray-900);
+}
+
+.alert-box ul, .alert-box ol {
+    margin: 0.5rem 0 0 0;
+    padding-left: 1.5rem;
+}
+
+.alert-box ul li, .alert-box ol li {
+    margin: 0.25rem 0;
+    color: var(--gray-700);
+}
+
+/* Status Badge */
+.status-connected {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: linear-gradient(135deg, #E6F7F0 0%, #CCF0E1 100%);
+    border: 2px solid var(--admin-green);
+    border-radius: var(--radius-md);
+    color: var(--admin-green);
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.status-connected::before {
+    content: '✓';
+    font-size: 1.25rem;
+}
+
+/* Buttons */
+.btn-primary {
+    background: linear-gradient(135deg, var(--admin-green) 0%, #00c46e 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 168, 94, 0.25);
+    text-decoration: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 168, 94, 0.35);
+    color: white;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, var(--admin-orange) 0%, #e67a2b 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 12px rgba(205, 106, 21, 0.25);
+    text-decoration: none;
+}
+
+.btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(205, 106, 21, 0.35);
+    color: white;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+    color: white;
+}
+
+.btn-outline {
+    background: white;
+    color: var(--admin-green);
+    border: 2px solid var(--admin-green);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-outline:hover {
+    background: var(--admin-green);
+    color: white;
+}
+
+.btn-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+/* Quick Links Section */
+.quick-links-section {
+    margin-top: 3rem;
+}
+
+.quick-links-section h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: 1.5rem;
+}
+
+.quick-links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.quick-link-card {
+    background: white;
+    border: 2px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    text-align: center;
+    text-decoration: none;
+    color: var(--gray-700);
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.quick-link-card:hover {
+    border-color: var(--admin-green);
+    background: linear-gradient(135deg, #E6F7F0 0%, #CCF0E1 100%);
+    color: var(--gray-900);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.quick-link-card i {
+    font-size: 2rem;
+    color: var(--admin-green);
+}
+
+.quick-link-card span {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .settings-page {
+        padding: 1rem;
+    }
+
+    .config-card {
+        padding: 1.5rem;
+    }
+
+    .btn-actions {
+        flex-direction: column;
+    }
+
+    .btn-primary,
+    .btn-warning,
+    .btn-danger,
+    .btn-outline {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .quick-links-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+}
+</style>
+
+<div class="settings-page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-icon">
+            <i class="bi bi-gear-fill"></i>
+        </div>
+        <div class="header-text">
+            <h3>Configuración del Sistema</h3>
+        </div>
     </div>
 
-    <div class="mb-5 bg-white p-4 rounded shadow-sm">
-        <h3 class="fw-normal">Configuración General</h3>
+    <?= $this->Flash->render() ?>
+
+    <!-- General Configuration -->
+    <div class="config-card">
+        <div class="config-header">
+            <img src="<?= $this->Url->build('img/email.png') ?>" alt="Email">
+            <h3>Configuración General</h3>
+        </div>
 
         <?= $this->Form->create(null, ['type' => 'post']) ?>
 
-        <div class="form-group mb-5">
-            <?= $this->Form->label('system_title', 'Título del Sistema', ['class' => 'form-label']) ?>
+        <div class="form-group">
+            <?= $this->Form->label('system_title', 'Título del Sistema') ?>
             <?= $this->Form->text('system_title', [
                 'value' => $settings['system_title'] ?? 'Sistema de Soporte',
-                'class' => 'form-control form-control-plaintext px-3 border shadow-none',
                 'placeholder' => 'Sistema de Soporte'
             ]) ?>
         </div>
 
-        <h3 class="d-flex align-items-center mb-3 mt-4 fw-normal"> <img src="<?= $this->Url->build('img/email.png') ?>"
-                width="40" class="me-2">Configuración de Gmail API</h3>
-
-        <div class="form-group mb-3">
-            <?= $this->Form->label('gmail_check_interval', 'Intervalo de comprobación (minutos)', ['class' => 'form-label']) ?>
+        <div class="form-group">
+            <?= $this->Form->label('gmail_check_interval', 'Intervalo de comprobación de Gmail (minutos)') ?>
             <?= $this->Form->number('gmail_check_interval', [
                 'value' => $settings['gmail_check_interval'] ?? '5',
-                'class' => 'form-control form-control-plaintext px-3 border shadow-none',
                 'placeholder' => '5',
                 'min' => 1
             ]) ?>
-            <small class="text-muted fw-light">Frecuencia con la que se revisan nuevos correos</small>
+            <small>Frecuencia con la que se revisan nuevos correos</small>
         </div>
 
-        <div class="form-actions">
-            <?= $this->Form->button('<i class="bi bi-arrow-up-circle"></i> Guardar configuración de Gmail', ['class' => 'btn btn-success shadow-sm', 'escapeTitle' => false]) ?>
+        <div class="btn-actions">
+            <?= $this->Form->button('<i class="bi bi-check-circle"></i> Guardar Configuración', [
+                'class' => 'btn-primary',
+                'escapeTitle' => false
+            ]) ?>
         </div>
 
         <?= $this->Form->end() ?>
     </div>
 
-    <div class="mt-3 mb-5 bg-white p-4 rounded shadow-sm">
-        <h3 class="d-flex align-items-center mb-3 fw-normal"><img src="<?= $this->Url->build('img/google.png') ?>"
-                width="40" class="me-2">Autorización de Google OAuth 2.0</h3>
+    <!-- Google OAuth Configuration -->
+    <div class="config-card">
+        <div class="config-header">
+            <img src="<?= $this->Url->build('img/google.png') ?>" alt="Google">
+            <h3>Autorización de Google OAuth 2.0</h3>
+        </div>
 
         <?php if (!empty($settings['gmail_refresh_token'])): ?>
-            <div class="text-success mb-3 fw-bold">
-                ✓ Gmail está autorizado y conectado
+            <div class="status-connected">
+                Gmail está autorizado y conectado
             </div>
 
-            <p class="d-flex gap-3">
-                <?= $this->Html->link('<i class="bi bi-arrow-repeat"></i> Reconectar', ['action' => 'gmailAuth'], ['class' => 'btn btn-warning text-white shadow-sm', 'escapeTitle' => false]) ?>
-                <?= $this->Html->link('<i class="bi bi-play-circle"></i> Probar Conexión', ['action' => 'testGmail'], ['class' => 'btn btn-danger shadow-sm', 'escapeTitle' => false]) ?>
-            </p>
+            <div class="btn-actions">
+                <?= $this->Html->link('<i class="bi bi-arrow-repeat"></i> Reconectar', ['action' => 'gmailAuth'], [
+                    'class' => 'btn-warning',
+                    'escapeTitle' => false
+                ]) ?>
+                <?= $this->Html->link('<i class="bi bi-play-circle"></i> Probar Conexión', ['action' => 'testGmail'], [
+                    'class' => 'btn-danger',
+                    'escapeTitle' => false
+                ]) ?>
+            </div>
         <?php else: ?>
-            <div>
-                Gmail no está autorizado. Debes autorizar la aplicación para importar correos.
+            <div class="alert-box warning">
+                <i class="bi bi-exclamation-circle"></i>
+                <strong>Gmail no está autorizado.</strong> Debes autorizar la aplicación para importar correos.
             </div>
 
-            <p>
+            <div style="margin-top: 1.5rem;">
                 <strong>Pasos para configurar Gmail:</strong>
-            </p>
-            <ol>
-                <li>Asegúrate de tener el archivo <code>client_secret.json</code> en <code>config/google/</code></li>
-                <li>Haz clic en el botón de abajo para autorizar la aplicación</li>
-                <li>Inicia sesión con tu cuenta de Gmail</li>
-                <li>Autoriza los permisos solicitados</li>
-            </ol>
+                <ol style="margin-top: 0.75rem; color: var(--gray-700);">
+                    <li>Asegúrate de tener el archivo <code>client_secret.json</code> en <code>config/google/</code></li>
+                    <li>Haz clic en el botón de abajo para autorizar la aplicación</li>
+                    <li>Inicia sesión con tu cuenta de Gmail</li>
+                    <li>Autoriza los permisos solicitados</li>
+                </ol>
+            </div>
 
-            <p>
-                <?= $this->Html->link('Autorizar Gmail', ['action' => 'gmailAuth'], ['class' => 'btn btn-success rounded-0 shadow-sm']) ?>
-            </p>
+            <div class="btn-actions">
+                <?= $this->Html->link('<i class="bi bi-shield-check"></i> Autorizar Gmail', ['action' => 'gmailAuth'], [
+                    'class' => 'btn-primary',
+                    'escapeTitle' => false
+                ]) ?>
+            </div>
         <?php endif; ?>
     </div>
 
-    <!-- WhatsApp API Configuration -->
-    <div class="mt-5 mb-5 bg-white p-4 rounded shadow-sm">
-        <h3 class="d-flex align-items-center mb-3 fw-normal">
-            <i class="bi bi-whatsapp text-success me-2" style="font-size: 2rem;"></i>
-            Configuración de WhatsApp
-        </h3>
+    <!-- WhatsApp Configuration -->
+    <div class="config-card">
+        <div class="config-header">
+            <i class="bi bi-whatsapp text-success"></i>
+            <h3>Configuración de WhatsApp</h3>
+        </div>
 
         <?= $this->Form->create(null, ['type' => 'post', 'url' => ['action' => 'index']]) ?>
 
-        <div class="form-group mb-3">
-            <div class="form-check">
+        <div class="form-group">
+            <div class="checkbox-toggle">
                 <?= $this->Form->checkbox('whatsapp_enabled', [
                     'checked' => ($settings['whatsapp_enabled'] ?? '0') === '1',
                     'value' => '1',
-                    'class' => 'form-check-input',
                     'id' => 'whatsapp_enabled'
                 ]) ?>
-                <?= $this->Form->label('whatsapp_enabled', 'Habilitar notificaciones de WhatsApp', [
-                    'class' => 'form-check-label fw-bold'
-                ]) ?>
+                <?= $this->Form->label('whatsapp_enabled', 'Habilitar notificaciones de WhatsApp') ?>
             </div>
-            <small class="text-muted">Enviar notificaciones automáticas por WhatsApp cuando se crean/actualizan
-                tickets</small>
+            <small>Enviar notificaciones automáticas por WhatsApp cuando se crean/actualizan tickets</small>
         </div>
 
-        <div id="whatsapp-config-fields"
-            style="display: <?= (($settings['whatsapp_enabled'] ?? '0') === '1') ? 'block' : 'none' ?>;">
-            <div class="form-group mb-2">
-                <?= $this->Form->label('whatsapp_api_url', 'URL de Evolution API', ['class' => 'form-label']) ?>
+        <div id="whatsapp-config-fields" class="collapsible-fields" style="display: <?= (($settings['whatsapp_enabled'] ?? '0') === '1') ? 'block' : 'none' ?>;">
+            <div class="form-group">
+                <?= $this->Form->label('whatsapp_api_url', 'URL de Evolution API') ?>
                 <?= $this->Form->text('whatsapp_api_url', [
                     'value' => $settings['whatsapp_api_url'] ?? 'https://n8n-evolution-api.jx7zng.easypanel.host',
-                    'class' => 'form-control form-control-plaintext px-3 border shadow-none',
                     'placeholder' => 'https://your-evolution-api.com'
                 ]) ?>
-                <small class="text-muted">URL base de tu instancia de Evolution API</small>
+                <small>URL base de tu instancia de Evolution API</small>
             </div>
 
-            <div class="form-group mb-2">
-                <?= $this->Form->label('whatsapp_api_key', 'API Key', ['class' => 'form-label']) ?>
+            <div class="form-group">
+                <?= $this->Form->label('whatsapp_api_key', 'API Key') ?>
                 <?= $this->Form->password('whatsapp_api_key', [
                     'value' => $settings['whatsapp_api_key'] ?? '',
-                    'class' => 'form-control form-control-plaintext px-3 border shadow-none',
                     'placeholder' => '••••••••••••••••'
                 ]) ?>
-                <small class="text-muted">Clave de autenticación de Evolution API</small>
+                <small>Clave de autenticación de Evolution API</small>
             </div>
 
-            <div class="form-group mb-2">
-                <?= $this->Form->label('whatsapp_instance_name', 'Nombre de Instancia', ['class' => 'form-label']) ?>
+            <div class="form-group">
+                <?= $this->Form->label('whatsapp_instance_name', 'Nombre de Instancia') ?>
                 <?= $this->Form->text('whatsapp_instance_name', [
                     'value' => $settings['whatsapp_instance_name'] ?? 'AlexBot',
-                    'class' => 'form-control form-control-plaintext px-3 border shadow-none',
                     'placeholder' => 'AlexBot'
                 ]) ?>
-                <small class="text-muted">Nombre de tu instancia de WhatsApp en Evolution API</small>
+                <small>Nombre de tu instancia de WhatsApp en Evolution API</small>
             </div>
 
-            <div class="form-group mb-3">
-                <?= $this->Form->label('whatsapp_tickets_number', 'Número de alerta de tickets', ['class' => 'form-label']) ?>
+            <div class="form-group">
+                <?= $this->Form->label('whatsapp_tickets_number', 'Número de alerta de tickets') ?>
                 <?= $this->Form->text('whatsapp_tickets_number', [
                     'value' => $settings['whatsapp_tickets_number'] ?? '',
-                    'class' => 'form-control form-control-plaintext px-3 border shadow-none mb-3',
-                    'placeholder' => '5511999999999@s.whatsapp.net'
-                ]) ?>
-                <?= $this->Form->label('whatsapp_compras_number', 'Número de alerta de compras', ['class' => 'form-label']) ?>
-                <?= $this->Form->text('whatsapp_compras_number', [
-                    'value' => $settings['whatsapp_compras_number'] ?? '',
-                    'class' => 'form-control form-control-plaintext px-3 border shadow-none mb-3',
-                    'placeholder' => '5511999999999@s.whatsapp.net'
-                ]) ?>
-                <?= $this->Form->label('whatsapp_pqrs_number', 'Número de alerta de pqrs', ['class' => 'form-label']) ?>
-                <?= $this->Form->text('whatsapp_pqrs_number', [
-                    'value' => $settings['whatsapp_pqrs_number'] ?? '',
-                    'class' => 'form-control form-control-plaintext px-3 border shadow-none mb-3',
                     'placeholder' => '5511999999999@s.whatsapp.net'
                 ]) ?>
             </div>
 
-            <div class="alert alert-success">
+            <div class="form-group">
+                <?= $this->Form->label('whatsapp_compras_number', 'Número de alerta de compras') ?>
+                <?= $this->Form->text('whatsapp_compras_number', [
+                    'value' => $settings['whatsapp_compras_number'] ?? '',
+                    'placeholder' => '5511999999999@s.whatsapp.net'
+                ]) ?>
+            </div>
+
+            <div class="form-group">
+                <?= $this->Form->label('whatsapp_pqrs_number', 'Número de alerta de PQRS') ?>
+                <?= $this->Form->text('whatsapp_pqrs_number', [
+                    'value' => $settings['whatsapp_pqrs_number'] ?? '',
+                    'placeholder' => '5511999999999@s.whatsapp.net'
+                ]) ?>
+            </div>
+
+            <div class="alert-box">
                 <i class="bi bi-info-circle-fill"></i>
                 <strong>Formatos de número:</strong>
-                <ul class="mb-0 mt-2">
+                <ul>
                     <li><strong>Grupo:</strong> <code>ID@g.us</code> (ej: 120363424575102342@g.us)</li>
-                    <li><strong>Individual:</strong> <code>código+número@s.whatsapp.net</code> (ej:
-                        5219991234567@s.whatsapp.net)</li>
+                    <li><strong>Individual:</strong> <code>código+número@s.whatsapp.net</code> (ej: 5219991234567@s.whatsapp.net)</li>
                 </ul>
             </div>
         </div>
 
-        <div class="form-actions d-flex gap-2">
-            <?= $this->Form->button('<i class="bi bi-arrow-up-circle"></i> Guardar configuración de WhatsApp', [
-                'class' => 'btn btn-success shadow-sm',
+        <div class="btn-actions">
+            <?= $this->Form->button('<i class="bi bi-check-circle"></i> Guardar Configuración', [
+                'class' => 'btn-primary',
                 'type' => 'submit',
                 'escapeTitle' => false
             ]) ?>
 
             <?php if (($settings['whatsapp_enabled'] ?? '0') === '1'): ?>
-                <?= $this->Html->link(
-                    '<i class="bi bi-check-circle me-1"></i> Probar Conexión',
-                    ['action' => 'testWhatsapp'],
-                    [
-                        'class' => 'btn btn-outline-success shadow-sm',
-                        'escape' => false,
-                        'id' => 'test-whatsapp-btn'
-                    ]
-                ) ?>
+                <?= $this->Html->link('<i class="bi bi-check-circle"></i> Probar Conexión', ['action' => 'testWhatsapp'], [
+                    'class' => 'btn-outline',
+                    'escape' => false,
+                    'id' => 'test-whatsapp-btn'
+                ]) ?>
             <?php endif; ?>
         </div>
 
         <?= $this->Form->end() ?>
     </div>
 
-    <!-- n8n AI Integration Configuration -->
-    <div class="mt-5 mb-5 bg-white p-4 rounded shadow-sm">
-        <h3 class="d-flex align-items-center mb-3 fw-normal">
-            <img src="<?= $this->Url->build('img/n8n.png') ?>" width="40" class="me-2">
-            Configuración de n8n
-        </h3>
+    <!-- n8n Configuration -->
+    <div class="config-card">
+        <div class="config-header">
+            <img src="<?= $this->Url->build('img/n8n.png') ?>" alt="n8n">
+            <h3>Configuración de n8n</h3>
+        </div>
 
         <?= $this->Form->create(null, ['type' => 'post', 'url' => ['action' => 'index']]) ?>
 
-        <div class="form-group mb-3">
-            <div class="form-check">
+        <div class="form-group">
+            <div class="checkbox-toggle">
                 <?= $this->Form->checkbox('n8n_enabled', [
                     'checked' => ($settings['n8n_enabled'] ?? '0') === '1',
                     'value' => '1',
-                    'class' => 'form-check-input',
                     'id' => 'n8n_enabled'
                 ]) ?>
-                <?= $this->Form->label('n8n_enabled', 'Habilitar integración con n8n', [
-                    'class' => 'form-check-label fw-bold'
-                ]) ?>
+                <?= $this->Form->label('n8n_enabled', 'Habilitar integración con n8n') ?>
             </div>
-            <small class="text-muted">Enviar tickets a n8n para asignación automática de tags con IA</small>
+            <small>Enviar tickets a n8n para asignación automática de tags con IA</small>
         </div>
 
-        <div id="n8n-config-fields"
-            style="display: <?= (($settings['n8n_enabled'] ?? '0') === '1') ? 'block' : 'none' ?>;">
-            <div class="form-group mb-3">
-                <?= $this->Form->label('n8n_webhook_url', 'URL del Webhook de n8n', ['class' => 'form-label']) ?>
+        <div id="n8n-config-fields" class="collapsible-fields" style="display: <?= (($settings['n8n_enabled'] ?? '0') === '1') ? 'block' : 'none' ?>;">
+            <div class="form-group">
+                <?= $this->Form->label('n8n_webhook_url', 'URL del Webhook de n8n') ?>
                 <?= $this->Form->text('n8n_webhook_url', [
                     'value' => $settings['n8n_webhook_url'] ?? '',
-                    'class' => 'form-control form-control-plaintext px-3 border shadow-none',
                     'placeholder' => 'https://tu-n8n.com/webhook/ai-tags'
                 ]) ?>
-                <small class="text-muted">URL completa del webhook que recibirá los datos del ticket</small>
+                <small>URL completa del webhook que recibirá los datos del ticket</small>
             </div>
 
-            <div class="form-group mb-3">
-                <?= $this->Form->label('n8n_api_key', 'API Key (Opcional)', ['class' => 'form-label']) ?>
+            <div class="form-group">
+                <?= $this->Form->label('n8n_api_key', 'API Key (Opcional)') ?>
                 <?= $this->Form->password('n8n_api_key', [
                     'value' => $settings['n8n_api_key'] ?? '',
-                    'class' => 'form-control form-control-plaintext px-3 border shadow-none',
                     'placeholder' => '••••••••••••••••'
                 ]) ?>
-                <small class="text-muted">Clave de autenticación para el webhook (opcional)</small>
+                <small>Clave de autenticación para el webhook (opcional)</small>
             </div>
 
-            <div class="form-group mb-3">
-                <div class="form-check">
+            <div class="form-group">
+                <div class="checkbox-toggle">
                     <?= $this->Form->checkbox('n8n_send_tags_list', [
                         'checked' => ($settings['n8n_send_tags_list'] ?? '1') === '1',
                         'value' => '1',
-                        'class' => 'form-check-input',
                         'id' => 'n8n_send_tags_list'
                     ]) ?>
-                    <?= $this->Form->label('n8n_send_tags_list', 'Enviar lista de tags disponibles', [
-                        'class' => 'form-check-label'
-                    ]) ?>
+                    <?= $this->Form->label('n8n_send_tags_list', 'Enviar lista de tags disponibles') ?>
                 </div>
-                <small class="text-muted">Incluir la lista completa de tags en el payload del webhook</small>
+                <small>Incluir la lista completa de tags en el payload del webhook</small>
             </div>
 
-            <div class="form-group mb-3">
-                <?= $this->Form->label('n8n_timeout', 'Timeout (segundos)', ['class' => 'form-label']) ?>
+            <div class="form-group">
+                <?= $this->Form->label('n8n_timeout', 'Timeout (segundos)') ?>
                 <?= $this->Form->number('n8n_timeout', [
                     'value' => $settings['n8n_timeout'] ?? '10',
-                    'class' => 'form-control form-control-plaintext px-3 border shadow-none',
                     'placeholder' => '10',
                     'min' => 1,
                     'max' => 60
                 ]) ?>
-                <small class="text-muted">Tiempo máximo de espera para la respuesta del webhook</small>
+                <small>Tiempo máximo de espera para la respuesta del webhook</small>
             </div>
 
-            <div class="alert alert-success">
+            <div class="alert-box">
                 <i class="bi bi-info-circle-fill"></i>
                 <strong>Flujo de integración:</strong>
-                <ol class="mb-0 mt-2 small">
+                <ol>
                     <li>Se crea un ticket desde Gmail</li>
                     <li>El sistema envía los datos del ticket a n8n vía webhook</li>
                     <li>n8n procesa el ticket con IA para sugerir tags</li>
@@ -277,36 +705,49 @@ $this->assign('title', 'Configuración');
             </div>
         </div>
 
-        <div class="form-actions d-flex gap-2">
-            <?= $this->Form->button('<i class="bi bi-arrow-up-circle"></i> Guardar Configuración de n8n', [
-                'class' => 'btn btn-success shadow-sm',
+        <div class="btn-actions">
+            <?= $this->Form->button('<i class="bi bi-check-circle"></i> Guardar Configuración', [
+                'class' => 'btn-primary',
                 'type' => 'submit',
                 'escapeTitle' => false
             ]) ?>
 
             <?php if (($settings['n8n_enabled'] ?? '0') === '1'): ?>
-                <?= $this->Html->link(
-                    '<i class="bi bi-check-circle me-1"></i> Probar Conexión',
-                    ['action' => 'testN8n'],
-                    [
-                        'class' => 'btn btn-outline-primary shadow-sm',
-                        'escape' => false,
-                        'id' => 'test-n8n-btn'
-                    ]
-                ) ?>
+                <?= $this->Html->link('<i class="bi bi-check-circle"></i> Probar Conexión', ['action' => 'testN8n'], [
+                    'class' => 'btn-outline',
+                    'escape' => false,
+                    'id' => 'test-n8n-btn'
+                ]) ?>
             <?php endif; ?>
         </div>
 
         <?= $this->Form->end() ?>
     </div>
 
-    <div class="pb-5">
-        <h3 class="fw-normal">Otras Opciones</h3>
-        <div class="d-flex align-items-center gap-3">
-            <?= $this->Html->link('<i class="bi bi-envelope"></i> Plantillas', ['action' => 'emailTemplates'], ['class' => 'btn btn-secondary shadow-sm', 'escapeTitle' => false]) ?>
-            <?= $this->Html->link('<i class="bi bi-people"></i> Usuarios', ['action' => 'users'], ['class' => 'btn btn-secondary shadow-sm', 'escapeTitle' => false]) ?>
-            <?= $this->Html->link('<i class="bi bi-building"></i> Organizaciones', ['action' => 'organizations'], ['class' => 'btn btn-secondary shadow-sm', 'escapeTitle' => false]) ?>
-            <?= $this->Html->link('<i class="bi bi-tags"></i> Etiquetas', ['action' => 'tags'], ['class' => 'btn btn-secondary shadow-sm', 'escapeTitle' => false]) ?>
+    <!-- Quick Links -->
+    <div class="quick-links-section">
+        <h3>Otras Opciones</h3>
+        <div class="quick-links-grid">
+            <?= $this->Html->link(
+                '<i class="bi bi-envelope"></i><span>Plantillas</span>',
+                ['action' => 'emailTemplates'],
+                ['class' => 'quick-link-card', 'escapeTitle' => false]
+            ) ?>
+            <?= $this->Html->link(
+                '<i class="bi bi-people"></i><span>Usuarios</span>',
+                ['action' => 'users'],
+                ['class' => 'quick-link-card', 'escapeTitle' => false]
+            ) ?>
+            <?= $this->Html->link(
+                '<i class="bi bi-building"></i><span>Organizaciones</span>',
+                ['action' => 'organizations'],
+                ['class' => 'quick-link-card', 'escapeTitle' => false]
+            ) ?>
+            <?= $this->Html->link(
+                '<i class="bi bi-tags"></i><span>Etiquetas</span>',
+                ['action' => 'tags'],
+                ['class' => 'quick-link-card', 'escapeTitle' => false]
+            ) ?>
         </div>
     </div>
 </div>

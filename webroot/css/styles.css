@@ -343,6 +343,13 @@ body {
     }
 }
 
+.badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 8px;
+}
+
 /* Sidebar scrollbars with border-radius integration */
 .sidebar-scroll {
     border-radius: 0 8px 8px 0;
