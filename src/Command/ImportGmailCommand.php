@@ -107,6 +107,7 @@ class ImportGmailCommand extends Command
             $created = 0;
             $skipped = 0;
             $errors = 0;
+            $comments = 0;
 
             // Pre-fetch existing message IDs for batch checking
             $ticketsTable = $this->fetchTable('Tickets');
@@ -122,39 +123,90 @@ class ImportGmailCommand extends Command
                 $io->out("[" . ($index + 1) . "/" . count($messageIds) . "] Processing message: {$messageId}");
 
                 try {
-                    // Check if ticket already exists (using pre-fetched data)
+                    // Parse message first to check filters
+                    $emailData = $gmailService->parseMessage($messageId);
+
+                    $io->verbose("  From: {$emailData['from']}");
+                    $io->verbose("  Subject: {$emailData['subject']}");
+
+                    // FILTER 1: Check if auto-reply
+                    if (!empty($emailData['is_auto_reply'])) {
+                        $io->verbose("  Skipped: Auto-reply detected");
+                        $gmailService->markAsRead($messageId);
+                        $skipped++;
+                        continue;
+                    }
+
+                    // FILTER 2: Check if system notification response
+                    if (!empty($emailData['is_system_notification'])) {
+                        $io->verbose("  Skipped: Response to system notification");
+                        $gmailService->markAsRead($messageId);
+                        $skipped++;
+                        continue;
+                    }
+
+                    // FILTER 3: Check if ticket already exists (using pre-fetched data)
                     if (in_array($messageId, $existingMessageIds)) {
                         $io->verbose("  Skipped: Ticket already exists");
                         $skipped++;
                         continue;
                     }
 
-                    // Parse message
-                    $emailData = $gmailService->parseMessage($messageId);
+                    // FILTER 4: Check for existing thread (email threading)
+                    $existingTicket = null;
+                    if (!empty($emailData['gmail_thread_id'])) {
+                        $existingTicket = $ticketsTable->find()
+                            ->where(['gmail_thread_id' => $emailData['gmail_thread_id']])
+                            ->first();
+                    }
 
-                    $io->verbose("  From: {$emailData['from']}");
-                    $io->verbose("  Subject: {$emailData['subject']}");
+                    if ($existingTicket) {
+                        // Thread exists - create comment instead of new ticket
+                        $comment = $ticketService->createCommentFromEmail($existingTicket, $emailData);
 
-                    // Create ticket
-                    $ticket = $ticketService->createFromEmail($emailData);
+                        if ($comment) {
+                            try {
+                                $io->success("  Added comment to existing ticket: #{$existingTicket->ticket_number}");
+                            } catch (\Exception $ioException) {
+                                // Ignore console write errors on Windows
+                            }
+                            $comments++;
 
-                    if ($ticket) {
-                        try {
-                            $io->success("  Created ticket: #{$ticket->ticket_number}");
-                        } catch (\Exception $ioException) {
-                            // Ignore console write errors on Windows
+                            // Mark as read
+                            $gmailService->markAsRead($messageId);
+                        } else {
+                            try {
+                                $io->warning("  Comment rejected (unauthorized sender or error)");
+                            } catch (\Exception $ioException) {
+                                // Ignore console write errors on Windows
+                            }
+                            $skipped++;
+
+                            // Still mark as read to prevent reprocessing
+                            $gmailService->markAsRead($messageId);
                         }
-                        $created++;
-
-                        // Mark as read
-                        $gmailService->markAsRead($messageId);
                     } else {
-                        try {
-                            $io->error("  Failed to create ticket");
-                        } catch (\Exception $ioException) {
-                            // Ignore console write errors on Windows
+                        // New thread - create ticket
+                        $ticket = $ticketService->createFromEmail($emailData);
+
+                        if ($ticket) {
+                            try {
+                                $io->success("  Created ticket: #{$ticket->ticket_number}");
+                            } catch (\Exception $ioException) {
+                                // Ignore console write errors on Windows
+                            }
+                            $created++;
+
+                            // Mark as read
+                            $gmailService->markAsRead($messageId);
+                        } else {
+                            try {
+                                $io->error("  Failed to create ticket");
+                            } catch (\Exception $ioException) {
+                                // Ignore console write errors on Windows
+                            }
+                            $errors++;
                         }
-                        $errors++;
                     }
                 } catch (\Exception $e) {
                     try {
@@ -183,11 +235,13 @@ class ImportGmailCommand extends Command
             $io->hr();
             $io->out('Import completed!');
             $io->out("  Created: {$created}");
+            $io->out("  Comments: {$comments}");
             $io->out("  Skipped: {$skipped}");
             $io->out("  Errors: {$errors}");
 
             Log::info('Gmail import completed', [
                 'created' => $created,
+                'comments' => $comments,
                 'skipped' => $skipped,
                 'errors' => $errors,
             ]);
