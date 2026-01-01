@@ -483,7 +483,7 @@ class GmailService
      * @param string $htmlBody HTML body
      * @param array $attachments Attachments (file paths)
      * @param string $boundary MIME boundary
-     * @param array $options Additional options (from, cc, bcc, replyTo)
+     * @param array $options Additional options (from, cc, bcc, replyTo, headers)
      * @return string MIME message
      */
     private function createMimeMessage($to, string $subject, string $htmlBody, array $attachments, string $boundary, array $options = []): string
@@ -561,7 +561,10 @@ class GmailService
         // Custom headers
         if (!empty($options['headers'])) {
             foreach ($options['headers'] as $headerName => $headerValue) {
-                $message .= "{$headerName}: {$headerValue}\r\n";
+                // Sanitize header name and value to prevent CRLF injection attacks
+                $sanitizedName = str_replace(["\r", "\n"], '', (string)$headerName);
+                $sanitizedValue = str_replace(["\r", "\n"], '', (string)$headerValue);
+                $message .= "{$sanitizedName}: {$sanitizedValue}\r\n";
             }
         }
 
