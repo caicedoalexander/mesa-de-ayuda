@@ -425,6 +425,7 @@ class EmailService
             // Build options for Gmail API
             $options = [
                 'from' => [$fromEmail => $systemTitle],
+                'headers' => ['X-Mesa-Ayuda-Notification' => 'true'],
             ];
 
             if (!empty($ccRecipients)) {
