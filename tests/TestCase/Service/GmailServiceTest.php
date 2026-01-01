@@ -269,4 +269,87 @@ class GmailServiceTest extends TestCase
         $result = $this->GmailService->isAutoReply($headers);
         $this->assertFalse($result);
     }
+
+    /**
+     * Test isSystemNotification detects X-Mesa-Ayuda-Notification: true
+     *
+     * @return void
+     */
+    public function testIsSystemNotificationDetectsCustomHeader(): void
+    {
+        $headers = $this->createHeaders([
+            'From' => 'support@example.com',
+            'X-Mesa-Ayuda-Notification' => 'true',
+            'Subject' => 'Ticket Update',
+        ]);
+
+        $result = $this->GmailService->isSystemNotification($headers);
+        $this->assertTrue($result);
+    }
+
+    /**
+     * Test isSystemNotification returns false for normal emails
+     *
+     * @return void
+     */
+    public function testIsSystemNotificationReturnsFalseForNormalEmails(): void
+    {
+        $headers = $this->createHeaders([
+            'From' => 'user@example.com',
+            'To' => 'support@example.com',
+            'Subject' => 'Help with my order',
+        ]);
+
+        $result = $this->GmailService->isSystemNotification($headers);
+        $this->assertFalse($result);
+    }
+
+    /**
+     * Test isSystemNotification returns false for other header values
+     *
+     * @return void
+     */
+    public function testIsSystemNotificationReturnsFalseForOtherValues(): void
+    {
+        // Test with 'false' value
+        $headers = $this->createHeaders([
+            'X-Mesa-Ayuda-Notification' => 'false',
+        ]);
+        $result = $this->GmailService->isSystemNotification($headers);
+        $this->assertFalse($result);
+
+        // Test with empty string
+        $headers = $this->createHeaders([
+            'X-Mesa-Ayuda-Notification' => '',
+        ]);
+        $result = $this->GmailService->isSystemNotification($headers);
+        $this->assertFalse($result);
+
+        // Test with 'yes' value
+        $headers = $this->createHeaders([
+            'X-Mesa-Ayuda-Notification' => 'yes',
+        ]);
+        $result = $this->GmailService->isSystemNotification($headers);
+        $this->assertFalse($result);
+
+        // Test with substring match attempt (should fail)
+        $headers = $this->createHeaders([
+            'X-Mesa-Ayuda-Notification' => 'true story',
+        ]);
+        $result = $this->GmailService->isSystemNotification($headers);
+        $this->assertFalse($result);
+    }
+
+    /**
+     * Test isSystemNotification with empty headers array
+     *
+     * @return void
+     */
+    public function testIsSystemNotificationWithEmptyHeaders(): void
+    {
+        $headers = [];
+
+        $result = $this->GmailService->isSystemNotification($headers);
+        $this->assertFalse($result);
+    }
 }

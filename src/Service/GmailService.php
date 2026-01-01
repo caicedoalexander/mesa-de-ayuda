@@ -388,6 +388,25 @@ class GmailService
     }
 
     /**
+     * Detect if email is a response to a system notification
+     *
+     * Checks for custom header added by the Mesa de Ayuda system to outgoing
+     * notification emails. This allows filtering out replies to automated
+     * notifications that should not create new tickets.
+     *
+     * @param array $headers Array of header objects from Gmail API
+     * @return bool True if system notification response detected, false otherwise
+     */
+    public function isSystemNotification(array $headers): bool
+    {
+        // Check for custom Mesa de Ayuda notification header
+        $notificationHeader = $this->getHeader($headers, 'X-Mesa-Ayuda-Notification');
+
+        // Exact match required - we control this header value
+        return $notificationHeader === 'true';
+    }
+
+    /**
      * Send email via Gmail
      *
      * @param string $to Recipient email address
