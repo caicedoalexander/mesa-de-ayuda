@@ -206,6 +206,54 @@ class TicketService
     }
 
     /**
+     * Check if email address is in ticket's original To/CC recipients
+     *
+     * @param \App\Model\Entity\Ticket $ticket The ticket entity
+     * @param string $email Email address to check
+     * @return bool True if email is authorized
+     */
+    private function isEmailInTicketRecipients(\App\Model\Entity\Ticket $ticket, string $email): bool
+    {
+        // Normalize email for case-insensitive comparison
+        $normalizedEmail = strtolower(trim($email));
+
+        // Check email_to array
+        $emailTo = $ticket->email_to_array;
+        if (!empty($emailTo)) {
+            foreach ($emailTo as $recipient) {
+                if (isset($recipient['email']) && strtolower(trim($recipient['email'])) === $normalizedEmail) {
+                    return true;
+                }
+            }
+        }
+
+        // Check email_cc array
+        $emailCc = $ticket->email_cc_array;
+        if (!empty($emailCc)) {
+            foreach ($emailCc as $recipient) {
+                if (isset($recipient['email']) && strtolower(trim($recipient['email'])) === $normalizedEmail) {
+                    return true;
+                }
+            }
+        }
+
+        // Check if email is the original requester's email
+        // Load ticket with Requesters association if not already loaded
+        if (!isset($ticket->requester)) {
+            $ticketsTable = $this->fetchTable('Tickets');
+            $ticket = $ticketsTable->get($ticket->id, [
+                'contain' => ['Requesters']
+            ]);
+        }
+
+        if (isset($ticket->requester->email) && strtolower(trim($ticket->requester->email)) === $normalizedEmail) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Process email attachments (now using GenericAttachmentTrait)
      *
      * @param \Cake\Datasource\EntityInterface $ticket Ticket entity
