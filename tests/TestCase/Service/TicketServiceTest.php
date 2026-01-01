@@ -27,6 +27,7 @@ class TicketServiceTest extends TestCase
         'app.Users',
         'app.Tickets',
         'app.Organizations',
+        'app.TicketComments',
     ];
 
     /**
@@ -396,5 +397,273 @@ class TicketServiceTest extends TestCase
 
         // Test unauthorized email
         $this->assertFalse($method->invoke($this->TicketService, $ticket, 'unauthorized@example.com'));
+    }
+
+    /**
+     * Test createCommentFromEmail with authorized sender creates comment successfully
+     *
+     * @return void
+     */
+    public function testCreateCommentFromEmailWithAuthorizedSenderCreatesComment(): void
+    {
+        $ticketsTable = $this->getTableLocator()->get('Tickets');
+        $ticketCommentsTable = $this->getTableLocator()->get('TicketComments');
+
+        // Create a ticket with authorized recipients
+        $ticket = $ticketsTable->newEntity([
+            'ticket_number' => 'TEST-2026-10001',
+            'subject' => 'Test Ticket',
+            'description' => 'Test description',
+            'status' => 'nuevo',
+            'priority' => 'media',
+            'requester_id' => 1,
+            'channel' => 'email',
+            'gmail_message_id' => 'original-message-id',
+            'gmail_thread_id' => 'thread-123',
+            'email_to' => [
+                ['email' => 'authorized@example.com', 'name' => 'Authorized User'],
+            ],
+        ]);
+        $ticketsTable->saveOrFail($ticket);
+
+        // Email data from authorized sender
+        $emailData = [
+            'from' => 'Authorized User <authorized@example.com>',
+            'subject' => 'Re: Test Ticket',
+            'body_html' => '<p>This is my reply to the ticket</p>',
+            'body_text' => 'This is my reply to the ticket',
+            'gmail_message_id' => 'reply-message-id',
+            'gmail_thread_id' => 'thread-123',
+        ];
+
+        // Create comment from email
+        $comment = $this->TicketService->createCommentFromEmail($ticket, $emailData);
+
+        // Assert comment was created
+        $this->assertInstanceOf(\App\Model\Entity\TicketComment::class, $comment);
+        $this->assertEquals($ticket->id, $comment->ticket_id);
+        $this->assertEquals('<p>This is my reply to the ticket</p>', $comment->body);
+        $this->assertEquals('public', $comment->comment_type);
+        $this->assertFalse($comment->is_system_comment);
+        $this->assertEquals('reply-message-id', $comment->gmail_message_id);
+        $this->assertFalse($comment->sent_as_email);
+
+        // Verify comment was saved to database
+        $savedComment = $ticketCommentsTable->get($comment->id);
+        $this->assertNotNull($savedComment);
+    }
+
+    /**
+     * Test createCommentFromEmail with unauthorized sender returns null
+     *
+     * @return void
+     */
+    public function testCreateCommentFromEmailWithUnauthorizedSenderReturnsNull(): void
+    {
+        $ticketsTable = $this->getTableLocator()->get('Tickets');
+        $ticketCommentsTable = $this->getTableLocator()->get('TicketComments');
+
+        // Create a ticket with specific authorized recipients
+        $ticket = $ticketsTable->newEntity([
+            'ticket_number' => 'TEST-2026-10002',
+            'subject' => 'Test Ticket',
+            'description' => 'Test description',
+            'status' => 'nuevo',
+            'priority' => 'media',
+            'requester_id' => 1,
+            'channel' => 'email',
+            'gmail_message_id' => 'original-message-id',
+            'gmail_thread_id' => 'thread-456',
+            'email_to' => [
+                ['email' => 'authorized@example.com', 'name' => 'Authorized User'],
+            ],
+        ]);
+        $ticketsTable->saveOrFail($ticket);
+
+        // Email data from UNAUTHORIZED sender
+        $emailData = [
+            'from' => 'Unauthorized Sender <unauthorized@example.com>',
+            'subject' => 'Re: Test Ticket',
+            'body_html' => '<p>Unauthorized reply attempt</p>',
+            'body_text' => 'Unauthorized reply attempt',
+            'gmail_message_id' => 'unauthorized-message-id',
+            'gmail_thread_id' => 'thread-456',
+        ];
+
+        // Get initial comment count
+        $initialCount = $ticketCommentsTable->find()->count();
+
+        // Attempt to create comment from unauthorized email
+        $result = $this->TicketService->createCommentFromEmail($ticket, $emailData);
+
+        // Assert null was returned
+        $this->assertNull($result);
+
+        // Verify no comment was created
+        $finalCount = $ticketCommentsTable->find()->count();
+        $this->assertEquals($initialCount, $finalCount);
+    }
+
+    /**
+     * Test createCommentFromEmail truncates body content over 65000 characters
+     *
+     * @return void
+     */
+    public function testCreateCommentFromEmailTruncatesOversizedBody(): void
+    {
+        $ticketsTable = $this->getTableLocator()->get('Tickets');
+
+        // Create a ticket with authorized recipients
+        $ticket = $ticketsTable->newEntity([
+            'ticket_number' => 'TEST-2026-10003',
+            'subject' => 'Test Ticket',
+            'description' => 'Test description',
+            'status' => 'nuevo',
+            'priority' => 'media',
+            'requester_id' => 1,
+            'channel' => 'email',
+            'gmail_message_id' => 'original-message-id',
+            'gmail_thread_id' => 'thread-789',
+            'email_to' => [
+                ['email' => 'sender@example.com', 'name' => 'Sender'],
+            ],
+        ]);
+        $ticketsTable->saveOrFail($ticket);
+
+        // Generate a body larger than 65000 characters
+        $largeBody = str_repeat('This is a very long email body. ', 3000); // ~96000 chars
+
+        $emailData = [
+            'from' => 'Sender <sender@example.com>',
+            'subject' => 'Re: Test Ticket',
+            'body_html' => $largeBody,
+            'body_text' => $largeBody,
+            'gmail_message_id' => 'large-message-id',
+            'gmail_thread_id' => 'thread-789',
+        ];
+
+        // Create comment from email
+        $comment = $this->TicketService->createCommentFromEmail($ticket, $emailData);
+
+        // Assert comment was created
+        $this->assertInstanceOf(\App\Model\Entity\TicketComment::class, $comment);
+
+        // Assert body was truncated to 65000 chars
+        $this->assertEquals(65000, strlen($comment->body));
+        $this->assertLessThan(strlen($largeBody), strlen($comment->body));
+    }
+
+    /**
+     * Test createCommentFromEmail auto-creates user if not exists
+     *
+     * @return void
+     */
+    public function testCreateCommentFromEmailAutoCreatesUser(): void
+    {
+        $ticketsTable = $this->getTableLocator()->get('Tickets');
+        $usersTable = $this->getTableLocator()->get('Users');
+
+        // Create a ticket with authorized recipients (including new user email)
+        $ticket = $ticketsTable->newEntity([
+            'ticket_number' => 'TEST-2026-10004',
+            'subject' => 'Test Ticket',
+            'description' => 'Test description',
+            'status' => 'nuevo',
+            'priority' => 'media',
+            'requester_id' => 1,
+            'channel' => 'email',
+            'gmail_message_id' => 'original-message-id',
+            'gmail_thread_id' => 'thread-auto',
+            'email_to' => [
+                ['email' => 'newuser@example.com', 'name' => 'New User'],
+            ],
+        ]);
+        $ticketsTable->saveOrFail($ticket);
+
+        // Verify user doesn't exist yet
+        $existingUser = $usersTable->find()->where(['email' => 'newuser@example.com'])->first();
+        $this->assertNull($existingUser);
+
+        // Email data from new user
+        $emailData = [
+            'from' => 'New User <newuser@example.com>',
+            'subject' => 'Re: Test Ticket',
+            'body_html' => '<p>Reply from new user</p>',
+            'body_text' => 'Reply from new user',
+            'gmail_message_id' => 'new-user-message-id',
+            'gmail_thread_id' => 'thread-auto',
+        ];
+
+        // Create comment from email
+        $comment = $this->TicketService->createCommentFromEmail($ticket, $emailData);
+
+        // Assert comment was created
+        $this->assertInstanceOf(\App\Model\Entity\TicketComment::class, $comment);
+
+        // Verify user was auto-created
+        $createdUser = $usersTable->find()->where(['email' => 'newuser@example.com'])->first();
+        $this->assertNotNull($createdUser);
+        $this->assertEquals('New', $createdUser->first_name);
+        $this->assertEquals('User', $createdUser->last_name);
+        $this->assertEquals('requester', $createdUser->role);
+        $this->assertTrue($createdUser->is_active);
+
+        // Verify comment is linked to auto-created user
+        $this->assertEquals($createdUser->id, $comment->user_id);
+    }
+
+    /**
+     * Test createCommentFromEmail processes attachments (basic test)
+     *
+     * @return void
+     */
+    public function testCreateCommentFromEmailProcessesAttachments(): void
+    {
+        $ticketsTable = $this->getTableLocator()->get('Tickets');
+
+        // Create a ticket with authorized recipients
+        $ticket = $ticketsTable->newEntity([
+            'ticket_number' => 'TEST-2026-10005',
+            'subject' => 'Test Ticket',
+            'description' => 'Test description',
+            'status' => 'nuevo',
+            'priority' => 'media',
+            'requester_id' => 1,
+            'channel' => 'email',
+            'gmail_message_id' => 'original-message-id',
+            'gmail_thread_id' => 'thread-attach',
+            'email_to' => [
+                ['email' => 'sender@example.com', 'name' => 'Sender'],
+            ],
+        ]);
+        $ticketsTable->saveOrFail($ticket);
+
+        // Email data WITH attachments
+        // Note: In real scenario, processEmailAttachments would download from Gmail
+        // For this basic test, we just verify the method handles the attachment array
+        $emailData = [
+            'from' => 'Sender <sender@example.com>',
+            'subject' => 'Re: Test Ticket',
+            'body_html' => '<p>Reply with attachment</p>',
+            'body_text' => 'Reply with attachment',
+            'gmail_message_id' => 'attach-message-id',
+            'gmail_thread_id' => 'thread-attach',
+            'attachments' => [
+                [
+                    'filename' => 'document.pdf',
+                    'mime_type' => 'application/pdf',
+                    'attachment_id' => 'gmail-attachment-id-123',
+                ],
+            ],
+        ];
+
+        // Create comment from email
+        // Note: This will attempt to download from Gmail API, which may fail in test environment
+        // The important part is that the comment is created successfully
+        $comment = $this->TicketService->createCommentFromEmail($ticket, $emailData);
+
+        // Assert comment was created even if attachment processing failed
+        $this->assertInstanceOf(\App\Model\Entity\TicketComment::class, $comment);
+        $this->assertEquals('<p>Reply with attachment</p>', $comment->body);
     }
 }

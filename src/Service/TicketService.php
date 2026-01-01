@@ -158,6 +158,92 @@ class TicketService
     }
 
     /**
+     * Create comment from email response in existing thread
+     *
+     * @param \App\Model\Entity\Ticket $ticket The ticket to add comment to
+     * @param array $emailData Parsed email data from GmailService
+     * @return \App\Model\Entity\TicketComment|null Created comment or null
+     */
+    public function createCommentFromEmail(\App\Model\Entity\Ticket $ticket, array $emailData): ?\App\Model\Entity\TicketComment
+    {
+        $ticketCommentsTable = $this->fetchTable('TicketComments');
+
+        // Extract sender email and name from emailData
+        $gmailService = new GmailService();
+        $fromEmail = $gmailService->extractEmailAddress($emailData['from']);
+        $fromName = $gmailService->extractName($emailData['from']);
+
+        // Validate sender using isEmailInTicketRecipients() - return null if unauthorized
+        if (!$this->isEmailInTicketRecipients($ticket, $fromEmail)) {
+            Log::warning('Unauthorized email sender attempted to reply to ticket', [
+                'ticket_id' => $ticket->id,
+                'ticket_number' => $ticket->ticket_number,
+                'from_email' => $fromEmail,
+            ]);
+            return null;
+        }
+
+        // Find or create user
+        $user = $this->findOrCreateUser($fromEmail, $fromName);
+        if (!$user) {
+            Log::error('Failed to create user for email comment', ['email' => $fromEmail]);
+            return null;
+        }
+
+        // Extract body content from emailData
+        $body = $emailData['body_html'] ?: $emailData['body_text'];
+
+        // Truncate body if > 65,000 chars (prevent DB overflow)
+        $maxLength = 65000;
+        if (strlen($body) > $maxLength) {
+            Log::warning('Email body truncated to prevent DB overflow', [
+                'ticket_id' => $ticket->id,
+                'original_length' => strlen($body),
+                'truncated_length' => $maxLength,
+            ]);
+            $body = substr($body, 0, $maxLength);
+        }
+
+        // Create TicketComment entity with comment_type='public'
+        $comment = $ticketCommentsTable->newEntity([
+            'ticket_id' => $ticket->id,
+            'user_id' => $user->id,
+            'body' => $body,
+            'comment_type' => 'public',
+            'is_system_comment' => false,
+            'gmail_message_id' => $emailData['gmail_message_id'] ?? null,
+            'sent_as_email' => false,
+        ]);
+        assert($comment instanceof \App\Model\Entity\TicketComment);
+
+        // Save comment, return null on failure
+        if (!$ticketCommentsTable->save($comment)) {
+            Log::error('Failed to save ticket comment from email', [
+                'ticket_id' => $ticket->id,
+                'errors' => $comment->getErrors(),
+            ]);
+            return null;
+        }
+
+        // Process attachments if present using processEmailAttachments()
+        if (!empty($emailData['attachments'])) {
+            $this->processEmailAttachments($ticket, $emailData['attachments'], $user->id);
+        }
+
+        // Do NOT send notifications (explicitly skip notification logic to prevent email loops)
+
+        // Log success
+        Log::info('Created ticket comment from email', [
+            'ticket_id' => $ticket->id,
+            'ticket_number' => $ticket->ticket_number,
+            'comment_id' => $comment->id,
+            'from_email' => $fromEmail,
+        ]);
+
+        return $comment;
+    }
+
+    /**
      * Find existing user or create new one
      *
      * @param string $email User email
