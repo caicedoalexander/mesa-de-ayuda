@@ -224,6 +224,8 @@ class GmailService
                 'body_text' => '',
                 'attachments' => [],
                 'inline_images' => [],
+                'is_auto_reply' => $this->isAutoReply($headers),
+                'is_system_notification' => $this->isSystemNotification($headers),
             ];
 
             // Extract body and attachments
