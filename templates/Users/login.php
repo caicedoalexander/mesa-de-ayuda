@@ -84,16 +84,7 @@ $this->assign('title', 'Iniciar Sesión');
         </div>
         <div class="d-flex flex-column justify-content-between w-75 p-5 pb-2">
             <div class="">
-                <div class="d-flex align-items-center gap-2">
-                    <div class="bg-white d-flex justify-content-center aling-items-center rounded-circle" style="width: 42px; height: 42px;">
-                        <img class="my-auto" src="<?= $this->Url->build('img/logo.png') ?>" alt="Logo" height="50">
-                    </div>
-                    <div class="gap-0 d-flex flex-column">
-                        <h2 class="fs-4 m-0 lh-1">
-                            <?= h($systemTitle) ?>
-                        </h2>
-                    </div>
-                </div>
+                <img src="<?= $this->Url->image('logos/logo-horizontal.svg') ?>" alt="">
                 <p class="text-muted fw-light mt-1">Inicia sesión para continuar</p>
             </div>
             <?= $this->Flash->render() ?>

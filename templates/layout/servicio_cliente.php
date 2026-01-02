@@ -4,17 +4,7 @@
 <body>
     <nav class="top-navbar pqrs-navbar" style="max-height: 55px; z-index: 1000;">
         <div class="d-flex justify-content-between align-items-center px-3 w-100">
-            <div class="d-flex align-items-center gap-2">
-                <div class="d-flex justify-content-center align-items-center bg-white rounded-circle shadow-sm" style="width: 42px; height: 42px;">
-                    <img class="my-auto" src="<?= $this->Url->build('img/logo.png') ?>" alt="Logo" height="45">
-                </div>
-                <div class="gap-0 d-flex flex-column">
-                    <h2 class="fs-5 m-0">
-                        <?= h($systemTitle) ?>
-                    </h2>
-                    <small class="m-0" style="font-size: 0.75rem; opacity: 0.9;">Servicio al Cliente</small>
-                </div>
-            </div>
+            <img src="<?= $this->Url->image('logos/servicioalcliente.svg') ?>">
             <?= $this->element('ia') ?>
             <div class="nav-menu d-flex align-items-center gap-3 py-3">
                 <?= $this->Html->link(

@@ -66,7 +66,7 @@ $userId = $user ? $user->get('id') : null;
     <?php if ($tickets->count() > 0): ?>
         <div class="table-responsive table-scroll mb-auto">
             <table class="table table-hover mb-0">
-                <thead class="" style="position: sticky; top: 0; z-index: 10;">
+                <thead class="bg-white" style="position: sticky; top: 0; z-index: 10;">
                     <tr>
                         <th class="w-fit pe-4 align-middle" style="width:36px">
                             <input type="checkbox" id="checkAll" class="form-check-input border border-dark rounded" />
