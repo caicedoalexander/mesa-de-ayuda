@@ -155,8 +155,13 @@ Detects and filters automated responses using standard email headers:
 - `X-Autorespond: yes`
 - `Precedence: auto_reply` / `bulk` / `junk`
 
-**Notification Detection:**
-System notifications include custom header `X-Mesa-Ayuda-Notification: true` to identify and ignore responses.
+**Notification Detection (Enhanced Jan 2026):**
+Multi-layered detection to prevent email loops from replies to system notifications:
+1. **Custom header check** - `X-Mesa-Ayuda-Notification: true` (added to all outgoing notifications)
+2. **Sender verification** - Detects if email is FROM system address (`gmail_user_email`)
+3. **Subject pattern matching** - Identifies replies to notification subjects (`Re: [Ticket #`, `Re: [PQRS #`, `Re: [Compra #`)
+
+Note: Custom headers don't propagate when users reply, so layers 2-3 are critical for reliability.
 
 **Key Features:**
 - Email attachments properly associated with comments

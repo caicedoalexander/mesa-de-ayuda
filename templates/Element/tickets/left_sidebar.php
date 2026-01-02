@@ -40,10 +40,13 @@
                 <?php endif; ?>
             </div>
 
-            <div class="">
-                <label class="small text-muted fw-semibold me-1">Canal:</label>
-                <?php $url = 'img/' . h($ticket->channel) . '.png' ?>
-                <img src="<?= $this->Url->build($url) ?>" style="width: 20px; height: 20px; object-fit: cover;">
+            <div class="d-flex align-items-center gap-2">
+                <label class="small text-muted fw-semibold">Canal:</label>
+                <?php if ($ticket->channel === 'email'): ?>
+                    <i class="bi bi-envelope text-secondary fs-5"></i>
+                <?php else: ?>
+                    <i class="bi bi-whatsapp text-success fs-5"></i>
+                <?php endif; ?>
             </div>
         </section>
 

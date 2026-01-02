@@ -20,26 +20,31 @@ $userId = $user ? $user->get('id') : null;
 </div>
 
 <div class="pt-4 pb-2 px-5 w-100 d-flex flex-column">
-    <div class="d-flex gap-3 align-items-center mb-3">
-        <i class="bi bi-cart" style="font-size: 25px;"></i>
-        <h2 class="fw-normal m-0 fs-3">
-            <?php
-            $titles = [
-                'sin_asignar' => 'Compras sin asignar',
-                'todos_sin_resolver' => 'Compras sin resolver',
-                'mis_compras' => 'Mis compras',
-                'nuevos' => 'Compras nuevas',
-                'en_revision' => 'En revisión',
-                'aprobados' => 'Aprobadas',
-                'en_proceso' => 'En proceso',
-                'completados' => 'Completadas',
-                'rechazados' => 'Rechazadas',
-                'convertidos' => 'Convertidas',
-                'vencidos_sla' => 'SLA Vencidos',
-            ];
-            echo $titles[$view] ?? 'Compras';
-            ?>
-        </h2>
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-icon">
+            <i class="bi bi-cart-check"></i>
+        </div>
+        <div class="header-text">
+            <h3>
+                <?php
+                $titles = [
+                    'sin_asignar' => 'Compras sin asignar',
+                    'todos_sin_resolver' => 'Compras sin resolver',
+                    'mis_compras' => 'Mis compras',
+                    'nuevos' => 'Compras nuevas',
+                    'en_revision' => 'En revisión',
+                    'aprobados' => 'Aprobadas',
+                    'en_proceso' => 'En proceso',
+                    'completados' => 'Completadas',
+                    'rechazados' => 'Rechazadas',
+                    'convertidos' => 'Convertidas',
+                    'vencidos_sla' => 'SLA Vencidos',
+                ];
+                echo $titles[$view] ?? 'Compras';
+                ?>
+            </h3>
+        </div>
     </div>
 
     <div class="d-flex align-items-center mb-3 gap-2">
@@ -66,7 +71,7 @@ $userId = $user ? $user->get('id') : null;
     <?php if ($compras->count() > 0): ?>
         <div class="table-responsive table-scroll mb-auto">
             <table class="table table-hover mb-0">
-                <thead style="position: sticky; top: 0; z-index: 10;">
+                <thead class="bg-white" style="position: sticky; top: 0; z-index: 10;">
                     <tr>
                         <th class="w-fit pe-4 align-middle" style="width:36px">
                             <input type="checkbox" id="checkAll" class="form-check-input border border-dark rounded" />

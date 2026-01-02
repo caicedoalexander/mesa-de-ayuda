@@ -158,12 +158,7 @@ if ($entityType === 'ticket' || $entityType === 'compra') {
         <?php foreach ($comments as $comment): ?>
             <?php if ($comment->is_system_comment): ?>
                 <div class="bg-warning bg-opacity-10 mb-3 border-warning fw-bold py-2 shadow-sm w-50 mx-auto text-center" style="font-size: 13px !important; border-radius: 8px;">
-                    <?php
-                    // SECURITY FIX: Sanitize user comments to prevent XSS
-                    // Preserve basic formatting tags but strip dangerous HTML
-                    $allowedTags = '<p><br><strong><em><ul><ol><li><a><b><i><u><h1><h2><h3><h4><h5><h6><blockquote><code><pre>';
-                    echo strip_tags($comment->body, $allowedTags);
-                    ?>
+                    <?php echo $comment->body; ?>
                 </div>
             <?php else: ?>
                 <div class="card border-0 p-3 mb-3" style="background-color: transparent !important;">
@@ -244,14 +239,8 @@ if ($entityType === 'ticket' || $entityType === 'compra') {
                             ?>
                         </div>
                     </div>
-                    <div
-                        class="lh-base small p-3 rounded <?= $comment->is_system_comment ? 'bg-warning bg-opacity-10 border-warning' : ($comment->comment_type === 'internal' ? 'bg-warning bg-opacity-10' : 'bg-secondary bg-opacity-10') ?>">
-                        <?php
-                        // SECURITY FIX: Sanitize user comments to prevent XSS
-                        // Preserve basic formatting tags but strip dangerous HTML
-                        $allowedTags = '<p><br><strong><em><ul><ol><li><a><b><i><u><h1><h2><h3><h4><h5><h6><blockquote><code><pre>';
-                        echo strip_tags($comment->body, $allowedTags);
-                        ?>
+                    <div class="lh-base small p-3 rounded <?= $comment->is_system_comment ? 'bg-warning bg-opacity-10 border-warning' : ($comment->comment_type === 'internal' ? 'bg-warning bg-opacity-10' : 'bg-secondary bg-opacity-10') ?>">
+                        <?php echo $comment->body; ?>
                     </div>
 
                     <?php

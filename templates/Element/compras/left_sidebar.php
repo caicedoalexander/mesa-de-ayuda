@@ -40,6 +40,15 @@
                 <?php endif; ?>
             </div>
 
+            <div class="d-flex align-items-center gap-2">
+                <label class="small text-muted fw-semibold">Canal:</label>
+                <?php if ($compra->channel === 'email'): ?>
+                    <i class="bi bi-envelope text-secondary fs-5"></i>
+                <?php else: ?>
+                    <i class="bi bi-whatsapp text-success fs-5"></i>
+                <?php endif; ?>
+            </div>
+
             <div class="mb-3">
                 <label class="small text-muted fw-semibold mb-1">SLA:</label>
                 <div><?= $this->Compras->dualSlaIndicator($compra) ?></div>

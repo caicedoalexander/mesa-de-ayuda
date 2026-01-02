@@ -75,12 +75,71 @@ class EmailService
     /**
      * Send new ticket notification to requester
      *
+     * Also notifies recipients in email_to and email_cc if ticket was created from email.
+     * Excludes requester and system email to avoid duplicates and loops.
+     *
      * @param \App\Model\Entity\Ticket $ticket Ticket entity
      * @return bool Success status
      */
     public function sendNewTicketNotification($ticket): bool
     {
-        return $this->sendGenericTemplateEmail('ticket', 'nuevo_ticket', $ticket);
+        // Load ticket with associations to get requester email
+        $ticketsTable = $this->fetchTable('Tickets');
+        $ticket = $ticketsTable->get($ticket->id, contain: ['Requesters']);
+
+        // Get system email to exclude from notifications
+        $systemEmail = '';
+        if ($this->systemConfig !== null && !empty($this->systemConfig['gmail_user_email'])) {
+            $systemEmail = strtolower($this->systemConfig['gmail_user_email']);
+        } else {
+            $settingsTable = $this->fetchTable('SystemSettings');
+            $setting = $settingsTable->find()
+                ->where(['setting_key' => 'gmail_user_email'])
+                ->first();
+            if ($setting) {
+                $systemEmail = strtolower($setting->setting_value);
+            }
+        }
+
+        // Extract additional recipients from ticket's email_to and email_cc (if created from email)
+        $additionalTo = [];
+        $additionalCc = [];
+
+        $requesterEmail = strtolower($ticket->requester->email);
+
+        // Parse email_to JSON array
+        if (!empty($ticket->email_to)) {
+            $emailTo = is_string($ticket->email_to) ? json_decode($ticket->email_to, true) : $ticket->email_to;
+            if (is_array($emailTo)) {
+                foreach ($emailTo as $recipient) {
+                    if (!empty($recipient['email'])) {
+                        $recipientEmail = strtolower($recipient['email']);
+                        // Exclude requester and system email
+                        if ($recipientEmail !== $requesterEmail && $recipientEmail !== $systemEmail) {
+                            $additionalTo[] = $recipient;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Parse email_cc JSON array
+        if (!empty($ticket->email_cc)) {
+            $emailCc = is_string($ticket->email_cc) ? json_decode($ticket->email_cc, true) : $ticket->email_cc;
+            if (is_array($emailCc)) {
+                foreach ($emailCc as $recipient) {
+                    if (!empty($recipient['email'])) {
+                        $recipientEmail = strtolower($recipient['email']);
+                        // Exclude requester and system email
+                        if ($recipientEmail !== $requesterEmail && $recipientEmail !== $systemEmail) {
+                            $additionalCc[] = $recipient;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $this->sendGenericTemplateEmail('ticket', 'nuevo_ticket', $ticket, [], [], $additionalTo, $additionalCc);
     }
 
     /**

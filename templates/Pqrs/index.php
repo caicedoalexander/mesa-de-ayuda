@@ -22,23 +22,28 @@ $userId = $user ? $user->get('id') : null;
 </div>
 
 <div class="pt-4 pb-2 px-5 w-100 d-flex flex-column">
-    <div class="d-flex gap-3 align-items-center mb-3">
-        <i class="bi bi-chat-square-text" style="font-size: 25px;"></i>
-        <h2 class="fw-normal fs-3">
-            <?php
-            $titles = [
-                'sin_asignar' => 'PQRS sin asignar',
-                'todos_sin_resolver' => 'PQRS sin resolver',
-                'nuevas' => 'PQRS nuevas',
-                'en_revision' => 'PQRS en revisión',
-                'en_proceso' => 'PQRS en proceso',
-                'resueltas' => 'PQRS resueltas',
-                'cerradas' => 'PQRS cerradas',
-                'mis_pqrs' => 'Mis PQRS',
-            ];
-            echo $titles[$view] ?? 'PQRS';
-            ?>
-        </h2>
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-icon">
+            <i class="bi bi-chat-square-text"></i>
+        </div>
+        <div class="header-text">
+            <h3>
+                <?php
+                $titles = [
+                    'sin_asignar' => 'PQRS sin asignar',
+                    'todos_sin_resolver' => 'PQRS sin resolver',
+                    'nuevas' => 'PQRS nuevas',
+                    'en_revision' => 'PQRS en revisión',
+                    'en_proceso' => 'PQRS en proceso',
+                    'resueltas' => 'PQRS resueltas',
+                    'cerradas' => 'PQRS cerradas',
+                    'mis_pqrs' => 'Mis PQRS',
+                ];
+                echo $titles[$view] ?? 'PQRS';
+                ?>
+            </h3>
+        </div>
     </div>
 
     <div class="d-flex align-items-center mb-3 gap-2">

@@ -9,7 +9,7 @@
         <small class="text-muted"><?= h($compra->requester->email ?? 'N/A') ?></small>
     </div>
 
-    <div class="sidebar-scroll flex-grow-1 overflow-auto my-3 bg-white shadow-sm" style="border-radius: 8px;">
+    <div class="sidebar-scroll flex-grow-1 overflow-auto mt-3 bg-white shadow-sm" style="border-radius: 8px;">
         <div class="p-3">
         <section class="mb-3">
             <h3 class="fs-6 mb-3">Información del Solicitante</h3>

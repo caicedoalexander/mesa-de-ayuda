@@ -646,11 +646,7 @@ body {
     <div class="success-header">
         <div class="container">
             <div class="success-header-content">
-                <img class="success-header-logo" src="<?= $this->Url->build('img/logo.png') ?>" alt="Logo">
-                <div class="success-header-text">
-                    <h2>Mesa de Ayuda</h2>
-                    <small>Servicio al Cliente</small>
-                </div>
+                <img class="success-header-logo" src="<?= $this->Url->build('img/logos/servicioalcliente.svg') ?>" alt="Servicio al Cliente">
             </div>
         </div>
     </div>

@@ -108,6 +108,13 @@ class TicketService
             $subject = '(Sin asunto)';
         }
 
+        // Determine channel: if email comes from WhatsApp bot email, set channel as 'whatsapp'
+        $channel = 'email';
+        $whatsappBotEmail = 'mesadeayuda.whatsapp@gmail.com';
+        if (strtolower($fromEmail) === strtolower($whatsappBotEmail)) {
+            $channel = 'whatsapp';
+        }
+
         // Create ticket
         $ticket = $ticketsTable->newEntity([
             'ticket_number' => $ticketNumber,
@@ -118,7 +125,7 @@ class TicketService
             'status' => 'nuevo',
             'priority' => 'media',
             'requester_id' => $user->id,
-            'channel' => 'email',
+            'channel' => $channel,
             'source_email' => $fromEmail,
         ]);
         assert($ticket instanceof \App\Model\Entity\Ticket);
@@ -213,6 +220,8 @@ class TicketService
             'is_system_comment' => false,
             'gmail_message_id' => $emailData['gmail_message_id'] ?? null,
             'sent_as_email' => false,
+            'email_to' => !empty($emailData['email_to']) ? json_encode($emailData['email_to']) : null,
+            'email_cc' => !empty($emailData['email_cc']) ? json_encode($emailData['email_cc']) : null,
         ]);
         assert($comment instanceof \App\Model\Entity\TicketComment);
 
@@ -289,6 +298,32 @@ class TicketService
 
         Log::error('Failed to create user', ['email' => $email, 'errors' => $user->getErrors()]);
         return null;
+    }
+
+    /**
+     * Get system email address from settings
+     *
+     * @return string System email or empty string
+     */
+    private function getSystemEmail(): string
+    {
+        try {
+            // Try to get from systemConfig first (if passed in constructor)
+            if ($this->systemConfig !== null && !empty($this->systemConfig['gmail_user_email'])) {
+                return $this->systemConfig['gmail_user_email'];
+            }
+
+            // Otherwise load from database
+            $settingsTable = $this->fetchTable('SystemSettings');
+            $setting = $settingsTable->find()
+                ->where(['setting_key' => 'gmail_user_email'])
+                ->first();
+
+            return $setting ? $setting->setting_value : '';
+        } catch (\Exception $e) {
+            Log::error('Failed to load system email: ' . $e->getMessage());
+            return '';
+        }
     }
 
     /**

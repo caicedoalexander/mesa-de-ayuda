@@ -23,23 +23,28 @@ $userId = $user ? $user->get('id') : null;
 </div>
 
 <div class="pt-4 pb-2 px-5 w-100 d-flex flex-column">
-    <div class="d-flex gap-3 align-items-center mb-3">
-        <img src="<?= $this->Url->build('img/ticket.png') ?>" height="35">
-        <h2 class="fw-normal m-0 fs-3">
-            <?php
-            $titles = [
-                'sin_asignar' => 'Tickets sin asignar',
-                'todos_sin_resolver' => 'Tickets sin resolver',
-                'nuevos' => 'Tickets nuevos',
-                'abiertos' => 'Tickets abiertos',
-                'pendientes' => 'Tickets pendientes',
-                'resueltos' => 'Tickets resueltos',
-                'convertidos' => 'Tickets convertidos',
-                'mis_tickets' => 'Mis tickets',
-            ];
-            echo $titles[$view] ?? 'Tickets';
-            ?>
-        </h2>
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-icon">
+            <i class="bi bi-ticket"></i>
+        </div>
+        <div class="header-text">
+            <h3>
+                <?php
+                $titles = [
+                    'sin_asignar' => 'Tickets sin asignar',
+                    'todos_sin_resolver' => 'Tickets sin resolver',
+                    'nuevos' => 'Tickets nuevos',
+                    'abiertos' => 'Tickets abiertos',
+                    'pendientes' => 'Tickets pendientes',
+                    'resueltos' => 'Tickets resueltos',
+                    'convertidos' => 'Tickets convertidos',
+                    'mis_tickets' => 'Mis tickets',
+                ];
+                echo $titles[$view] ?? 'Tickets';
+                ?>
+            </h3>
+        </div>
     </div>
 
     <div class="d-flex align-items-center mb-3 gap-2">

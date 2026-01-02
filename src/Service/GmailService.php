@@ -393,20 +393,72 @@ class GmailService
     /**
      * Detect if email is a response to a system notification
      *
-     * Checks for custom header added by the Mesa de Ayuda system to outgoing
-     * notification emails. This allows filtering out replies to automated
-     * notifications that should not create new tickets.
+     * Checks multiple indicators to detect replies to automated notifications:
+     * 1. Custom header X-Mesa-Ayuda-Notification (added by system emails)
+     * 2. Sender is system email address (gmail_user_email)
+     * 3. Subject contains notification patterns (Re: Tu Solicitud fue recibida, etc.)
+     *
+     * This prevents infinite loops where users reply to automated notifications.
      *
      * @param array $headers Array of header objects from Gmail API
      * @return bool True if system notification response detected, false otherwise
      */
     public function isSystemNotification(array $headers): bool
     {
-        // Check for custom Mesa de Ayuda notification header
+        // Check 1: Custom Mesa de Ayuda notification header (original method)
         $notificationHeader = $this->getHeader($headers, 'X-Mesa-Ayuda-Notification');
+        if ($notificationHeader === 'true') {
+            return true;
+        }
 
-        // Exact match required - we control this header value
-        return $notificationHeader === 'true';
+        // Check 2: Sender is system email address
+        $from = $this->getHeader($headers, 'From');
+        $fromEmail = $this->extractEmailAddress($from);
+
+        // Load system email from settings
+        $systemEmail = $this->getSystemEmail();
+        if (!empty($systemEmail) && strtolower($fromEmail) === strtolower($systemEmail)) {
+            // Email is FROM the system itself - likely a reply loop
+            return true;
+        }
+
+        // Check 3: Subject contains notification patterns
+        // Match any replies to system notifications (Re: [Ticket #, Re: [PQRS #, Re: [Compra #)
+        $subject = $this->getHeader($headers, 'Subject');
+        $notificationPatterns = [
+            'Re: [Ticket #',        // Matches all ticket notification replies
+            'Re: [PQRS #',          // Matches all PQRS notification replies
+            'Re: [Compra #',        // Matches all Compra notification replies
+            'Re: Tu Solicitud',     // Generic confirmation pattern (if used)
+        ];
+
+        foreach ($notificationPatterns as $pattern) {
+            if (stripos($subject, $pattern) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Get system email address from settings
+     *
+     * @return string System email or empty string
+     */
+    private function getSystemEmail(): string
+    {
+        try {
+            $settingsTable = $this->fetchTable('SystemSettings');
+            $setting = $settingsTable->find()
+                ->where(['setting_key' => 'gmail_user_email'])
+                ->first();
+
+            return $setting ? $setting->setting_value : '';
+        } catch (\Exception $e) {
+            Log::error('Failed to load system email: ' . $e->getMessage());
+            return '';
+        }
     }
 
     /**
