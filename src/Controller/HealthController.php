@@ -30,9 +30,9 @@ class HealthController extends AppController
      * Returns 200 OK if all systems are operational:
      * - Nginx is serving requests
      * - PHP-FPM is processing PHP code
-     * - MySQL database is accessible
+     * - MySQL database is accessible (optional, degrades gracefully)
      *
-     * Returns 503 Service Unavailable if any component fails.
+     * Returns 503 Service Unavailable only if PHP/Nginx fail.
      *
      * @return \Cake\Http\Response
      */
@@ -44,11 +44,11 @@ class HealthController extends AppController
             'checks' => []
         ];
 
-        try {
-            // Check 1: PHP is running (implicit - we're here)
-            $status['checks']['php'] = 'ok';
+        // Check 1: PHP is running (implicit - we're here)
+        $status['checks']['php'] = 'ok';
 
-            // Check 2: Database connection
+        // Check 2: Database connection (non-fatal if fails)
+        try {
             $usersTable = $this->fetchTable('Users');
             $userCount = $usersTable->find()->count();
             $status['checks']['database'] = 'ok';
@@ -59,22 +59,17 @@ class HealthController extends AppController
             $settingsCount = $settingsTable->find()->count();
             $status['checks']['system_settings'] = 'ok';
             $status['checks']['system_settings_count'] = $settingsCount;
-
-            // All checks passed
-            return $this->response
-                ->withType('application/json')
-                ->withStringBody(json_encode($status, JSON_PRETTY_PRINT));
-
         } catch (\Exception $e) {
-            // Something failed
-            $status['status'] = 'unhealthy';
-            $status['error'] = $e->getMessage();
-            $status['checks']['error_type'] = get_class($e);
-
-            return $this->response
-                ->withStatus(503) // Service Unavailable
-                ->withType('application/json')
-                ->withStringBody(json_encode($status, JSON_PRETTY_PRINT));
+            // Database not ready yet (migrations pending) - not fatal for health check
+            $status['checks']['database'] = 'not_ready';
+            $status['checks']['database_message'] = 'Migrations may be pending';
+            $status['warnings'][] = 'Database not initialized - run migrations';
         }
+
+        // Always return 200 OK if PHP/Nginx are running
+        // Database issues are reported but not fatal
+        return $this->response
+            ->withType('application/json')
+            ->withStringBody(json_encode($status, JSON_PRETTY_PRINT));
     }
 }

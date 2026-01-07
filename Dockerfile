@@ -81,5 +81,9 @@ RUN chmod +x /usr/local/bin/start-worker
 # Expose port 80
 EXPOSE 80
 
+# Health check - verificar que Nginx responde
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost/health || exit 1
+
 # Start supervisor (runs nginx, php-fpm, and worker)
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

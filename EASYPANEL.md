@@ -15,8 +15,13 @@ Guía rápida para desplegar Mesa de Ayuda en Easypanel.
 
 ## 📋 Pasos de Despliegue
 
-### 1. Configurar Variables de Entorno en Easypanel
+### 1. Configurar en Easypanel
 
+**En General Settings:**
+- **Port**: `80` (importante!)
+- **Dockerfile Path**: `./Dockerfile`
+
+**En Environment Variables:**
 ```env
 APP_ENV=production
 DEBUG=false
@@ -30,15 +35,34 @@ SECURITY_SALT=tu-salt-aleatorio
 
 ### 2. Deploy desde GitHub
 
-Easypanel detectará el `Dockerfile` en la raíz automáticamente.
+Easypanel detectará el `Dockerfile` en la raíz automáticamente y:
+- Construirá la imagen
+- Iniciará PHP-FPM y Nginx
+- Ejecutará health check cada 30s en `/health`
 
-### 3. Ejecutar Migraciones
+**⚠️ Importante:** El health check pasará incluso sin migraciones. Esto es intencional para permitir el despliegue inicial.
+
+### 3. Verificar que el Contenedor Está Corriendo
+
+En los logs deberías ver:
+```
+INFO success: php-fpm entered RUNNING state
+INFO success: nginx entered RUNNING state
+```
+
+Si ves `SIGQUIT` o el contenedor se reinicia constantemente:
+- Verifica que el puerto 80 esté configurado en Easypanel
+- Verifica los logs de nginx: `cat /var/www/html/logs/nginx-error.log`
+
+### 4. Ejecutar Migraciones (CRÍTICO)
 
 Una vez desplegado, accede a la **Terminal/Console** en Easypanel y ejecuta:
 
 ```bash
 php bin/cake.php migrations migrate
 ```
+
+Esto creará todas las tablas y datos iniciales.
 
 ### 4. Verificar que la App Funciona
 
