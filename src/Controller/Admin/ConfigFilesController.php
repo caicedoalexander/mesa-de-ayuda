@@ -92,14 +92,14 @@ class ConfigFilesController extends AppController
             Log::info('Config file uploaded', [
                 'type' => $fileType,
                 'path' => $targetPath,
-                'user' => $this->Authentication->getIdentity()->email
+                'user' => $this->Authentication->getIdentity()?->get('email')
             ]);
         } catch (\Exception $e) {
             $this->Flash->error('Error al guardar el archivo: ' . $e->getMessage());
             Log::error('Config file upload failed', [
                 'type' => $fileType,
                 'error' => $e->getMessage(),
-                'user' => $this->Authentication->getIdentity()->email
+                'user' => $this->Authentication->getIdentity()?->get('email')
             ]);
         }
 
@@ -162,7 +162,7 @@ class ConfigFilesController extends AppController
             $this->Flash->success('Archivo de configuración eliminado correctamente.');
             Log::info('Config file deleted', [
                 'type' => $type,
-                'user' => $this->Authentication->getIdentity()->email
+                'user' => $this->Authentication->getIdentity()?->get('email')
             ]);
         } else {
             $this->Flash->warning('El archivo ya no existe.');
