@@ -128,7 +128,7 @@ $this->assign('title', 'Estadísticas de Compras');
 
         <!-- Top Requesters -->
         <div class="col-md-6">
-            <?= $this->element('Tickets/requester_stats', [
+            <?= $this->element('tickets/requester_stats', [
                 'topRequesters' => $topRequesters
             ]) ?>
         </div>

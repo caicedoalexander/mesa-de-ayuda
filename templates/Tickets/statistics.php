@@ -78,7 +78,7 @@ $this->assign('title', 'Estadísticas de Tickets');
 
         <!-- Response Metrics (Tickets-specific) -->
         <div class="col-md-4">
-            <?= $this->element('Tickets/response_metrics', [
+            <?= $this->element('tickets/response_metrics', [
                 'responseRate' => $responseRate,
                 'resolutionRate' => $resolutionRate,
                 'avgResponseTime' => $avgResponseTime,
@@ -106,7 +106,7 @@ $this->assign('title', 'Estadísticas de Tickets');
 
         <!-- Top Requesters (Tickets-specific) -->
         <div class="col-md-6">
-            <?= $this->element('Tickets/requester_stats', [
+            <?= $this->element('tickets/requester_stats', [
                 'topRequesters' => $topRequesters
             ]) ?>
         </div>
