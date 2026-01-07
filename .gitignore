@@ -5,7 +5,7 @@
 /logs/*
 /tmp/*
 /vendor/*
-/config/google/client_secret.json
+client_secret.json
 /webroot/uploads/*
 
 # OS generated files #
