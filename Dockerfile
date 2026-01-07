@@ -46,10 +46,20 @@ RUN rm -f /etc/nginx/sites-enabled/default \
 COPY docker/nginx/easypanel.conf /etc/nginx/sites-enabled/default
 
 # Copy supervisor configuration for running nginx + php-fpm + worker
-RUN echo '[supervisord]\n\
+RUN echo '[unix_http_server]\n\
+file=/var/run/supervisor.sock\n\
+chmod=0700\n\
+\n\
+[supervisord]\n\
 nodaemon=true\n\
 user=root\n\
 logfile=/var/www/html/logs/supervisord.log\n\
+\n\
+[supervisorctl]\n\
+serverurl=unix:///var/run/supervisor.sock\n\
+\n\
+[rpcinterface:supervisor]\n\
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface\n\
 \n\
 [program:php-fpm]\n\
 command=/usr/local/sbin/php-fpm -F\n\

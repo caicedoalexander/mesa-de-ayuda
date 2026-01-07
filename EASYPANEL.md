@@ -89,26 +89,69 @@ Accede a la URL de tu app y verifica que carga correctamente.
 
 ### 5. Configurar Gmail OAuth
 
-1. Accede al Admin Panel: `/admin/settings`
-2. Configura las credenciales de Gmail OAuth
-3. Autoriza la cuenta de Gmail
+**IMPORTANTE**: Debes tener HTTPS configurado antes de continuar.
+
+#### 5.1. Configurar Google Cloud Console
+
+1. Ve a [Google Cloud Console](https://console.cloud.google.com)
+2. Crea o selecciona tu proyecto
+3. Ve a **APIs & Services** → **Credentials**
+4. Crea credenciales OAuth 2.0 Client ID (tipo "Web application")
+5. En **Authorized redirect URIs**, agrega:
+   ```
+   https://tudominio.com/admin/settings/gmail-auth
+   ```
+   ⚠️ **Debe ser HTTPS** - Google rechazará URLs HTTP
+
+#### 5.2. Subir client_secret.json
+
+1. Descarga el archivo `client_secret.json` de Google Cloud Console
+2. Ve a `/admin/settings` en tu aplicación
+3. En la sección **"Archivo de Configuración de Gmail"**:
+   - Haz clic en **"Seleccionar archivo"**
+   - Sube el archivo `client_secret.json`
+   - Haz clic en **"Subir Archivo"**
+
+#### 5.3. Autorizar Gmail
+
+1. En `/admin/settings`, sección **"Configuración de Gmail"**
+2. Haz clic en **"Autorizar Gmail"**
+3. Completa el flujo OAuth de Google
+4. Una vez autorizado, verás el estado como "Conectado"
 
 ### 6. Iniciar el Worker (Después de configurar Gmail)
 
 En la **Terminal/Console** de Easypanel:
 
 ```bash
+# Verificar que supervisor está corriendo
+supervisorctl status
+
+# Deberías ver:
+# php-fpm                          RUNNING
+# nginx                            RUNNING
+# gmail-worker                     STOPPED
+
 # Iniciar worker
 start-worker
 
 # O manualmente con supervisorctl
 supervisorctl start gmail-worker
 
-# Ver estado
-supervisorctl status
+# Verificar que está corriendo
+supervisorctl status gmail-worker
 
 # Ver logs del worker
 tail -f /var/www/html/logs/worker.log
+```
+
+**Nota**: Si ves el error `unix:///var/run/supervisor.sock no such file`, significa que Supervisor no está corriendo. Esto puede suceder si:
+- El contenedor se acaba de iniciar y Supervisor aún no ha creado el socket
+- Hay un problema con la configuración de Supervisor
+
+**Solución**: Espera unos segundos y vuelve a intentar. Si persiste, verifica los logs:
+```bash
+cat /var/www/html/logs/supervisord.log
 ```
 
 ## 🔍 Verificar Estado de Servicios
@@ -143,6 +186,44 @@ tail -f /var/www/html/logs/supervisord.log
 
 ## 🛠️ Troubleshooting
 
+### Google OAuth no acepta mi URL (error "redirect_uri_mismatch")
+
+**Causa**: La aplicación está generando URLs HTTP en lugar de HTTPS.
+
+**Solución**:
+
+1. **Verifica que HTTPS esté habilitado en Easypanel**:
+   - Ve a tu aplicación en Easypanel
+   - En la sección **Domains**, asegúrate de tener un dominio configurado
+   - Verifica que el certificado SSL esté activo (🔒 verde)
+
+2. **Asegúrate de que `TRUST_PROXY=true` esté en Environment Variables**:
+   ```bash
+   TRUST_PROXY=true
+   ```
+
+3. **Opcionalmente, fuerza la URL base con HTTPS**:
+   ```bash
+   FULL_BASE_URL=https://tudominio.com
+   ```
+
+4. **Verifica que la URL de redirección sea correcta**:
+   - En Google Cloud Console debe ser: `https://tudominio.com/admin/settings/gmail-auth`
+   - En tu aplicación, ve a `/admin/settings` y verifica que los enlaces sean HTTPS
+
+5. **Redespliega** después de cambiar las variables de entorno
+
+### La aplicación genera URLs HTTP en lugar de HTTPS
+
+**Síntoma**: Los enlaces en la aplicación apuntan a `http://` en lugar de `https://`
+
+**Causa**: CakePHP no está detectando que está detrás de un proxy HTTPS.
+
+**Solución**:
+1. Agrega `TRUST_PROXY=true` a las Environment Variables en Easypanel
+2. Verifica que Easypanel esté enviando el header `X-Forwarded-Proto: https`
+3. Redespliega la aplicación
+
 ### Nginx no inicia
 
 ```bash
@@ -153,9 +234,42 @@ nginx -t
 cat /var/www/html/logs/nginx-error.log
 ```
 
+### Error "unix:///var/run/supervisor.sock no such file"
+
+**Causa**: Supervisor no está corriendo o el socket no se ha creado.
+
+**Diagnóstico**:
+```bash
+# Verificar que supervisor está corriendo
+ps aux | grep supervisord
+
+# Ver logs de supervisor
+cat /var/www/html/logs/supervisord.log
+
+# Verificar si el socket existe
+ls -la /var/run/supervisor.sock
+```
+
+**Solución**:
+
+1. **Si el contenedor se acaba de iniciar**: Espera 10-20 segundos para que Supervisor se inicialice completamente.
+
+2. **Si Supervisor no está corriendo**: El contenedor debe reiniciarse. En Easypanel, haz clic en "Restart" en la aplicación.
+
+3. **Si persiste después de reiniciar**: Revisa los logs del contenedor para ver errores de inicio:
+   ```bash
+   cat /var/www/html/logs/supervisord.log
+   ```
+
 ### Worker no funciona
 
 ```bash
+# Verificar que el worker está corriendo
+supervisorctl status gmail-worker
+
+# Si está STOPPED, iniciarlo
+supervisorctl start gmail-worker
+
 # Verificar configuración de Gmail
 php bin/cake.php import_gmail
 
@@ -189,10 +303,14 @@ supervisorctl restart all
 
 ## ✅ Checklist Post-Despliegue
 
+- [ ] Dominio configurado en Easypanel con HTTPS habilitado (🔒)
+- [ ] Variable `TRUST_PROXY=true` configurada
 - [ ] Migraciones ejecutadas correctamente
-- [ ] La aplicación carga en el navegador
+- [ ] La aplicación carga en el navegador con HTTPS
 - [ ] Login funciona
-- [ ] Gmail OAuth configurado
+- [ ] Los enlaces internos usan HTTPS (no HTTP)
+- [ ] `client_secret.json` subido vía panel de administración
+- [ ] Gmail OAuth configurado y autorizado
 - [ ] Worker iniciado manualmente
 - [ ] Emails se importan correctamente
 - [ ] Uploads funcionan
