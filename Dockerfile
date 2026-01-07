@@ -33,9 +33,9 @@ RUN cp config/app_local.example.php config/app_local.php
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Create necessary directories and set permissions
-RUN mkdir -p logs tmp/cache tmp/sessions webroot/uploads/tickets webroot/uploads/compras webroot/uploads/pqrs \
+RUN mkdir -p logs tmp/cache tmp/sessions webroot/uploads/tickets webroot/uploads/compras webroot/uploads/pqrs config/google \
     && chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 logs tmp webroot/uploads
+    && chmod -R 775 logs tmp webroot/uploads config/google
 
 # Copy PHP configuration
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/custom.ini
