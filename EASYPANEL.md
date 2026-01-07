@@ -119,7 +119,9 @@ Accede a la URL de tu app y verifica que carga correctamente.
 3. Completa el flujo OAuth de Google
 4. Una vez autorizado, verás el estado como "Conectado"
 
-### 6. Iniciar el Worker (Después de configurar Gmail)
+### 6. Iniciar el Worker
+
+**IMPORTANTE**: El worker puede iniciarse **antes o después** de configurar Gmail. Si Gmail no está configurado, el worker esperará y revisará cada N minutos hasta que esté configurado.
 
 En la **Terminal/Console** de Easypanel:
 
@@ -144,6 +146,24 @@ supervisorctl status gmail-worker
 # Ver logs del worker
 tail -f /var/www/html/logs/worker.log
 ```
+
+**Comportamiento del Worker:**
+
+- **Si Gmail NO está configurado**: El worker mostrará un warning cada N minutos indicando que Gmail no está configurado, pero seguirá ejecutándose.
+  ```
+  [2026-01-07 14:57:18] Iteration #1
+    Gmail OAuth not configured yet. Skipping import.
+    Configure Gmail at /admin/settings before starting the worker.
+    Worker will continue checking every 5 minutes.
+  ```
+
+- **Si Gmail ESTÁ configurado**: El worker importará emails automáticamente cada N minutos.
+  ```
+  [2026-01-07 14:57:18] Iteration #1
+    Running Gmail import...
+    Import completed successfully
+    Next import at: 2026-01-07 15:02:18
+  ```
 
 **Nota**: Si ves el error `unix:///var/run/supervisor.sock no such file`, significa que Supervisor no está corriendo. Esto puede suceder si:
 - El contenedor se acaba de iniciar y Supervisor aún no ha creado el socket

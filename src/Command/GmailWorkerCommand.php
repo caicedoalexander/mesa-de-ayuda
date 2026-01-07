@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Command;
 
+use App\Utility\SettingsEncryptionTrait;
 use Cake\Command\Command;
 use Cake\Console\Arguments;
 use Cake\Console\ConsoleIo;
@@ -22,6 +23,7 @@ use Cake\Console\Exception\StopException;
 class GmailWorkerCommand extends Command
 {
     use LocatorAwareTrait;
+    use SettingsEncryptionTrait;
 
     /**
      * Hook method for defining this command's option parser.
@@ -79,14 +81,21 @@ class GmailWorkerCommand extends Command
                 $intervalMinutes = $this->getImportInterval();
                 $io->verbose("  Import interval: {$intervalMinutes} minutes");
 
-                // Execute the import
-                $io->out('  Running Gmail import...');
-                $result = $this->executeImport($io);
-
-                if ($result === self::CODE_SUCCESS) {
-                    $io->success('  Import completed successfully');
+                // Check if Gmail is configured
+                if (!$this->isGmailConfigured()) {
+                    $io->warning('  Gmail OAuth not configured yet. Skipping import.');
+                    $io->out('  Configure Gmail at /admin/settings before starting the worker.');
+                    $io->out('  Worker will continue checking every ' . $intervalMinutes . ' minutes.');
                 } else {
-                    $io->warning('  Import completed with errors');
+                    // Execute the import
+                    $io->out('  Running Gmail import...');
+                    $result = $this->executeImport($io);
+
+                    if ($result === self::CODE_SUCCESS) {
+                        $io->success('  Import completed successfully');
+                    } else {
+                        $io->warning('  Import completed with errors');
+                    }
                 }
 
                 $duration = round(microtime(true) - $startTime, 2);
@@ -142,9 +151,60 @@ class GmailWorkerCommand extends Command
         $command->initialize();
 
         // Create arguments with default options
-        $args = new Arguments([], ['max' => 50, 'query' => 'is:unread', 'delay' => 1000], []);
+        $args = new Arguments([], ['max' => '50', 'query' => 'is:unread', 'delay' => '1000'], []);
 
         return $command->execute($args, $io) ?? self::CODE_SUCCESS;
+    }
+
+    /**
+     * Check if Gmail OAuth is configured
+     *
+     * @return bool
+     */
+    private function isGmailConfigured(): bool
+    {
+        $settingsTable = $this->fetchTable('SystemSettings');
+
+        // Check for refresh token (required for OAuth)
+        $refreshTokenSetting = $settingsTable->find()
+            ->where(['setting_key' => 'gmail_refresh_token'])
+            ->first();
+
+        if (!$refreshTokenSetting || empty($refreshTokenSetting->setting_value)) {
+            return false;
+        }
+
+        // Decrypt the refresh token to verify it's valid
+        try {
+            $decryptedToken = $this->shouldEncrypt('gmail_refresh_token')
+                ? $this->decryptSetting($refreshTokenSetting->setting_value, 'gmail_refresh_token')
+                : $refreshTokenSetting->setting_value;
+
+            if (empty($decryptedToken)) {
+                return false;
+            }
+        } catch (\Exception $e) {
+            // Decryption failed, token is invalid
+            Log::error('Failed to decrypt Gmail refresh token', [
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+
+        // Check for client_secret.json file
+        $clientSecretPath = $settingsTable->find()
+            ->where(['setting_key' => 'gmail_client_secret_path'])
+            ->first();
+
+        if (!$clientSecretPath || empty($clientSecretPath->setting_value)) {
+            return false;
+        }
+
+        if (!file_exists($clientSecretPath->setting_value)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
