@@ -52,7 +52,9 @@ docker-compose.yml
 docker-compose.prod.yml
 docker-compose.*.yml
 docker/web/Dockerfile
-docker/scripts/
+docker/scripts/*.ps1
+docker/scripts/*.sh
+!docker/scripts/start-worker.sh
 
 # Uploads (will be mounted as volume)
 webroot/uploads/*

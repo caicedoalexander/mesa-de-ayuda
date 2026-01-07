@@ -37,18 +37,22 @@ RUN mkdir -p logs tmp/cache tmp/sessions webroot/uploads/tickets webroot/uploads
 # Copy PHP configuration
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/custom.ini
 
-# Copy Nginx configuration
-COPY docker/nginx/default.conf /etc/nginx/sites-available/default
+# Configure Nginx
+RUN rm -f /etc/nginx/sites-enabled/default \
+    && rm -f /etc/nginx/sites-available/default
+COPY docker/nginx/easypanel.conf /etc/nginx/sites-enabled/default
 
 # Copy supervisor configuration for running nginx + php-fpm + worker
 RUN echo '[supervisord]\n\
 nodaemon=true\n\
 user=root\n\
+logfile=/var/www/html/logs/supervisord.log\n\
 \n\
 [program:php-fpm]\n\
 command=/usr/local/sbin/php-fpm -F\n\
 autostart=true\n\
 autorestart=true\n\
+priority=1\n\
 stdout_logfile=/var/www/html/logs/php-fpm.log\n\
 stderr_logfile=/var/www/html/logs/php-fpm-error.log\n\
 \n\
@@ -56,16 +60,23 @@ stderr_logfile=/var/www/html/logs/php-fpm-error.log\n\
 command=/usr/sbin/nginx -g "daemon off;"\n\
 autostart=true\n\
 autorestart=true\n\
+priority=2\n\
 stdout_logfile=/var/www/html/logs/nginx.log\n\
 stderr_logfile=/var/www/html/logs/nginx-error.log\n\
 \n\
 [program:gmail-worker]\n\
 command=/usr/local/bin/php /var/www/html/bin/cake.php gmail_worker\n\
-autostart=true\n\
+autostart=false\n\
 autorestart=true\n\
+priority=3\n\
+startretries=3\n\
 stdout_logfile=/var/www/html/logs/worker.log\n\
 stderr_logfile=/var/www/html/logs/worker-error.log\n\
 user=www-data' > /etc/supervisor/conf.d/supervisord.conf
+
+# Copy worker management script
+COPY docker/scripts/start-worker.sh /usr/local/bin/start-worker
+RUN chmod +x /usr/local/bin/start-worker
 
 # Expose port 80
 EXPOSE 80
