@@ -1,0 +1,86 @@
+
+PHP CODE SNIFFER REPORT SUMMARY
+--------------------------------------------------------------------------------
+FILE                                                            ERRORS  WARNINGS
+--------------------------------------------------------------------------------
+C:\Users\sistema\Documents\soporte\src\Application.php          1       0
+...istema\Documents\soporte\src\Command\GmailWorkerCommand.php  8       0
+...istema\Documents\soporte\src\Command\ImportGmailCommand.php  23      0
+...\sistema\Documents\soporte\src\Command\TestEmailCommand.php  14      0
+...\sistema\Documents\soporte\src\Controller\AppController.php  5       0
+...tema\Documents\soporte\src\Controller\ComprasController.php  31      0
+...stema\Documents\soporte\src\Controller\HealthController.php  3       0
+...sistema\Documents\soporte\src\Controller\PqrsController.php  20      0
+...tema\Documents\soporte\src\Controller\TicketsController.php  48      0
+...istema\Documents\soporte\src\Controller\UsersController.php  2       0
+...ents\soporte\src\Controller\Admin\ConfigFilesController.php  24      1
+...cuments\soporte\src\Controller\Admin\SettingsController.php  44      0
+...ts\soporte\src\Controller\Admin\SlaManagementController.php  9       4
+...soporte\src\Controller\Traits\StatisticsControllerTrait.php  1       0
+...porte\src\Controller\Traits\TicketSystemControllerTrait.php  63      5
+...s\soporte\src\Controller\Traits\ViewDataNormalizerTrait.php  6       0
+...s\sistema\Documents\soporte\src\Model\Entity\Attachment.php  14      1
+C:\Users\sistema\Documents\soporte\src\Model\Entity\Compra.php  6       0
+...istema\Documents\soporte\src\Model\Entity\EmailTemplate.php  8       1
+...sistema\Documents\soporte\src\Model\Entity\Organization.php  6       1
+...istema\Documents\soporte\src\Model\Entity\SystemSetting.php  6       1
+C:\Users\sistema\Documents\soporte\src\Model\Entity\Tag.php     5       1
+C:\Users\sistema\Documents\soporte\src\Model\Entity\Ticket.php  6       0
+...stema\Documents\soporte\src\Model\Entity\TicketFollower.php  6       1
+...istema\Documents\soporte\src\Model\Entity\TicketHistory.php  1       0
+...rs\sistema\Documents\soporte\src\Model\Entity\TicketTag.php  6       1
+C:\Users\sistema\Documents\soporte\src\Model\Entity\User.php    1       0
+...tema\Documents\soporte\src\Model\Table\AttachmentsTable.php  8       1
+...cuments\soporte\src\Model\Table\ComprasAttachmentsTable.php  4       2
+...\Documents\soporte\src\Model\Table\ComprasCommentsTable.php  4       0
+...a\Documents\soporte\src\Model\Table\ComprasHistoryTable.php  6       0
+...\sistema\Documents\soporte\src\Model\Table\ComprasTable.php  10      0
+...a\Documents\soporte\src\Model\Table\EmailTemplatesTable.php  2       0
+...ma\Documents\soporte\src\Model\Table\OrganizationsTable.php  8       1
+...\Documents\soporte\src\Model\Table\PqrsAttachmentsTable.php  2       1
+...ema\Documents\soporte\src\Model\Table\PqrsCommentsTable.php  3       0
+...tema\Documents\soporte\src\Model\Table\PqrsHistoryTable.php  4       0
+...ers\sistema\Documents\soporte\src\Model\Table\PqrsTable.php  7       1
+...a\Documents\soporte\src\Model\Table\SystemSettingsTable.php  2       0
+...ers\sistema\Documents\soporte\src\Model\Table\TagsTable.php  5       1
+...a\Documents\soporte\src\Model\Table\TicketCommentsTable.php  9       1
+...\Documents\soporte\src\Model\Table\TicketFollowersTable.php  9       1
+...ma\Documents\soporte\src\Model\Table\TicketHistoryTable.php  11      1
+...\sistema\Documents\soporte\src\Model\Table\TicketsTable.php  12      1
+...stema\Documents\soporte\src\Model\Table\TicketTagsTable.php  3       0
+...rs\sistema\Documents\soporte\src\Model\Table\UsersTable.php  21      4
+...rs\sistema\Documents\soporte\src\Service\ComprasService.php  44      0
+...sers\sistema\Documents\soporte\src\Service\EmailService.php  77      14
+...sers\sistema\Documents\soporte\src\Service\GmailService.php  36      6
+C:\Users\sistema\Documents\soporte\src\Service\N8nService.php   14      1
+C:\Users\sistema\Documents\soporte\src\Service\PqrsService.php  27      1
+...s\sistema\Documents\soporte\src\Service\ResponseService.php  31      1
+C:\Users\sistema\Documents\soporte\src\Service\S3Service.php    19      1
+...tema\Documents\soporte\src\Service\SlaManagementService.php  33      1
+...sistema\Documents\soporte\src\Service\StatisticsService.php  23      0
+...ers\sistema\Documents\soporte\src\Service\TicketService.php  63      2
+...s\sistema\Documents\soporte\src\Service\WhatsappService.php  33      0
+...ments\soporte\src\Service\Renderer\NotificationRenderer.php  17      3
+...uments\soporte\src\Service\Traits\EntityConversionTrait.php  15      0
+...ments\soporte\src\Service\Traits\GenericAttachmentTrait.php  45      11
+...\soporte\src\Service\Traits\NotificationDispatcherTrait.php  9       0
+...ments\soporte\src\Service\Traits\StatisticsServiceTrait.php  35      2
+...\Documents\soporte\src\Service\Traits\TicketSystemTrait.php  38      0
+...a\Documents\soporte\src\Utility\SettingsEncryptionTrait.php  8       0
+...tema\Documents\soporte\src\View\Cell\ComprasSidebarCell.php  1       2
+...sistema\Documents\soporte\src\View\Cell\PqrsSidebarCell.php  2       3
+...tema\Documents\soporte\src\View\Cell\TicketsSidebarCell.php  2       2
+...istema\Documents\soporte\src\View\Cell\UsersSidebarCell.php  3       0
+...sistema\Documents\soporte\src\View\Helper\ComprasHelper.php  20      2
+...rs\sistema\Documents\soporte\src\View\Helper\PqrsHelper.php  13      1
+...\sistema\Documents\soporte\src\View\Helper\StatusHelper.php  27      3
+...\sistema\Documents\soporte\src\View\Helper\TicketHelper.php  4       0
+...stema\Documents\soporte\src\View\Helper\TimeHumanHelper.php  17      0
+...rs\sistema\Documents\soporte\src\View\Helper\UserHelper.php  3       1
+--------------------------------------------------------------------------------
+A TOTAL OF 1156 ERRORS AND 89 WARNINGS WERE FOUND IN 74 FILES
+--------------------------------------------------------------------------------
+PHPCBF CAN FIX 1078 OF THESE SNIFF VIOLATIONS AUTOMATICALLY
+--------------------------------------------------------------------------------
+
+Time: 10.97 secs; Memory: 40MB

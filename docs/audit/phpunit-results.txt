@@ -1,0 +1,38 @@
+PHPUnit 12.5.4 by Sebastian Bergmann and contributors.
+
+Error in bootstrap script: RuntimeException:
+Could not apply migrations for {"connection":"test"}
+
+Migrations failed to apply with message:
+
+An invalid column type "enum" was specified for column "role".
+
+If you are using the `skip` option and running multiple sets of migrations on the same connection, you can't skip tables managed by CakePHP in the connection.
+#0 C:\Users\sistema\Documents\soporte\vendor\cakephp\migrations\src\TestSuite\Migrator.php(58): Migrations\TestSuite\Migrator->runMany(Array, true)
+#1 C:\Users\sistema\Documents\soporte\tests\bootstrap.php(75): Migrations\TestSuite\Migrator->run()
+#2 C:\Users\sistema\Documents\soporte\vendor\phpunit\phpunit\src\TextUI\Configuration\BootstrapLoader.php(61): include_once('C:\\Users\\sistem...')
+#3 C:\Users\sistema\Documents\soporte\vendor\phpunit\phpunit\src\TextUI\Configuration\BootstrapLoader.php(36): PHPUnit\TextUI\Configuration\BootstrapLoader->load('C:\\Users\\sistem...')
+#4 C:\Users\sistema\Documents\soporte\vendor\phpunit\phpunit\src\TextUI\Application.php(132): PHPUnit\TextUI\Configuration\BootstrapLoader->handle(Object(PHPUnit\TextUI\Configuration\Configuration))
+#5 C:\Users\sistema\Documents\soporte\vendor\phpunit\phpunit\phpunit(104): PHPUnit\TextUI\Application->run(Array)
+#6 C:\Users\sistema\Documents\soporte\vendor\bin\phpunit(122): include('C:\\Users\\sistem...')
+#7 {main}
+
+Previous error: InvalidArgumentException:
+An invalid column type "enum" was specified for column "role".
+#0 C:\Users\sistema\Documents\soporte\vendor\cakephp\migrations\src\Table.php(75): Phinx\Db\Table->addColumn('role', 'enum', Array)
+#1 C:\Users\sistema\Documents\soporte\config\Migrations\20260105000002_CreateUsers.php(63): Migrations\Table->addColumn('role', 'enum', Array)
+#2 C:\Users\sistema\Documents\soporte\vendor\cakephp\migrations\src\Shim\MigrationAdapter.php(131): CreateUsers->change()
+#3 C:\Users\sistema\Documents\soporte\vendor\cakephp\migrations\src\Migration\Environment.php(99): Migrations\Shim\MigrationAdapter->applyDirection('up')
+#4 C:\Users\sistema\Documents\soporte\vendor\cakephp\migrations\src\Migration\Manager.php(449): Migrations\Migration\Environment->executeMigration(Object(Migrations\Shim\MigrationAdapter), 'up', false)
+#5 C:\Users\sistema\Documents\soporte\vendor\cakephp\migrations\src\Migration\Manager.php(420): Migrations\Migration\Manager->executeMigration(Object(Migrations\Shim\MigrationAdapter), 'up', false)
+#6 C:\Users\sistema\Documents\soporte\vendor\cakephp\migrations\src\Migration\BuiltinBackend.php(96): Migrations\Migration\Manager->migrate(20260105210204)
+#7 C:\Users\sistema\Documents\soporte\vendor\cakephp\migrations\src\Migrations.php(186): Migrations\Migration\BuiltinBackend->migrate(Array)
+#8 C:\Users\sistema\Documents\soporte\vendor\cakephp\migrations\src\TestSuite\Migrator.php(116): Migrations\Migrations->migrate(Array)
+#9 C:\Users\sistema\Documents\soporte\vendor\cakephp\migrations\src\TestSuite\Migrator.php(58): Migrations\TestSuite\Migrator->runMany(Array, true)
+#10 C:\Users\sistema\Documents\soporte\tests\bootstrap.php(75): Migrations\TestSuite\Migrator->run()
+#11 C:\Users\sistema\Documents\soporte\vendor\phpunit\phpunit\src\TextUI\Configuration\BootstrapLoader.php(61): include_once('C:\\Users\\sistem...')
+#12 C:\Users\sistema\Documents\soporte\vendor\phpunit\phpunit\src\TextUI\Configuration\BootstrapLoader.php(36): PHPUnit\TextUI\Configuration\BootstrapLoader->load('C:\\Users\\sistem...')
+#13 C:\Users\sistema\Documents\soporte\vendor\phpunit\phpunit\src\TextUI\Application.php(132): PHPUnit\TextUI\Configuration\BootstrapLoader->handle(Object(PHPUnit\TextUI\Configuration\Configuration))
+#14 C:\Users\sistema\Documents\soporte\vendor\phpunit\phpunit\phpunit(104): PHPUnit\TextUI\Application->run(Array)
+#15 C:\Users\sistema\Documents\soporte\vendor\bin\phpunit(122): include('C:\\Users\\sistem...')
+#16 {main}

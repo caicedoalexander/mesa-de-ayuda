@@ -1,0 +1,1630 @@
+Note: Using configuration file C:\Users\sistema\Documents\soporte\phpstan.neon.
+   0/112 [>---------------------------]   0%[1G[2K  20/112 [=====>----------------------]  17%[1G[2K  40/112 [==========>-----------------]  35%[1G[2K  60/112 [===============>------------]  53%[1G[2K  72/112 [==================>---------]  64%[1G[2K  92/112 [=======================>----]  82%[1G[2K 112/112 [============================] 100% ------ ---------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Command\TestEmailCommand.php[39m                                                              
+ ------ ---------------------------------------------------------------------------------------------- 
+  :33    Access to an undefined property Cake\Datasource\EntityInterface::$ticket_number.              
+         🪪  property.notFound                                                                         
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m         
+  :35    Parameter #1 $ticket of method App\Service\EmailService::sendNewTicketNotification() expects  
+         App\Model\Entity\Ticket, Cake\Datasource\EntityInterface given.                               
+         🪪  argument.type                                                                             
+ ------ ---------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Controller\Admin\SettingsController.php[39m                                            
+ ------ --------------------------------------------------------------------------------------- 
+  :298   Access to an undefined property Cake\Datasource\EntityInterface::$body_html.           
+         🪪  property.notFound                                                                  
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :342   Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+         🪪  property.notFound                                                                  
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :342   Call to an undefined method Cake\ORM\Table::saveProfileImage().                        
+         🪪  method.notFound                                                                    
+  :545   Access to an undefined property Cake\Datasource\EntityInterface::$is_active.           
+         🪪  property.notFound                                                                  
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :569   Access to an undefined property Cake\Datasource\EntityInterface::$is_active.           
+         🪪  property.notFound                                                                  
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+ ------ --------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Controller\ComprasController.php[39m                                                                           
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  :256   Parameter #1 $compra of method App\Service\ComprasService::convertToTicket() expects App\Model\Entity\Compra,  
+         Cake\Datasource\EntityInterface given.                                                                         
+         🪪  argument.type                                                                                              
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+
+
+ ------- -------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m    [32msrc\Controller\Traits\TicketSystemControllerTrait.php (in context of class App\Controller\ComprasController)[39m  
+ ------- -------------------------------------------------------------------------------------------------------------- 
+  :65     Access to an undefined property App\Controller\ComprasController::$Tickets.                                   
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :73     Access to an undefined property App\Controller\ComprasController::$Pqrs.                                      
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :74     Access to an undefined property App\Controller\ComprasController::$pqrsService.                               
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :119    Access to an undefined property App\Controller\ComprasController::$Tickets.                                   
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :127    Access to an undefined property App\Controller\ComprasController::$Pqrs.                                      
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :128    Access to an undefined property App\Controller\ComprasController::$pqrsService.                               
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :180    Access to an undefined property App\Controller\ComprasController::$Tickets.                                   
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :188    Access to an undefined property App\Controller\ComprasController::$Pqrs.                                      
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :189    Access to an undefined property App\Controller\ComprasController::$pqrsService.                               
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :294    Access to an undefined property Cake\Datasource\EntityInterface::$original_filename.                          
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :421    Call to an undefined method Cake\ORM\Table::logChange().                                                      
+          🪪  method.notFound                                                                                           
+  :1191   Access to an undefined property Cake\Datasource\EntityInterface::$requester_id.                               
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+ ------- -------------------------------------------------------------------------------------------------------------- 
+
+ ------- ----------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m    [32msrc\Controller\Traits\TicketSystemControllerTrait.php (in context of class App\Controller\PqrsController)[39m  
+ ------- ----------------------------------------------------------------------------------------------------------- 
+  :65     Access to an undefined property App\Controller\PqrsController::$Tickets.                                   
+          🪪  property.notFound                                                                                      
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                      
+  :66     Access to an undefined property App\Controller\PqrsController::$ticketService.                             
+          🪪  property.notFound                                                                                      
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                      
+  :69     Access to an undefined property App\Controller\PqrsController::$Compras.                                   
+          🪪  property.notFound                                                                                      
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                      
+  :70     Access to an undefined property App\Controller\PqrsController::$comprasService.                            
+          🪪  property.notFound                                                                                      
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                      
+  :119    Access to an undefined property App\Controller\PqrsController::$Tickets.                                   
+          🪪  property.notFound                                                                                      
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                      
+  :120    Access to an undefined property App\Controller\PqrsController::$ticketService.                             
+          🪪  property.notFound                                                                                      
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                      
+  :123    Access to an undefined property App\Controller\PqrsController::$Compras.                                   
+          🪪  property.notFound                                                                                      
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                      
+  :124    Access to an undefined property App\Controller\PqrsController::$comprasService.                            
+          🪪  property.notFound                                                                                      
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                      
+  :180    Access to an undefined property App\Controller\PqrsController::$Tickets.                                   
+          🪪  property.notFound                                                                                      
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                      
+  :181    Access to an undefined property App\Controller\PqrsController::$ticketService.                             
+          🪪  property.notFound                                                                                      
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                      
+  :184    Access to an undefined property App\Controller\PqrsController::$Compras.                                   
+          🪪  property.notFound                                                                                      
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                      
+  :185    Access to an undefined property App\Controller\PqrsController::$comprasService.                            
+          🪪  property.notFound                                                                                      
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                      
+  :294    Access to an undefined property Cake\Datasource\EntityInterface::$original_filename.                       
+          🪪  property.notFound                                                                                      
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                      
+  :421    Call to an undefined method Cake\ORM\Table::logChange().                                                   
+          🪪  method.notFound                                                                                        
+  :1191   Access to an undefined property Cake\Datasource\EntityInterface::$requester_id.                            
+          🪪  property.notFound                                                                                      
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                      
+ ------- ----------------------------------------------------------------------------------------------------------- 
+
+ ------- -------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m    [32msrc\Controller\Traits\TicketSystemControllerTrait.php (in context of class App\Controller\TicketsController)[39m  
+ ------- -------------------------------------------------------------------------------------------------------------- 
+  :69     Access to an undefined property App\Controller\TicketsController::$Compras.                                   
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :73     Access to an undefined property App\Controller\TicketsController::$Pqrs.                                      
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :74     Access to an undefined property App\Controller\TicketsController::$pqrsService.                               
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :123    Access to an undefined property App\Controller\TicketsController::$Compras.                                   
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :127    Access to an undefined property App\Controller\TicketsController::$Pqrs.                                      
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :128    Access to an undefined property App\Controller\TicketsController::$pqrsService.                               
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :184    Access to an undefined property App\Controller\TicketsController::$Compras.                                   
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :188    Access to an undefined property App\Controller\TicketsController::$Pqrs.                                      
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :189    Access to an undefined property App\Controller\TicketsController::$pqrsService.                               
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :294    Access to an undefined property Cake\Datasource\EntityInterface::$original_filename.                          
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :421    Call to an undefined method Cake\ORM\Table::logChange().                                                      
+          🪪  method.notFound                                                                                           
+  :1191   Access to an undefined property Cake\Datasource\EntityInterface::$requester_id.                               
+          🪪  property.notFound                                                                                         
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+ ------- -------------------------------------------------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Model\Table\AttachmentsTable.php[39m                                                                       
+ ------ ----------------------------------------------------------------------------------------------------------- 
+  :33    PHPDoc tag @property for property App\Model\Table\AttachmentsTable::$Comments contains unresolvable type.  
+         🪪  propertyTag.unresolvableType                                                                           
+  :33    PHPDoc tag @property for property App\Model\Table\AttachmentsTable::$Tickets contains unresolvable type.   
+         🪪  propertyTag.unresolvableType                                                                           
+ ------ ----------------------------------------------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Model\Table\ComprasAttachmentsTable.php[39m                                                                
+ ------ ----------------------------------------------------------------------------------------------------------- 
+  :18    PHPDoc tag @property for property App\Model\Table\ComprasAttachmentsTable::$Compras contains unresolvable  
+         type.                                                                                                      
+         🪪  propertyTag.unresolvableType                                                                           
+  :18    PHPDoc tag @property for property App\Model\Table\ComprasAttachmentsTable::$ComprasComments contains       
+         unresolvable type.                                                                                         
+         🪪  propertyTag.unresolvableType                                                                           
+  :18    PHPDoc tag @property for property App\Model\Table\ComprasAttachmentsTable::$UploadedByUsers contains       
+         unresolvable type.                                                                                         
+         🪪  propertyTag.unresolvableType                                                                           
+ ------ ----------------------------------------------------------------------------------------------------------- 
+
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Model\Table\ComprasCommentsTable.php[39m                                                                      
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  :18    PHPDoc tag @property for property App\Model\Table\ComprasCommentsTable::$Compras contains unresolvable type.  
+         🪪  propertyTag.unresolvableType                                                                              
+  :18    PHPDoc tag @property for property App\Model\Table\ComprasCommentsTable::$ComprasAttachments contains          
+         unresolvable type.                                                                                            
+         🪪  propertyTag.unresolvableType                                                                              
+  :18    PHPDoc tag @property for property App\Model\Table\ComprasCommentsTable::$Users contains unresolvable type.    
+         🪪  propertyTag.unresolvableType                                                                              
+ ------ -------------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Model\Table\ComprasHistoryTable.php[39m                                                                      
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  :17    PHPDoc tag @property for property App\Model\Table\ComprasHistoryTable::$Compras contains unresolvable type.  
+         🪪  propertyTag.unresolvableType                                                                             
+  :17    PHPDoc tag @property for property App\Model\Table\ComprasHistoryTable::$Users contains unresolvable type.    
+         🪪  propertyTag.unresolvableType                                                                             
+ ------ ------------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------------ 
+  [32mLine[39m   [32msrc\Model\Table\OrganizationsTable.php[39m                                                                      
+ ------ ------------------------------------------------------------------------------------------------------------ 
+  :33    PHPDoc tag @property for property App\Model\Table\OrganizationsTable::$Tickets contains unresolvable type.  
+         🪪  propertyTag.unresolvableType                                                                            
+  :33    PHPDoc tag @property for property App\Model\Table\OrganizationsTable::$Users contains unresolvable type.    
+         🪪  propertyTag.unresolvableType                                                                            
+ ------ ------------------------------------------------------------------------------------------------------------ 
+
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Model\Table\PqrsAttachmentsTable.php[39m                                                                     
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  :28    PHPDoc tag @property for property App\Model\Table\PqrsAttachmentsTable::$Pqrs contains unresolvable type.    
+         🪪  propertyTag.unresolvableType                                                                             
+  :28    PHPDoc tag @property for property App\Model\Table\PqrsAttachmentsTable::$PqrsComments contains unresolvable  
+         type.                                                                                                        
+         🪪  propertyTag.unresolvableType                                                                             
+  :28    PHPDoc tag @property for property App\Model\Table\PqrsAttachmentsTable::$UploadedByUsers contains            
+         unresolvable type.                                                                                           
+         🪪  propertyTag.unresolvableType                                                                             
+ ------ ------------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Model\Table\PqrsCommentsTable.php[39m                                                                        
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  :30    PHPDoc tag @property for property App\Model\Table\PqrsCommentsTable::$Pqrs contains unresolvable type.       
+         🪪  propertyTag.unresolvableType                                                                             
+  :30    PHPDoc tag @property for property App\Model\Table\PqrsCommentsTable::$PqrsAttachments contains unresolvable  
+         type.                                                                                                        
+         🪪  propertyTag.unresolvableType                                                                             
+  :30    PHPDoc tag @property for property App\Model\Table\PqrsCommentsTable::$Users contains unresolvable type.      
+         🪪  propertyTag.unresolvableType                                                                             
+ ------ ------------------------------------------------------------------------------------------------------------- 
+
+ ------ -------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Model\Table\PqrsHistoryTable.php[39m                                                                    
+ ------ -------------------------------------------------------------------------------------------------------- 
+  :27    PHPDoc tag @property for property App\Model\Table\PqrsHistoryTable::$Pqrs contains unresolvable type.   
+         🪪  propertyTag.unresolvableType                                                                        
+  :27    PHPDoc tag @property for property App\Model\Table\PqrsHistoryTable::$Users contains unresolvable type.  
+         🪪  propertyTag.unresolvableType                                                                        
+  :123   PHPDoc tag @param for parameter $userId with type int|null is not subtype of native type int.           
+         🪪  parameter.phpDocType                                                                                
+ ------ -------------------------------------------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Model\Table\PqrsTable.php[39m                                                                              
+ ------ ----------------------------------------------------------------------------------------------------------- 
+  :35    PHPDoc tag @property for property App\Model\Table\PqrsTable::$Assignees contains unresolvable type.        
+         🪪  propertyTag.unresolvableType                                                                           
+  :35    PHPDoc tag @property for property App\Model\Table\PqrsTable::$PqrsAttachments contains unresolvable type.  
+         🪪  propertyTag.unresolvableType                                                                           
+  :35    PHPDoc tag @property for property App\Model\Table\PqrsTable::$PqrsComments contains unresolvable type.     
+         🪪  propertyTag.unresolvableType                                                                           
+  :35    PHPDoc tag @property for property App\Model\Table\PqrsTable::$PqrsHistory contains unresolvable type.      
+         🪪  propertyTag.unresolvableType                                                                           
+ ------ ----------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------ 
+  [32mLine[39m   [32msrc\Model\Table\TagsTable.php[39m                                                                         
+ ------ ------------------------------------------------------------------------------------------------------ 
+  :32    PHPDoc tag @property for property App\Model\Table\TagsTable::$TicketTags contains unresolvable type.  
+         🪪  propertyTag.unresolvableType                                                                      
+ ------ ------------------------------------------------------------------------------------------------------ 
+
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Model\Table\TicketCommentsTable.php[39m                                                                      
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  :33    PHPDoc tag @property for property App\Model\Table\TicketCommentsTable::$Tickets contains unresolvable type.  
+         🪪  propertyTag.unresolvableType                                                                             
+  :33    PHPDoc tag @property for property App\Model\Table\TicketCommentsTable::$Users contains unresolvable type.    
+         🪪  propertyTag.unresolvableType                                                                             
+ ------ ------------------------------------------------------------------------------------------------------------- 
+
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Model\Table\TicketFollowersTable.php[39m                                                                      
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  :33    PHPDoc tag @property for property App\Model\Table\TicketFollowersTable::$Tickets contains unresolvable type.  
+         🪪  propertyTag.unresolvableType                                                                              
+  :33    PHPDoc tag @property for property App\Model\Table\TicketFollowersTable::$Users contains unresolvable type.    
+         🪪  propertyTag.unresolvableType                                                                              
+ ------ -------------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------------ 
+  [32mLine[39m   [32msrc\Model\Table\TicketHistoryTable.php[39m                                                                      
+ ------ ------------------------------------------------------------------------------------------------------------ 
+  :35    PHPDoc tag @property for property App\Model\Table\TicketHistoryTable::$Tickets contains unresolvable type.  
+         🪪  propertyTag.unresolvableType                                                                            
+  :35    PHPDoc tag @property for property App\Model\Table\TicketHistoryTable::$Users contains unresolvable type.    
+         🪪  propertyTag.unresolvableType                                                                            
+ ------ ------------------------------------------------------------------------------------------------------------ 
+
+ ------ --------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Model\Table\TicketTagsTable.php[39m                                                                      
+ ------ --------------------------------------------------------------------------------------------------------- 
+  :33    PHPDoc tag @property for property App\Model\Table\TicketTagsTable::$Tags contains unresolvable type.     
+         🪪  propertyTag.unresolvableType                                                                         
+  :33    PHPDoc tag @property for property App\Model\Table\TicketTagsTable::$Tickets contains unresolvable type.  
+         🪪  propertyTag.unresolvableType                                                                         
+ ------ --------------------------------------------------------------------------------------------------------- 
+
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Model\Table\TicketsTable.php[39m                                                                              
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  :37    PHPDoc tag @property for property App\Model\Table\TicketsTable::$Assignees contains unresolvable type.        
+         🪪  propertyTag.unresolvableType                                                                              
+  :37    PHPDoc tag @property for property App\Model\Table\TicketsTable::$Attachments contains unresolvable type.      
+         🪪  propertyTag.unresolvableType                                                                              
+  :37    PHPDoc tag @property for property App\Model\Table\TicketsTable::$Requesters contains unresolvable type.       
+         🪪  propertyTag.unresolvableType                                                                              
+  :37    PHPDoc tag @property for property App\Model\Table\TicketsTable::$TicketComments contains unresolvable type.   
+         🪪  propertyTag.unresolvableType                                                                              
+  :37    PHPDoc tag @property for property App\Model\Table\TicketsTable::$TicketFollowers contains unresolvable type.  
+         🪪  propertyTag.unresolvableType                                                                              
+  :37    PHPDoc tag @property for property App\Model\Table\TicketsTable::$TicketTags contains unresolvable type.       
+         🪪  propertyTag.unresolvableType                                                                              
+ ------ -------------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------------ 
+  [32mLine[39m   [32msrc\Model\Table\UsersTable.php[39m                                                                              
+ ------ ------------------------------------------------------------------------------------------------------------ 
+  :37    PHPDoc tag @property for property App\Model\Table\UsersTable::$Organizations contains unresolvable type.    
+         🪪  propertyTag.unresolvableType                                                                            
+  :37    PHPDoc tag @property for property App\Model\Table\UsersTable::$TicketComments contains unresolvable type.   
+         🪪  propertyTag.unresolvableType                                                                            
+  :37    PHPDoc tag @property for property App\Model\Table\UsersTable::$TicketFollowers contains unresolvable type.  
+         🪪  propertyTag.unresolvableType                                                                            
+ ------ ------------------------------------------------------------------------------------------------------------ 
+
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Service\ComprasService.php[39m                                                                                
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  :25    Property App\Service\ComprasService::$systemConfig is never read, only written.                               
+         🪪  property.onlyWritten                                                                                      
+         💡  See: https://phpstan.org/developing-extensions/always-read-written-properties                             
+  :95    Call to an undefined method Cake\ORM\Table::generateCompraNumber().                                           
+         🪪  method.notFound                                                                                           
+  :121   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                         
+         🪪  property.notFound                                                                                         
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+  :132   Method App\Service\ComprasService::createFromTicket() should return App\Model\Entity\Compra|null but returns  
+         Cake\Datasource\EntityInterface.                                                                              
+         🪪  return.type                                                                                               
+  :178   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                         
+         🪪  property.notFound                                                                                         
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                         
+ ------ -------------------------------------------------------------------------------------------------------------- 
+
+ ------- --------------------------------------------------------------------------------------- 
+  [32mLine[39m    [32msrc\Service\EmailService.php[39m                                                           
+ ------- --------------------------------------------------------------------------------------- 
+  :108    Access to an undefined property Cake\Datasource\EntityInterface::$requester.           
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :159    Access to an undefined property Cake\Datasource\EntityInterface::$assignee.            
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :189    Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :204    Access to an undefined property Cake\Datasource\EntityInterface::$user.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :213    Access to an undefined property Cake\Datasource\EntityInterface::$ticket_number.       
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :214    Access to an undefined property Cake\Datasource\EntityInterface::$subject.             
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :215    Access to an undefined property Cake\Datasource\EntityInterface::$user.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :216    Access to an undefined property Cake\Datasource\EntityInterface::$body.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :218    Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :220    Access to an undefined property Cake\Datasource\EntityInterface::$user.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :227    Access to an undefined property Cake\Datasource\EntityInterface::$requester.           
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :230    Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :266    Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :281    Access to an undefined property Cake\Datasource\EntityInterface::$assignee.            
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :291    Access to an undefined property Cake\Datasource\EntityInterface::$user.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :300    Access to an undefined property Cake\Datasource\EntityInterface::$ticket_number.       
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :301    Access to an undefined property Cake\Datasource\EntityInterface::$subject.             
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :302    Access to an undefined property Cake\Datasource\EntityInterface::$requester.           
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :303    Access to an undefined property Cake\Datasource\EntityInterface::$user.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :304    Access to an undefined property Cake\Datasource\EntityInterface::$body.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :307    Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :310    Access to an undefined property Cake\Datasource\EntityInterface::$user.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :317    Access to an undefined property Cake\Datasource\EntityInterface::$requester.           
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :320    Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :535    Access to an undefined property Cake\Datasource\EntityInterface::$assignee.            
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :571    Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :584    Access to an undefined property Cake\Datasource\EntityInterface::$user.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :596    Access to an undefined property Cake\Datasource\EntityInterface::$pqrs_number.         
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :609    Access to an undefined property Cake\Datasource\EntityInterface::$pqrs_number.         
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :610    Access to an undefined property Cake\Datasource\EntityInterface::$subject.             
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :612    Access to an undefined property Cake\Datasource\EntityInterface::$body.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :620    Access to an undefined property Cake\Datasource\EntityInterface::$requester_email.     
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :623    Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :654    Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :669    Access to an undefined property Cake\Datasource\EntityInterface::$assignee.            
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :679    Access to an undefined property Cake\Datasource\EntityInterface::$user.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :688    Access to an undefined property Cake\Datasource\EntityInterface::$pqrs_number.         
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :689    Access to an undefined property Cake\Datasource\EntityInterface::$type.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :690    Access to an undefined property Cake\Datasource\EntityInterface::$subject.             
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :691    Access to an undefined property Cake\Datasource\EntityInterface::$requester_name.      
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :692    Access to an undefined property Cake\Datasource\EntityInterface::$user.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :693    Access to an undefined property Cake\Datasource\EntityInterface::$body.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :698    Access to an undefined property Cake\Datasource\EntityInterface::$user.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :705    Access to an undefined property Cake\Datasource\EntityInterface::$requester_email.     
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :708    Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :729    Access to an undefined property Cake\Datasource\EntityInterface::$assignee.            
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :731    Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :737    Access to an undefined property Cake\Datasource\EntityInterface::$sla_due_date.        
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :743    Access to an undefined property Cake\Datasource\EntityInterface::$priority.            
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :764    Access to an undefined property Cake\Datasource\EntityInterface::$assignee.            
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :799    Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :812    Access to an undefined property Cake\Datasource\EntityInterface::$user.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :825    Access to an undefined property Cake\Datasource\EntityInterface::$compra_number.       
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :826    Access to an undefined property Cake\Datasource\EntityInterface::$subject.             
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :827    Access to an undefined property Cake\Datasource\EntityInterface::$requester.           
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :829    Access to an undefined property Cake\Datasource\EntityInterface::$body.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :831    Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :841    Access to an undefined property Cake\Datasource\EntityInterface::$requester.           
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :844    Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :878    Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :893    Access to an undefined property Cake\Datasource\EntityInterface::$assignee.            
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :903    Access to an undefined property Cake\Datasource\EntityInterface::$user.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :912    Access to an undefined property Cake\Datasource\EntityInterface::$compra_number.       
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :913    Access to an undefined property Cake\Datasource\EntityInterface::$subject.             
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :914    Access to an undefined property Cake\Datasource\EntityInterface::$requester.           
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :915    Access to an undefined property Cake\Datasource\EntityInterface::$user.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :916    Access to an undefined property Cake\Datasource\EntityInterface::$body.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :919    Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :922    Access to an undefined property Cake\Datasource\EntityInterface::$user.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :929    Access to an undefined property Cake\Datasource\EntityInterface::$requester.           
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :932    Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :1043   Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :1061   Match expression does not handle remaining value: string                               
+          🪪  match.unhandled                                                                    
+  :1077   Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :1095   Match expression does not handle remaining value: string                               
+          🪪  match.unhandled                                                                    
+  :1097   Access to an undefined property Cake\Datasource\EntityInterface::$ticket_number.       
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :1098   Access to an undefined property Cake\Datasource\EntityInterface::$subject.             
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :1100   Access to an undefined property Cake\Datasource\EntityInterface::$created.             
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :1101   Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :1104   Access to an undefined property Cake\Datasource\EntityInterface::$pqrs_number.         
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :1105   Access to an undefined property Cake\Datasource\EntityInterface::$type.                
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :1106   Access to an undefined property Cake\Datasource\EntityInterface::$subject.             
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :1107   Access to an undefined property Cake\Datasource\EntityInterface::$requester_name.      
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :1108   Access to an undefined property Cake\Datasource\EntityInterface::$created.             
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :1111   Access to an undefined property Cake\Datasource\EntityInterface::$compra_number.       
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :1112   Access to an undefined property Cake\Datasource\EntityInterface::$subject.             
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :1114   Access to an undefined property Cake\Datasource\EntityInterface::$created.             
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :1115   Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+          🪪  property.notFound                                                                  
+          💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :1133   Match expression does not handle remaining value: string                               
+          🪪  match.unhandled                                                                    
+ ------- --------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Service\N8nService.php[39m                                                           
+ ------ ------------------------------------------------------------------------------------- 
+  :125   Call to static method now() on an unknown class Cake\I18n\FrozenTime.                
+         🪪  class.notFound                                                                   
+         💡  Learn more at https://phpstan.org/user-guide/discovering-symbols                 
+  :134   Using nullsafe method call on non-nullable type Cake\I18n\DateTime. Use -> instead.  
+         🪪  nullsafe.neverNull                                                               
+  :287   Call to static method now() on an unknown class Cake\I18n\FrozenTime.                
+         🪪  class.notFound                                                                   
+         💡  Learn more at https://phpstan.org/user-guide/discovering-symbols                 
+ ------ ------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Service\PqrsService.php[39m                                        
+ ------ ------------------------------------------------------------------- 
+  :57    Call to an undefined method Cake\ORM\Table::generatePqrsNumber().  
+         🪪  method.notFound                                                
+ ------ ------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Service\ResponseService.php[39m                                                        
+ ------ --------------------------------------------------------------------------------------- 
+  :152   Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+         🪪  property.notFound                                                                  
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :161   Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+         🪪  property.notFound                                                                  
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+  :169   Access to an undefined property Cake\Datasource\EntityInterface::$id.                  
+         🪪  property.notFound                                                                  
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m  
+ ------ --------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Service\SlaManagementService.php[39m                                  
+ ------ ---------------------------------------------------------------------- 
+  :109   PHPDoc tag @param references unknown parameter: $firstResponseSladue  
+         🪪  parameter.notFound                                                
+ ------ ---------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Service\TicketService.php[39m                                                                                
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  :103   Call to an undefined method Cake\ORM\Table::generateTicketNumber().                                          
+         🪪  method.notFound                                                                                          
+  :342   Access to an undefined property App\Model\Entity\Ticket::$email_to_array.                                    
+         🪪  property.notFound                                                                                        
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                        
+  :352   Access to an undefined property App\Model\Entity\Ticket::$email_cc_array.                                    
+         🪪  property.notFound                                                                                        
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                        
+  :553   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                        
+         🪪  property.notFound                                                                                        
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                        
+  :561   Method App\Service\TicketService::createFromCompra() should return App\Model\Entity\Ticket|null but returns  
+         Cake\Datasource\EntityInterface.                                                                             
+         🪪  return.type                                                                                              
+  :607   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                        
+         🪪  property.notFound                                                                                        
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                        
+ ------ ------------------------------------------------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Service\Traits\EntityConversionTrait.php (in context of class App\Service\ComprasService)[39m  
+ ------ ----------------------------------------------------------------------------------------------- 
+  :61    Access to an undefined property Cake\Datasource\EntityInterface::$id.                          
+         🪪  property.notFound                                                                          
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m          
+  :146   Access to an undefined property Cake\Datasource\EntityInterface::$id.                          
+         🪪  property.notFound                                                                          
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m          
+ ------ ----------------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Service\Traits\EntityConversionTrait.php (in context of class App\Service\TicketService)[39m  
+ ------ ---------------------------------------------------------------------------------------------- 
+  :61    Access to an undefined property Cake\Datasource\EntityInterface::$id.                         
+         🪪  property.notFound                                                                         
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m         
+  :146   Access to an undefined property Cake\Datasource\EntityInterface::$id.                         
+         🪪  property.notFound                                                                         
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m         
+ ------ ---------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------ 
+  [32mLine[39m   [32msrc\Service\Traits\GenericAttachmentTrait.php (in context of class App\Controller\ComprasController)[39m  
+ ------ ------------------------------------------------------------------------------------------------------ 
+  :211   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                 
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :231   Variable $fullPath in isset() always exists and is not nullable.                                      
+         🪪  isset.variable                                                                                    
+  :250   Access to an undefined property Cake\Datasource\EntityInterface::$ticket_number.                      
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :251   Access to an undefined property Cake\Datasource\EntityInterface::$pqrs_number.                        
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :252   Access to an undefined property Cake\Datasource\EntityInterface::$compra_number.                      
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :492   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                 
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :515   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                 
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :524   Variable $fullPath in isset() always exists and is not nullable.                                      
+         🪪  isset.variable                                                                                    
+  :552   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                          
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :555   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                          
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :749   Access to an undefined property Cake\Datasource\EntityInterface::$filename.                           
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :751   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                          
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :759   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                          
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :776   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                          
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :780   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                          
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :794   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                          
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :798   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                          
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+ ------ ------------------------------------------------------------------------------------------------------ 
+
+ ------ --------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Service\Traits\GenericAttachmentTrait.php (in context of class App\Controller\PqrsController)[39m  
+ ------ --------------------------------------------------------------------------------------------------- 
+  :211   Access to an undefined property Cake\Datasource\EntityInterface::$id.                              
+         🪪  property.notFound                                                                              
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m              
+  :231   Variable $fullPath in isset() always exists and is not nullable.                                   
+         🪪  isset.variable                                                                                 
+  :250   Access to an undefined property Cake\Datasource\EntityInterface::$ticket_number.                   
+         🪪  property.notFound                                                                              
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m              
+  :251   Access to an undefined property Cake\Datasource\EntityInterface::$pqrs_number.                     
+         🪪  property.notFound                                                                              
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m              
+  :252   Access to an undefined property Cake\Datasource\EntityInterface::$compra_number.                   
+         🪪  property.notFound                                                                              
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m              
+  :492   Access to an undefined property Cake\Datasource\EntityInterface::$id.                              
+         🪪  property.notFound                                                                              
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m              
+  :515   Access to an undefined property Cake\Datasource\EntityInterface::$id.                              
+         🪪  property.notFound                                                                              
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m              
+  :524   Variable $fullPath in isset() always exists and is not nullable.                                   
+         🪪  isset.variable                                                                                 
+  :552   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                       
+         🪪  property.notFound                                                                              
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m              
+  :555   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                       
+         🪪  property.notFound                                                                              
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m              
+  :749   Access to an undefined property Cake\Datasource\EntityInterface::$filename.                        
+         🪪  property.notFound                                                                              
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m              
+  :751   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                       
+         🪪  property.notFound                                                                              
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m              
+  :759   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                       
+         🪪  property.notFound                                                                              
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m              
+  :776   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                       
+         🪪  property.notFound                                                                              
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m              
+  :780   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                       
+         🪪  property.notFound                                                                              
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m              
+  :794   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                       
+         🪪  property.notFound                                                                              
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m              
+  :798   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                       
+         🪪  property.notFound                                                                              
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m              
+ ------ --------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------ 
+  [32mLine[39m   [32msrc\Service\Traits\GenericAttachmentTrait.php (in context of class App\Controller\TicketsController)[39m  
+ ------ ------------------------------------------------------------------------------------------------------ 
+  :211   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                 
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :231   Variable $fullPath in isset() always exists and is not nullable.                                      
+         🪪  isset.variable                                                                                    
+  :250   Access to an undefined property Cake\Datasource\EntityInterface::$ticket_number.                      
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :251   Access to an undefined property Cake\Datasource\EntityInterface::$pqrs_number.                        
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :252   Access to an undefined property Cake\Datasource\EntityInterface::$compra_number.                      
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :492   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                 
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :515   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                 
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :524   Variable $fullPath in isset() always exists and is not nullable.                                      
+         🪪  isset.variable                                                                                    
+  :552   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                          
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :555   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                          
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :749   Access to an undefined property Cake\Datasource\EntityInterface::$filename.                           
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :751   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                          
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :759   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                          
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :776   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                          
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :780   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                          
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :794   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                          
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :798   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                          
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+ ------ ------------------------------------------------------------------------------------------------------ 
+
+ ------ ------------------------------------------------------------------------------------------------ 
+  [32mLine[39m   [32msrc\Service\Traits\GenericAttachmentTrait.php (in context of class App\Service\ComprasService)[39m  
+ ------ ------------------------------------------------------------------------------------------------ 
+  :211   Access to an undefined property Cake\Datasource\EntityInterface::$id.                           
+         🪪  property.notFound                                                                           
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m           
+  :231   Variable $fullPath in isset() always exists and is not nullable.                                
+         🪪  isset.variable                                                                              
+  :250   Access to an undefined property Cake\Datasource\EntityInterface::$ticket_number.                
+         🪪  property.notFound                                                                           
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m           
+  :251   Access to an undefined property Cake\Datasource\EntityInterface::$pqrs_number.                  
+         🪪  property.notFound                                                                           
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m           
+  :252   Access to an undefined property Cake\Datasource\EntityInterface::$compra_number.                
+         🪪  property.notFound                                                                           
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m           
+  :492   Access to an undefined property Cake\Datasource\EntityInterface::$id.                           
+         🪪  property.notFound                                                                           
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m           
+  :515   Access to an undefined property Cake\Datasource\EntityInterface::$id.                           
+         🪪  property.notFound                                                                           
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m           
+  :524   Variable $fullPath in isset() always exists and is not nullable.                                
+         🪪  isset.variable                                                                              
+  :552   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                    
+         🪪  property.notFound                                                                           
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m           
+  :555   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                    
+         🪪  property.notFound                                                                           
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m           
+  :749   Access to an undefined property Cake\Datasource\EntityInterface::$filename.                     
+         🪪  property.notFound                                                                           
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m           
+  :751   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                    
+         🪪  property.notFound                                                                           
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m           
+  :759   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                    
+         🪪  property.notFound                                                                           
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m           
+  :776   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                    
+         🪪  property.notFound                                                                           
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m           
+  :780   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                    
+         🪪  property.notFound                                                                           
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m           
+  :794   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                    
+         🪪  property.notFound                                                                           
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m           
+  :798   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                    
+         🪪  property.notFound                                                                           
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m           
+ ------ ------------------------------------------------------------------------------------------------ 
+
+ ------ ---------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Service\Traits\GenericAttachmentTrait.php (in context of class App\Service\EmailService)[39m  
+ ------ ---------------------------------------------------------------------------------------------- 
+  :211   Access to an undefined property Cake\Datasource\EntityInterface::$id.                         
+         🪪  property.notFound                                                                         
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m         
+  :231   Variable $fullPath in isset() always exists and is not nullable.                              
+         🪪  isset.variable                                                                            
+  :250   Access to an undefined property Cake\Datasource\EntityInterface::$ticket_number.              
+         🪪  property.notFound                                                                         
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m         
+  :251   Access to an undefined property Cake\Datasource\EntityInterface::$pqrs_number.                
+         🪪  property.notFound                                                                         
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m         
+  :252   Access to an undefined property Cake\Datasource\EntityInterface::$compra_number.              
+         🪪  property.notFound                                                                         
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m         
+  :492   Access to an undefined property Cake\Datasource\EntityInterface::$id.                         
+         🪪  property.notFound                                                                         
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m         
+  :515   Access to an undefined property Cake\Datasource\EntityInterface::$id.                         
+         🪪  property.notFound                                                                         
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m         
+  :524   Variable $fullPath in isset() always exists and is not nullable.                              
+         🪪  isset.variable                                                                            
+  :552   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                  
+         🪪  property.notFound                                                                         
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m         
+  :555   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                  
+         🪪  property.notFound                                                                         
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m         
+  :749   Access to an undefined property Cake\Datasource\EntityInterface::$filename.                   
+         🪪  property.notFound                                                                         
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m         
+  :751   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                  
+         🪪  property.notFound                                                                         
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m         
+  :759   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                  
+         🪪  property.notFound                                                                         
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m         
+  :776   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                  
+         🪪  property.notFound                                                                         
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m         
+  :780   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                  
+         🪪  property.notFound                                                                         
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m         
+  :794   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                  
+         🪪  property.notFound                                                                         
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m         
+  :798   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                  
+         🪪  property.notFound                                                                         
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m         
+ ------ ---------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Service\Traits\GenericAttachmentTrait.php (in context of class App\Service\PqrsService)[39m  
+ ------ --------------------------------------------------------------------------------------------- 
+  :211   Access to an undefined property Cake\Datasource\EntityInterface::$id.                        
+         🪪  property.notFound                                                                        
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m        
+  :231   Variable $fullPath in isset() always exists and is not nullable.                             
+         🪪  isset.variable                                                                           
+  :250   Access to an undefined property Cake\Datasource\EntityInterface::$ticket_number.             
+         🪪  property.notFound                                                                        
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m        
+  :251   Access to an undefined property Cake\Datasource\EntityInterface::$pqrs_number.               
+         🪪  property.notFound                                                                        
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m        
+  :252   Access to an undefined property Cake\Datasource\EntityInterface::$compra_number.             
+         🪪  property.notFound                                                                        
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m        
+  :492   Access to an undefined property Cake\Datasource\EntityInterface::$id.                        
+         🪪  property.notFound                                                                        
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m        
+  :515   Access to an undefined property Cake\Datasource\EntityInterface::$id.                        
+         🪪  property.notFound                                                                        
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m        
+  :524   Variable $fullPath in isset() always exists and is not nullable.                             
+         🪪  isset.variable                                                                           
+  :552   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                 
+         🪪  property.notFound                                                                        
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m        
+  :555   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                 
+         🪪  property.notFound                                                                        
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m        
+  :749   Access to an undefined property Cake\Datasource\EntityInterface::$filename.                  
+         🪪  property.notFound                                                                        
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m        
+  :751   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                 
+         🪪  property.notFound                                                                        
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m        
+  :759   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                 
+         🪪  property.notFound                                                                        
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m        
+  :776   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                 
+         🪪  property.notFound                                                                        
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m        
+  :780   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                 
+         🪪  property.notFound                                                                        
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m        
+  :794   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                 
+         🪪  property.notFound                                                                        
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m        
+  :798   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                 
+         🪪  property.notFound                                                                        
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m        
+ ------ --------------------------------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Service\Traits\GenericAttachmentTrait.php (in context of class App\Service\TicketService)[39m  
+ ------ ----------------------------------------------------------------------------------------------- 
+  :211   Access to an undefined property Cake\Datasource\EntityInterface::$id.                          
+         🪪  property.notFound                                                                          
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m          
+  :231   Variable $fullPath in isset() always exists and is not nullable.                               
+         🪪  isset.variable                                                                             
+  :250   Access to an undefined property Cake\Datasource\EntityInterface::$ticket_number.               
+         🪪  property.notFound                                                                          
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m          
+  :251   Access to an undefined property Cake\Datasource\EntityInterface::$pqrs_number.                 
+         🪪  property.notFound                                                                          
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m          
+  :252   Access to an undefined property Cake\Datasource\EntityInterface::$compra_number.               
+         🪪  property.notFound                                                                          
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m          
+  :492   Access to an undefined property Cake\Datasource\EntityInterface::$id.                          
+         🪪  property.notFound                                                                          
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m          
+  :515   Access to an undefined property Cake\Datasource\EntityInterface::$id.                          
+         🪪  property.notFound                                                                          
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m          
+  :524   Variable $fullPath in isset() always exists and is not nullable.                               
+         🪪  isset.variable                                                                             
+  :552   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                   
+         🪪  property.notFound                                                                          
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m          
+  :555   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                   
+         🪪  property.notFound                                                                          
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m          
+  :749   Access to an undefined property Cake\Datasource\EntityInterface::$filename.                    
+         🪪  property.notFound                                                                          
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m          
+  :751   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                   
+         🪪  property.notFound                                                                          
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m          
+  :759   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                   
+         🪪  property.notFound                                                                          
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m          
+  :776   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                   
+         🪪  property.notFound                                                                          
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m          
+  :780   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                   
+         🪪  property.notFound                                                                          
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m          
+  :794   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                   
+         🪪  property.notFound                                                                          
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m          
+  :798   Access to an undefined property Cake\Datasource\EntityInterface::$file_path.                   
+         🪪  property.notFound                                                                          
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m          
+ ------ ----------------------------------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Service\Traits\NotificationDispatcherTrait.php (in context of class App\Service\ComprasService)[39m  
+ ------ ----------------------------------------------------------------------------------------------------- 
+  :48    Access to an undefined property Cake\Datasource\EntityInterface::$id.                                
+         🪪  property.notFound                                                                                
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                
+  :60    Access to an undefined property Cake\Datasource\EntityInterface::$id.                                
+         🪪  property.notFound                                                                                
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                
+  :127   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                
+         🪪  property.notFound                                                                                
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                
+ ------ ----------------------------------------------------------------------------------------------------- 
+
+ ------ -------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Service\Traits\NotificationDispatcherTrait.php (in context of class App\Service\PqrsService)[39m  
+ ------ -------------------------------------------------------------------------------------------------- 
+  :48    Access to an undefined property Cake\Datasource\EntityInterface::$id.                             
+         🪪  property.notFound                                                                             
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m             
+  :60    Access to an undefined property Cake\Datasource\EntityInterface::$id.                             
+         🪪  property.notFound                                                                             
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m             
+  :127   Access to an undefined property Cake\Datasource\EntityInterface::$id.                             
+         🪪  property.notFound                                                                             
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m             
+ ------ -------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------ 
+  [32mLine[39m   [32msrc\Service\Traits\NotificationDispatcherTrait.php (in context of class App\Service\ResponseService)[39m  
+ ------ ------------------------------------------------------------------------------------------------------ 
+  :48    Access to an undefined property Cake\Datasource\EntityInterface::$id.                                 
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :60    Access to an undefined property Cake\Datasource\EntityInterface::$id.                                 
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+  :127   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                 
+         🪪  property.notFound                                                                                 
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                 
+ ------ ------------------------------------------------------------------------------------------------------ 
+
+ ------ ---------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Service\Traits\NotificationDispatcherTrait.php (in context of class App\Service\TicketService)[39m  
+ ------ ---------------------------------------------------------------------------------------------------- 
+  :48    Access to an undefined property Cake\Datasource\EntityInterface::$id.                               
+         🪪  property.notFound                                                                               
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m               
+  :60    Access to an undefined property Cake\Datasource\EntityInterface::$id.                               
+         🪪  property.notFound                                                                               
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m               
+  :127   Access to an undefined property Cake\Datasource\EntityInterface::$id.                               
+         🪪  property.notFound                                                                               
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m               
+ ------ ---------------------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Service\Traits\TicketSystemTrait.php (in context of class App\Service\ComprasService)[39m                 
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  :40    Access to an undefined property Cake\Datasource\EntityInterface::$status.                                 
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :46    Access to an undefined property Cake\Datasource\EntityInterface::$status.                                 
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :49    Call to static method now() on an unknown class Cake\I18n\FrozenTime.                                     
+         🪪  class.notFound                                                                                        
+         💡  Learn more at https://phpstan.org/user-guide/discovering-symbols                                      
+  :50    Access to an undefined property Cake\Datasource\EntityInterface::$resolved_at.                            
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :71    Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :81    Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :84    Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :176   Access to an undefined property Cake\Datasource\EntityInterface::$first_response_at.                      
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :177   Call to static method now() on an unknown class Cake\I18n\FrozenTime.                                     
+         🪪  class.notFound                                                                                        
+         💡  Learn more at https://phpstan.org/user-guide/discovering-symbols                                      
+  :202   Access to an undefined property Cake\Datasource\EntityInterface::$assignee_id.                            
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :205   Access to an undefined property Cake\Datasource\EntityInterface::$assignee_id.                            
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :205   Strict comparison using === between int<min, -1>|int<1, max>|null and '0' will always evaluate to false.  
+         🪪  identical.alwaysFalse                                                                                 
+  :211   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :223   Access to an undefined property Cake\Datasource\EntityInterface::$first_name.                             
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :223   Access to an undefined property Cake\Datasource\EntityInterface::$last_name.                              
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :229   Access to an undefined property Cake\Datasource\EntityInterface::$first_name.                             
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :229   Access to an undefined property Cake\Datasource\EntityInterface::$last_name.                              
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :241   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :251   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :272   Access to an undefined property Cake\Datasource\EntityInterface::$priority.                               
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :278   Access to an undefined property Cake\Datasource\EntityInterface::$priority.                               
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :294   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :304   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :455   Access to an undefined property Cake\Datasource\EntityInterface::$status.                                 
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :456   Access to an undefined property Cake\Datasource\EntityInterface::$resolved_at.                            
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :469   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :484   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+ ------ ---------------------------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Service\Traits\TicketSystemTrait.php (in context of class App\Service\PqrsService)[39m                    
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  :40    Access to an undefined property Cake\Datasource\EntityInterface::$status.                                 
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :46    Access to an undefined property Cake\Datasource\EntityInterface::$status.                                 
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :49    Call to static method now() on an unknown class Cake\I18n\FrozenTime.                                     
+         🪪  class.notFound                                                                                        
+         💡  Learn more at https://phpstan.org/user-guide/discovering-symbols                                      
+  :50    Access to an undefined property Cake\Datasource\EntityInterface::$resolved_at.                            
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :71    Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :81    Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :84    Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :176   Access to an undefined property Cake\Datasource\EntityInterface::$first_response_at.                      
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :177   Call to static method now() on an unknown class Cake\I18n\FrozenTime.                                     
+         🪪  class.notFound                                                                                        
+         💡  Learn more at https://phpstan.org/user-guide/discovering-symbols                                      
+  :202   Access to an undefined property Cake\Datasource\EntityInterface::$assignee_id.                            
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :205   Access to an undefined property Cake\Datasource\EntityInterface::$assignee_id.                            
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :205   Strict comparison using === between int<min, -1>|int<1, max>|null and '0' will always evaluate to false.  
+         🪪  identical.alwaysFalse                                                                                 
+  :211   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :223   Access to an undefined property Cake\Datasource\EntityInterface::$first_name.                             
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :223   Access to an undefined property Cake\Datasource\EntityInterface::$last_name.                              
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :229   Access to an undefined property Cake\Datasource\EntityInterface::$first_name.                             
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :229   Access to an undefined property Cake\Datasource\EntityInterface::$last_name.                              
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :241   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :251   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :272   Access to an undefined property Cake\Datasource\EntityInterface::$priority.                               
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :278   Access to an undefined property Cake\Datasource\EntityInterface::$priority.                               
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :294   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :304   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :455   Access to an undefined property Cake\Datasource\EntityInterface::$status.                                 
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :456   Access to an undefined property Cake\Datasource\EntityInterface::$resolved_at.                            
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :469   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :484   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+ ------ ---------------------------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Service\Traits\TicketSystemTrait.php (in context of class App\Service\TicketService)[39m                  
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  :40    Access to an undefined property Cake\Datasource\EntityInterface::$status.                                 
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :46    Access to an undefined property Cake\Datasource\EntityInterface::$status.                                 
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :49    Call to static method now() on an unknown class Cake\I18n\FrozenTime.                                     
+         🪪  class.notFound                                                                                        
+         💡  Learn more at https://phpstan.org/user-guide/discovering-symbols                                      
+  :50    Access to an undefined property Cake\Datasource\EntityInterface::$resolved_at.                            
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :71    Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :81    Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :84    Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :176   Access to an undefined property Cake\Datasource\EntityInterface::$first_response_at.                      
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :177   Call to static method now() on an unknown class Cake\I18n\FrozenTime.                                     
+         🪪  class.notFound                                                                                        
+         💡  Learn more at https://phpstan.org/user-guide/discovering-symbols                                      
+  :202   Access to an undefined property Cake\Datasource\EntityInterface::$assignee_id.                            
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :205   Access to an undefined property Cake\Datasource\EntityInterface::$assignee_id.                            
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :205   Strict comparison using === between int<min, -1>|int<1, max>|null and '0' will always evaluate to false.  
+         🪪  identical.alwaysFalse                                                                                 
+  :211   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :223   Access to an undefined property Cake\Datasource\EntityInterface::$first_name.                             
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :223   Access to an undefined property Cake\Datasource\EntityInterface::$last_name.                              
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :229   Access to an undefined property Cake\Datasource\EntityInterface::$first_name.                             
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :229   Access to an undefined property Cake\Datasource\EntityInterface::$last_name.                              
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :241   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :251   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :272   Access to an undefined property Cake\Datasource\EntityInterface::$priority.                               
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :278   Access to an undefined property Cake\Datasource\EntityInterface::$priority.                               
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :294   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :304   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :455   Access to an undefined property Cake\Datasource\EntityInterface::$status.                                 
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :456   Access to an undefined property Cake\Datasource\EntityInterface::$resolved_at.                            
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :469   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+  :484   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                     
+         🪪  property.notFound                                                                                     
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                     
+ ------ ---------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Service\WhatsappService.php[39m                                                                              
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  :229   Parameter #1 $ticket of method App\Service\Renderer\NotificationRenderer::renderWhatsappNewTicket() expects  
+         App\Model\Entity\Ticket, Cake\Datasource\EntityInterface given.                                              
+         🪪  argument.type                                                                                            
+  :287   Parameter #1 $compra of method App\Service\Renderer\NotificationRenderer::renderWhatsappNewCompra() expects  
+         App\Model\Entity\Compra, Cake\Datasource\EntityInterface given.                                              
+         🪪  argument.type                                                                                            
+ ------ ------------------------------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Utility\SettingsEncryptionTrait.php (in context of class App\Command\GmailWorkerCommand)[39m  
+ ------ ---------------------------------------------------------------------------------------------- 
+  :103   Strict comparison using === between string|null and false will always evaluate to false.      
+         🪪  identical.alwaysFalse                                                                     
+ ------ ---------------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Utility\SettingsEncryptionTrait.php (in context of class App\Command\ImportGmailCommand)[39m  
+ ------ ---------------------------------------------------------------------------------------------- 
+  :103   Strict comparison using === between string|null and false will always evaluate to false.      
+         🪪  identical.alwaysFalse                                                                     
+ ------ ---------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Utility\SettingsEncryptionTrait.php (in context of class App\Controller\Admin\SettingsController)[39m  
+ ------ ------------------------------------------------------------------------------------------------------- 
+  :103   Strict comparison using === between string|null and false will always evaluate to false.               
+         🪪  identical.alwaysFalse                                                                              
+ ------ ------------------------------------------------------------------------------------------------------- 
+
+ ------ -------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32msrc\Utility\SettingsEncryptionTrait.php (in context of class App\Controller\AppController)[39m  
+ ------ -------------------------------------------------------------------------------------------- 
+  :103   Strict comparison using === between string|null and false will always evaluate to false.    
+         🪪  identical.alwaysFalse                                                                   
+ ------ -------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------ 
+  [32mLine[39m   [32msrc\Utility\SettingsEncryptionTrait.php (in context of class App\Service\EmailService)[39m    
+ ------ ------------------------------------------------------------------------------------------ 
+  :103   Strict comparison using === between string|null and false will always evaluate to false.  
+         🪪  identical.alwaysFalse                                                                 
+ ------ ------------------------------------------------------------------------------------------ 
+
+ ------ ------------------------------------------------------------------------------------------ 
+  [32mLine[39m   [32msrc\Utility\SettingsEncryptionTrait.php (in context of class App\Service\GmailService)[39m    
+ ------ ------------------------------------------------------------------------------------------ 
+  :103   Strict comparison using === between string|null and false will always evaluate to false.  
+         🪪  identical.alwaysFalse                                                                 
+ ------ ------------------------------------------------------------------------------------------ 
+
+ ------ ------------------------------------------------------------------------------------------ 
+  [32mLine[39m   [32msrc\Utility\SettingsEncryptionTrait.php (in context of class App\Service\TicketService)[39m   
+ ------ ------------------------------------------------------------------------------------------ 
+  :103   Strict comparison using === between string|null and false will always evaluate to false.  
+         🪪  identical.alwaysFalse                                                                 
+ ------ ------------------------------------------------------------------------------------------ 
+
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32mtests\TestCase\Model\Table\AttachmentsTableTest.php[39m                                                           
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  :41    Property App\Test\TestCase\Model\Table\AttachmentsTableTest::$Attachments (App\Model\Table\AttachmentsTable)  
+         does not accept Cake\ORM\Table.                                                                               
+         🪪  assign.propertyType                                                                                       
+  :51    Cannot unset property App\Test\TestCase\Model\Table\AttachmentsTableTest::$Attachments because it might have  
+         hooks in a subclass.                                                                                          
+         🪪  unset.possiblyHookedProperty                                                                              
+ ------ -------------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32mtests\TestCase\Model\Table\EmailTemplatesTableTest.php[39m                                                         
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  :39    Property App\Test\TestCase\Model\Table\EmailTemplatesTableTest::$EmailTemplates                                
+         (App\Model\Table\EmailTemplatesTable) does not accept Cake\ORM\Table.                                          
+         🪪  assign.propertyType                                                                                        
+  :49    Cannot unset property App\Test\TestCase\Model\Table\EmailTemplatesTableTest::$EmailTemplates because it might  
+         have hooks in a subclass.                                                                                      
+         🪪  unset.possiblyHookedProperty                                                                               
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32mtests\TestCase\Model\Table\OrganizationsTableTest.php[39m                                                        
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  :41    Property App\Test\TestCase\Model\Table\OrganizationsTableTest::$Organizations                                
+         (App\Model\Table\OrganizationsTable) does not accept Cake\ORM\Table.                                         
+         🪪  assign.propertyType                                                                                      
+  :51    Cannot unset property App\Test\TestCase\Model\Table\OrganizationsTableTest::$Organizations because it might  
+         have hooks in a subclass.                                                                                    
+         🪪  unset.possiblyHookedProperty                                                                             
+ ------ ------------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32mtests\TestCase\Model\Table\SystemSettingsTableTest.php[39m                                                         
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  :39    Property App\Test\TestCase\Model\Table\SystemSettingsTableTest::$SystemSettings                                
+         (App\Model\Table\SystemSettingsTable) does not accept Cake\ORM\Table.                                          
+         🪪  assign.propertyType                                                                                        
+  :49    Cannot unset property App\Test\TestCase\Model\Table\SystemSettingsTableTest::$SystemSettings because it might  
+         have hooks in a subclass.                                                                                      
+         🪪  unset.possiblyHookedProperty                                                                               
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32mtests\TestCase\Model\Table\TagsTableTest.php[39m                                                               
+ ------ ----------------------------------------------------------------------------------------------------------- 
+  :40    Property App\Test\TestCase\Model\Table\TagsTableTest::$Tags (App\Model\Table\TagsTable) does not accept    
+         Cake\ORM\Table.                                                                                            
+         🪪  assign.propertyType                                                                                    
+  :50    Cannot unset property App\Test\TestCase\Model\Table\TagsTableTest::$Tags because it might have hooks in a  
+         subclass.                                                                                                  
+         🪪  unset.possiblyHookedProperty                                                                           
+ ------ ----------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32mtests\TestCase\Model\Table\TicketCommentsTableTest.php[39m                                                         
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  :41    Property App\Test\TestCase\Model\Table\TicketCommentsTableTest::$TicketComments                                
+         (App\Model\Table\TicketCommentsTable) does not accept Cake\ORM\Table.                                          
+         🪪  assign.propertyType                                                                                        
+  :51    Cannot unset property App\Test\TestCase\Model\Table\TicketCommentsTableTest::$TicketComments because it might  
+         have hooks in a subclass.                                                                                      
+         🪪  unset.possiblyHookedProperty                                                                               
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32mtests\TestCase\Model\Table\TicketFollowersTableTest.php[39m                                                    
+ ------ ----------------------------------------------------------------------------------------------------------- 
+  :41    Property App\Test\TestCase\Model\Table\TicketFollowersTableTest::$TicketFollowers                          
+         (App\Model\Table\TicketFollowersTable) does not accept Cake\ORM\Table.                                     
+         🪪  assign.propertyType                                                                                    
+  :51    Cannot unset property App\Test\TestCase\Model\Table\TicketFollowersTableTest::$TicketFollowers because it  
+         might have hooks in a subclass.                                                                            
+         🪪  unset.possiblyHookedProperty                                                                           
+ ------ ----------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------------ 
+  [32mLine[39m   [32mtests\TestCase\Model\Table\TicketTagsTableTest.php[39m                                                          
+ ------ ------------------------------------------------------------------------------------------------------------ 
+  :41    Property App\Test\TestCase\Model\Table\TicketTagsTableTest::$TicketTags (App\Model\Table\TicketTagsTable)   
+         does not accept Cake\ORM\Table.                                                                             
+         🪪  assign.propertyType                                                                                     
+  :51    Cannot unset property App\Test\TestCase\Model\Table\TicketTagsTableTest::$TicketTags because it might have  
+         hooks in a subclass.                                                                                        
+         🪪  unset.possiblyHookedProperty                                                                            
+ ------ ------------------------------------------------------------------------------------------------------------ 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32mtests\TestCase\Model\Table\TicketsTableTest.php[39m                                                                
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  :46    Property App\Test\TestCase\Model\Table\TicketsTableTest::$Tickets (App\Model\Table\TicketsTable) does not      
+         accept Cake\ORM\Table.                                                                                         
+         🪪  assign.propertyType                                                                                        
+  :56    Cannot unset property App\Test\TestCase\Model\Table\TicketsTableTest::$Tickets because it might have hooks in  
+         a subclass.                                                                                                    
+         🪪  unset.possiblyHookedProperty                                                                               
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32mtests\TestCase\Model\Table\UsersTableTest.php[39m                                                                
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  :42    Property App\Test\TestCase\Model\Table\UsersTableTest::$Users (App\Model\Table\UsersTable) does not accept   
+         Cake\ORM\Table.                                                                                              
+         🪪  assign.propertyType                                                                                      
+  :52    Cannot unset property App\Test\TestCase\Model\Table\UsersTableTest::$Users because it might have hooks in a  
+         subclass.                                                                                                    
+         🪪  unset.possiblyHookedProperty                                                                             
+ ------ ------------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32mtests\TestCase\Service\GmailServiceTest.php[39m                                                                  
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  :81    Cannot unset property App\Test\TestCase\Service\GmailServiceTest::$GmailService because it might have hooks  
+         in a subclass.                                                                                               
+         🪪  unset.possiblyHookedProperty                                                                             
+ ------ ------------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  [32mLine[39m   [32mtests\TestCase\Service\TicketServiceTest.php[39m                                                                   
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  :51    Cannot unset property App\Test\TestCase\Service\TicketServiceTest::$TicketService because it might have hooks  
+         in a subclass.                                                                                                 
+         🪪  unset.possiblyHookedProperty                                                                               
+  :153   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                          
+         🪪  property.notFound                                                                                          
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                          
+  :337   Access to an undefined property Cake\Datasource\EntityInterface::$email_to.                                    
+         🪪  property.notFound                                                                                          
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                          
+  :440   Parameter #1 $ticket of method App\Service\TicketService::createCommentFromEmail() expects                     
+         App\Model\Entity\Ticket, Cake\Datasource\EntityInterface given.                                                
+         🪪  argument.type                                                                                              
+  :444   Access to an undefined property Cake\Datasource\EntityInterface::$id.                                          
+         🪪  property.notFound                                                                                          
+         💡  Learn more: [36mhttps://phpstan.org/blog/solving-phpstan-access-to-undefined-property[39m                          
+  :453   Call to method PHPUnit\Framework\Assert::assertNotNull() with Cake\Datasource\EntityInterface will always      
+         evaluate to true.                                                                                              
+         🪪  method.alreadyNarrowedType                                                                                 
+  :497   Parameter #1 $ticket of method App\Service\TicketService::createCommentFromEmail() expects                     
+         App\Model\Entity\Ticket, Cake\Datasource\EntityInterface given.                                                
+         🪪  argument.type                                                                                              
+  :546   Parameter #1 $ticket of method App\Service\TicketService::createCommentFromEmail() expects                     
+         App\Model\Entity\Ticket, Cake\Datasource\EntityInterface given.                                                
+         🪪  argument.type                                                                                              
+  :598   Parameter #1 $ticket of method App\Service\TicketService::createCommentFromEmail() expects                     
+         App\Model\Entity\Ticket, Cake\Datasource\EntityInterface given.                                                
+         🪪  argument.type                                                                                              
+  :663   Parameter #1 $ticket of method App\Service\TicketService::createCommentFromEmail() expects                     
+         App\Model\Entity\Ticket, Cake\Datasource\EntityInterface given.                                                
+         🪪  argument.type                                                                                              
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+ -- -------------------------------------------------------------------------------------------------------------- 
+     [32mError[39m                                                                                                         
+ -- -------------------------------------------------------------------------------------------------------------- 
+     Ignored error pattern #Access to an undefined property Cake\\ORM\\Table::\$[a-zA-Z0-9_]+# was not matched in  
+     reported errors.                                                                                              
+ -- -------------------------------------------------------------------------------------------------------------- 
+
+[37;41m                                                                                                                       [39;49m
+[37;41m [ERROR] Found 455 errors                                                                                              [39;49m
+[37;41m                                                                                                                       [39;49m
+
+[37;41mScript phpstan analyse handling the stan event returned with error code 1[39;49m
