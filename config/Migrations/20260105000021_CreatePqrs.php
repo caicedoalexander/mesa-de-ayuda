@@ -41,10 +41,10 @@ class CreatePqrs extends AbstractMigration
             ])
 
             // PQRS type and classification
-            ->addColumn('type', 'enum', [
-                'values' => ['peticion', 'queja', 'reclamo', 'sugerencia'],
+            ->addColumn('type', 'string', [
+                'limit' => 20,
                 'null' => false,
-                'comment' => 'Type of request (determines SLA targets)',
+                'comment' => 'Type of request (peticion|queja|reclamo|sugerencia). Determines SLA targets',
             ])
 
             // PQRS content
@@ -59,17 +59,17 @@ class CreatePqrs extends AbstractMigration
             ])
 
             // Status and priority
-            ->addColumn('status', 'enum', [
-                'values' => ['nuevo', 'en_revision', 'en_proceso', 'resuelto', 'cerrado'],
+            ->addColumn('status', 'string', [
+                'limit' => 20,
                 'default' => 'nuevo',
                 'null' => false,
-                'comment' => 'PQRS status',
+                'comment' => 'PQRS status (nuevo|en_revision|en_proceso|resuelto|cerrado)',
             ])
-            ->addColumn('priority', 'enum', [
-                'values' => ['baja', 'media', 'alta', 'urgente'],
+            ->addColumn('priority', 'string', [
+                'limit' => 20,
                 'default' => 'media',
                 'null' => false,
-                'comment' => 'PQRS priority level',
+                'comment' => 'PQRS priority level (baja|media|alta|urgente)',
             ])
 
             // Requester information (public form - NO authenticated user required)
@@ -165,39 +165,39 @@ class CreatePqrs extends AbstractMigration
                 'name' => 'idx_pqrs_number_unique',
             ])
             ->addIndex(['priority'], [
-                'name' => 'idx_priority',
+                'name' => 'idx_pqrs_priority',
             ])
             ->addIndex(['assignee_id'], [
-                'name' => 'idx_assignee_id',
+                'name' => 'idx_pqrs_assignee_id',
             ])
             ->addIndex(['type'], [
-                'name' => 'idx_type',
+                'name' => 'idx_pqrs_type',
             ])
             ->addIndex(['status'], [
-                'name' => 'idx_status',
+                'name' => 'idx_pqrs_status',
             ])
             ->addIndex(['channel'], [
-                'name' => 'idx_channel',
+                'name' => 'idx_pqrs_channel',
             ])
             ->addIndex(['requester_email'], [
-                'name' => 'idx_requester_email',
+                'name' => 'idx_pqrs_requester_email',
             ])
             ->addIndex(['first_response_sla_due'], [
-                'name' => 'idx_first_response_sla',
+                'name' => 'idx_pqrs_first_response_sla',
             ])
             ->addIndex(['resolution_sla_due'], [
-                'name' => 'idx_resolution_sla',
+                'name' => 'idx_pqrs_resolution_sla',
             ])
 
             // Composite indexes for common queries
             ->addIndex(['status', 'created'], [
-                'name' => 'idx_status_created',
+                'name' => 'idx_pqrs_status_created',
             ])
             ->addIndex(['type', 'status'], [
-                'name' => 'idx_type_status',
+                'name' => 'idx_pqrs_type_status',
             ])
             ->addIndex(['assignee_id', 'status'], [
-                'name' => 'idx_assignee_status',
+                'name' => 'idx_pqrs_assignee_status',
             ])
 
             // Foreign key constraint

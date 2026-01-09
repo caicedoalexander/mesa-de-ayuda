@@ -72,7 +72,7 @@ class CreateTags extends AbstractMigration
                 'name' => 'idx_name_unique',
             ])
             ->addIndex(['is_active'], [
-                'name' => 'idx_is_active',
+                'name' => 'idx_tags_is_active',
             ])
 
             ->create();

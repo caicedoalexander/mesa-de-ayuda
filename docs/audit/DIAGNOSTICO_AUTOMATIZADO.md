@@ -574,7 +574,103 @@ Documentar findings en:
 
 ---
 
-## 9. Conclusiones
+## 9. ACTUALIZACIÓN: Tests Reparados (2026-01-09)
+
+### ✅ Migraciones Corregidas
+
+**Problema**: Tests no ejecutables debido a tipos de columna inválidos
+**Solución**: Conversión de todos los tipos `enum` a `string` con validación
+
+#### Cambios Realizados
+
+**1. Conversión de tipo enum → string (9 campos afectados)**
+- `users.role`: enum → string(20) con validación inList
+- `tickets.status`: enum → string(20)
+- `tickets.priority`: enum → string(20)
+- `compras.status`: enum → string(20)
+- `compras.priority`: enum → string(20)
+- `pqrs.type`: enum → string(20)
+- `pqrs.status`: enum → string(20)
+- `pqrs.priority`: enum → string(20)
+- `*_comments.comment_type`: enum → string(20)
+
+**2. Corrección de índices duplicados (112 cambios)**
+- SQLite requiere nombres de índices globalmente únicos
+- Patrón aplicado: `idx_XXX` → `idx_{tablename}_XXX`
+- Ejemplo: `idx_created` → `idx_tickets_created`, `idx_ticket_comments_created`
+
+#### Resultados de PHPUnit
+
+**Comando ejecutado:**
+```bash
+vendor/bin/phpunit
+```
+
+**Resumen:**
+- ✅ **Tests ejecutables**: SÍ (problema crítico resuelto)
+- **Total tests**: 57
+- **Assertions**: 33
+- **Errores**: 29 (fixture issues)
+- **Failures**: 4
+- **Incompletos**: 4
+
+**Análisis de Errores**:
+
+| Tipo de Error | Cantidad | Causa |
+|---------------|----------|-------|
+| Fixtures faltantes | 4 | `app.Comments`, `app.Requesters` no existen |
+| Fixtures inválidos | 22 | Users fixture le falta `first_name`, `last_name` |
+| Schema issues | 4 | `ticket_tags` describe falla (0 columns) |
+
+**Archivos de tests problemáticos:**
+1. `AttachmentsTableTest.php` - Fixture `app.Comments` no existe
+2. `TicketsTableTest.php` - Fixture `app.Requesters` no existe
+3. `UsersTableTest.php` - Fixture users con datos incompletos
+4. `OrganizationsTableTest.php` - Fixture users inválido
+5. `TagsTableTest.php` - Schema de `ticket_tags` broken
+
+#### Cobertura de Tests
+
+**Estado**: ❌ No disponible
+
+- PHP 8.5.1 no tiene driver de cobertura instalado (xdebug o pcov)
+- Recomendación: Instalar `pcov` para generar reportes de cobertura
+
+```bash
+# Para instalar pcov
+pecl install pcov
+# Agregar extension=pcov.so a php.ini
+```
+
+#### Métricas de Testing
+
+- **Tests passing**: 20/57 (35%)
+- **Tests with issues**: 37/57 (65%)
+- **Coverage**: No disponible sin driver
+
+### Impacto en Estado del Proyecto
+
+**Antes del fix:**
+- 🔴 Tests completamente bloqueados (no ejecutables)
+- Sin posibilidad de QA automatizado
+
+**Después del fix:**
+- 🟡 Tests ejecutables pero con issues
+- 35% de tests passing
+- Fixtures necesitan actualización
+
+### Issues Documentados de Tests
+
+| ID | Severidad | Issue | Estimación |
+|----|-----------|-------|------------|
+| TST-001 | Alto | Fixtures desactualizados (users sin first_name/last_name) | S (2-4h) |
+| TST-002 | Alto | Fixtures faltantes (Comments, Requesters) | S (2-4h) |
+| TST-003 | Medio | Schema issue con ticket_tags | M (1-2 días) |
+| TST-004 | Bajo | Instalar driver de cobertura (pcov) | XS (<2h) |
+
+---
+
+## 10. Conclusiones Actualizadas
 
 ### Fortalezas del Proyecto
 
@@ -587,25 +683,42 @@ Documentar findings en:
 
 ### Debilidades Principales
 
-❌ **Issues críticos**:
-1. Tests no ejecutables (migración broken)
+❌ **Issues críticos restantes**:
+1. ~~Tests no ejecutables (migración broken)~~ ✅ **RESUELTO**
 2. 455 errores PHPStan no revisados
 3. Archivos excesivamente largos (anti-pattern)
 4. 1156 violaciones de estándares de código
+5. 🆕 37/57 tests con issues de fixtures
 
 ### Viabilidad de Producción
 
-**Estado actual**: 🔴 **NO LISTO para producción**
+**Estado actual**: 🟡 **MEJORA SIGNIFICATIVA pero aún NO LISTO**
 
-**Razones**:
-- Sin testing funcional no hay garantía de calidad
-- 455 errores pueden ocultar bugs críticos
-- Archivos >1000 líneas son difíciles de mantener/debuguear
+**Progreso**:
+- ✅ Tests ahora ejecutables (bloqueante crítico resuelto)
+- ✅ 20/57 tests passing (35%)
+- ⚠️ Fixtures necesitan actualización
+- ⚠️ 455 errores PHPStan sin revisar
+- ⚠️ Archivos >1000 líneas dificultan mantenimiento
+
+**Razones para no ir a producción aún**:
+- 455 errores PHPStan pueden ocultar bugs críticos
+- 65% de tests fallando por fixtures
+- Archivos excesivamente complejos
 
 **Tiempo estimado para estar listo**: 2-3 semanas de trabajo enfocado
+- Fix fixtures: 1 día
+- Revisión PHPStan: 1 semana
+- Refactoring crítico: 2 semanas
 
 ---
 
-**Fin del Diagnóstico Automatizado - Fase 1**
+**Fin del Diagnóstico Automatizado - Fase 1 (Actualizado)**
 
-**Próximo documento**: Iniciar Fase 2 - Auditoría Manual de Services (Día 3)
+**Cambios aplicados**:
+- ✅ 9 campos enum → string
+- ✅ 112 índices renombrados
+- ✅ 27 migraciones ejecutadas exitosamente
+- ✅ Tests ejecutables (20/57 passing)
+
+**Próximo paso**: Iniciar Fase 2 - Auditoría Manual de Services (Día 2)

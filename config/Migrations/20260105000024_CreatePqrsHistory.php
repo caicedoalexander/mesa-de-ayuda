@@ -64,19 +64,19 @@ class CreatePqrsHistory extends AbstractMigration
 
             // Indexes for performance
             ->addIndex(['pqrs_id'], [
-                'name' => 'idx_pqrs_id',
+                'name' => 'idx_pqrs_history_pqrs_id',
             ])
             ->addIndex(['changed_by'], [
-                'name' => 'idx_changed_by',
+                'name' => 'idx_pqrs_history_changed_by',
             ])
             ->addIndex(['created'], [
-                'name' => 'idx_created',
+                'name' => 'idx_pqrs_history_created',
             ])
             ->addIndex(['field_name'], [
-                'name' => 'idx_field_name',
+                'name' => 'idx_pqrs_history_field_name',
             ])
             ->addIndex(['pqrs_id', 'created'], [
-                'name' => 'idx_pqrs_created',
+                'name' => 'idx_pqrs_history_pqrs_created',
             ])
 
             // Foreign key constraints

@@ -91,16 +91,16 @@ class CreateComprasAttachments extends AbstractMigration
 
             // Indexes for performance
             ->addIndex(['compra_id'], [
-                'name' => 'idx_compra_id',
+                'name' => 'idx_compras_attachments_compra_id',
             ])
             ->addIndex(['compras_comment_id'], [
-                'name' => 'idx_compras_comment_id',
+                'name' => 'idx_compras_attachments_comment_id',
             ])
             ->addIndex(['uploaded_by_user_id'], [
-                'name' => 'idx_uploaded_by_user_id',
+                'name' => 'idx_compras_attachments_uploaded_by',
             ])
             ->addIndex(['content_id'], [
-                'name' => 'idx_content_id',
+                'name' => 'idx_compras_attachments_content_id',
             ])
 
             // Foreign key constraints

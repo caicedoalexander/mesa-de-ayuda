@@ -85,7 +85,7 @@ class CreateEmailTemplates extends AbstractMigration
                 'name' => 'idx_template_key_unique',
             ])
             ->addIndex(['is_active'], [
-                'name' => 'idx_is_active',
+                'name' => 'idx_email_templates_is_active',
             ])
 
             ->create();

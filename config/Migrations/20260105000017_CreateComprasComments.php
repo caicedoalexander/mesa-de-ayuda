@@ -83,16 +83,16 @@ class CreateComprasComments extends AbstractMigration
 
             // Indexes for performance
             ->addIndex(['compra_id'], [
-                'name' => 'idx_compra_id',
+                'name' => 'idx_compras_comments_compra_id',
             ])
             ->addIndex(['user_id'], [
-                'name' => 'idx_user_id',
+                'name' => 'idx_compras_comments_user_id',
             ])
             ->addIndex(['comment_type'], [
-                'name' => 'idx_comment_type',
+                'name' => 'idx_compras_comments_comment_type',
             ])
             ->addIndex(['compra_id', 'created'], [
-                'name' => 'idx_compra_created',
+                'name' => 'idx_compras_comments_compra_created',
             ])
 
             // Foreign key constraints

@@ -45,11 +45,11 @@ class CreateTicketComments extends AbstractMigration
             ])
 
             // Comment classification
-            ->addColumn('comment_type', 'enum', [
-                'values' => ['public', 'internal'],
+            ->addColumn('comment_type', 'string', [
+                'limit' => 20,
                 'default' => 'public',
                 'null' => false,
-                'comment' => 'public = visible to requester, internal = agent notes only',
+                'comment' => 'Comment type (public|internal). public = visible to requester, internal = agent notes only',
             ])
             ->addColumn('is_system_comment', 'boolean', [
                 'default' => false,
@@ -81,27 +81,27 @@ class CreateTicketComments extends AbstractMigration
 
             // Indexes for performance
             ->addIndex(['ticket_id'], [
-                'name' => 'idx_ticket_id',
+                'name' => 'idx_ticket_comments_ticket_id',
             ])
             ->addIndex(['user_id'], [
-                'name' => 'idx_user_id',
+                'name' => 'idx_ticket_comments_user_id',
             ])
             ->addIndex(['created'], [
-                'name' => 'idx_created',
+                'name' => 'idx_ticket_comments_created',
             ])
             ->addIndex(['comment_type'], [
-                'name' => 'idx_comment_type',
+                'name' => 'idx_ticket_comments_comment_type',
             ])
             ->addIndex(['is_system_comment'], [
-                'name' => 'idx_is_system_comment',
+                'name' => 'idx_ticket_comments_is_system_comment',
             ])
 
             // Composite indexes for common queries
             ->addIndex(['ticket_id', 'created'], [
-                'name' => 'idx_ticket_created',
+                'name' => 'idx_ticket_comments_ticket_created',
             ])
             ->addIndex(['ticket_id', 'comment_type'], [
-                'name' => 'idx_ticket_comment_type',
+                'name' => 'idx_ticket_comments_ticket_comment_type',
             ])
 
             // Foreign key constraints

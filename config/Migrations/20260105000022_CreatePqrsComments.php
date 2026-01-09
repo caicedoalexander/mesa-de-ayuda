@@ -42,11 +42,11 @@ class CreatePqrsComments extends AbstractMigration
             ])
 
             // Comment classification
-            ->addColumn('comment_type', 'enum', [
-                'values' => ['public', 'internal'],
+            ->addColumn('comment_type', 'string', [
+                'limit' => 20,
                 'default' => 'public',
                 'null' => false,
-                'comment' => 'public = visible to requester, internal = agent notes only',
+                'comment' => 'Comment type (public|internal). public = visible to requester, internal = agent notes only',
             ])
             ->addColumn('is_system_comment', 'boolean', [
                 'default' => false,
@@ -78,19 +78,19 @@ class CreatePqrsComments extends AbstractMigration
 
             // Indexes for performance
             ->addIndex(['pqrs_id'], [
-                'name' => 'idx_pqrs_id',
+                'name' => 'idx_pqrs_comments_pqrs_id',
             ])
             ->addIndex(['user_id'], [
-                'name' => 'idx_user_id',
+                'name' => 'idx_pqrs_comments_user_id',
             ])
             ->addIndex(['created'], [
-                'name' => 'idx_created',
+                'name' => 'idx_pqrs_comments_created',
             ])
             ->addIndex(['comment_type'], [
-                'name' => 'idx_comment_type',
+                'name' => 'idx_pqrs_comments_comment_type',
             ])
             ->addIndex(['pqrs_id', 'created'], [
-                'name' => 'idx_pqrs_created',
+                'name' => 'idx_pqrs_comments_pqrs_created',
             ])
 
             // Foreign key constraints

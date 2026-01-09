@@ -71,24 +71,24 @@ class CreateTicketHistory extends AbstractMigration
 
             // Indexes for performance
             ->addIndex(['ticket_id'], [
-                'name' => 'idx_ticket_id',
+                'name' => 'idx_ticket_history_ticket_id',
             ])
             ->addIndex(['changed_by'], [
-                'name' => 'idx_changed_by',
+                'name' => 'idx_ticket_history_changed_by',
             ])
             ->addIndex(['created'], [
-                'name' => 'idx_created',
+                'name' => 'idx_ticket_history_created',
             ])
             ->addIndex(['field_name'], [
-                'name' => 'idx_field_name',
+                'name' => 'idx_ticket_history_field_name',
             ])
 
             // Composite indexes for common queries
             ->addIndex(['ticket_id', 'created'], [
-                'name' => 'idx_ticket_created',
+                'name' => 'idx_ticket_history_ticket_created',
             ])
             ->addIndex(['ticket_id', 'field_name'], [
-                'name' => 'idx_ticket_field',
+                'name' => 'idx_ticket_history_ticket_field',
             ])
 
             // Foreign key constraints

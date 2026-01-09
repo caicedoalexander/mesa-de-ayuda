@@ -1,0 +1,10 @@
+PHPUnit 12.5.4 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.1
+Configuration: C:\Users\sistema\Documents\soporte\phpunit.xml.dist
+
+There was 1 PHPUnit test runner warning:
+
+1) No code coverage driver available
+
+No tests executed!

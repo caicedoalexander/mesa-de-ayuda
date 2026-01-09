@@ -60,11 +60,11 @@ class CreateUsers extends AbstractMigration
             ])
 
             // Authorization
-            ->addColumn('role', 'enum', [
-                'values' => ['admin', 'agent', 'compras', 'servicio_cliente', 'requester'],
+            ->addColumn('role', 'string', [
+                'limit' => 20,
                 'default' => 'requester',
                 'null' => false,
-                'comment' => 'User role for authorization',
+                'comment' => 'User role for authorization (admin|agent|compras|servicio_cliente|requester)',
             ])
 
             // Organization relationship (multi-tenancy)
@@ -104,18 +104,18 @@ class CreateUsers extends AbstractMigration
                 'name' => 'idx_email_unique',
             ])
             ->addIndex(['organization_id'], [
-                'name' => 'idx_organization_id',
+                'name' => 'idx_users_organization_id',
             ])
             ->addIndex(['role'], [
-                'name' => 'idx_role',
+                'name' => 'idx_users_role',
             ])
             ->addIndex(['is_active'], [
-                'name' => 'idx_is_active',
+                'name' => 'idx_users_is_active',
             ])
 
             // Composite index for common queries
             ->addIndex(['role', 'is_active'], [
-                'name' => 'idx_role_active',
+                'name' => 'idx_users_role_active',
             ])
 
             // Foreign key constraint

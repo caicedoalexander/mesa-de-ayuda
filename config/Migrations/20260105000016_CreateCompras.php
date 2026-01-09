@@ -78,17 +78,17 @@ class CreateCompras extends AbstractMigration
             ])
 
             // Status and priority
-            ->addColumn('status', 'enum', [
-                'values' => ['nuevo', 'en_revision', 'aprobado', 'en_proceso', 'completado', 'rechazado'],
+            ->addColumn('status', 'string', [
+                'limit' => 20,
                 'default' => 'nuevo',
                 'null' => false,
-                'comment' => 'Purchase request status',
+                'comment' => 'Purchase request status (nuevo|en_revision|aprobado|en_proceso|completado|rechazado)',
             ])
-            ->addColumn('priority', 'enum', [
-                'values' => ['baja', 'media', 'alta', 'urgente'],
+            ->addColumn('priority', 'string', [
+                'limit' => 20,
                 'default' => 'media',
                 'null' => false,
-                'comment' => 'Purchase request priority level',
+                'comment' => 'Purchase request priority level (baja|media|alta|urgente)',
             ])
 
             // User relationships
@@ -151,16 +151,16 @@ class CreateCompras extends AbstractMigration
                 'name' => 'idx_original_ticket_number',
             ])
             ->addIndex(['priority'], [
-                'name' => 'idx_priority',
+                'name' => 'idx_compras_priority',
             ])
             ->addIndex(['assignee_id'], [
-                'name' => 'idx_assignee_id',
+                'name' => 'idx_compras_assignee_id',
             ])
             ->addIndex(['requester_id'], [
-                'name' => 'idx_requester_id',
+                'name' => 'idx_compras_requester_id',
             ])
             ->addIndex(['sla_due_date'], [
-                'name' => 'idx_sla_due_date',
+                'name' => 'idx_compras_sla_due_date',
             ])
             ->addIndex(['first_response_sla_due'], [
                 'name' => 'idx_compras_first_response_sla',
@@ -169,15 +169,15 @@ class CreateCompras extends AbstractMigration
                 'name' => 'idx_compras_resolution_sla',
             ])
             ->addIndex(['channel'], [
-                'name' => 'idx_channel',
+                'name' => 'idx_compras_channel',
             ])
 
             // Composite indexes for common queries
             ->addIndex(['status', 'created'], [
-                'name' => 'idx_status_created',
+                'name' => 'idx_compras_status_created',
             ])
             ->addIndex(['assignee_id', 'status'], [
-                'name' => 'idx_assignee_status',
+                'name' => 'idx_compras_assignee_status',
             ])
 
             // Foreign key constraints

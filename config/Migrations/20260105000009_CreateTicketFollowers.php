@@ -54,10 +54,10 @@ class CreateTicketFollowers extends AbstractMigration
 
             // Indexes for lookups
             ->addIndex(['user_id'], [
-                'name' => 'idx_user_id',
+                'name' => 'idx_ticket_followers_user_id',
             ])
             ->addIndex(['ticket_id'], [
-                'name' => 'idx_ticket_id',
+                'name' => 'idx_ticket_followers_ticket_id',
             ])
 
             // Foreign key constraints

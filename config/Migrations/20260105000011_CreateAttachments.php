@@ -96,24 +96,24 @@ class CreateAttachments extends AbstractMigration
 
             // Indexes for performance
             ->addIndex(['ticket_id'], [
-                'name' => 'idx_ticket_id',
+                'name' => 'idx_attachments_ticket_id',
             ])
             ->addIndex(['comment_id'], [
-                'name' => 'idx_comment_id',
+                'name' => 'idx_attachments_comment_id',
             ])
             ->addIndex(['content_id'], [
-                'name' => 'idx_content_id',
+                'name' => 'idx_attachments_content_id',
             ])
             ->addIndex(['uploaded_by'], [
-                'name' => 'idx_uploaded_by',
+                'name' => 'idx_attachments_uploaded_by',
             ])
             ->addIndex(['created'], [
-                'name' => 'idx_created',
+                'name' => 'idx_attachments_created',
             ])
 
             // Composite indexes for common queries
             ->addIndex(['ticket_id', 'is_inline'], [
-                'name' => 'idx_ticket_inline',
+                'name' => 'idx_attachments_ticket_inline',
             ])
 
             // Foreign key constraints

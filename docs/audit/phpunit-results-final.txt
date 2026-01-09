@@ -1,0 +1,561 @@
+PHPUnit 12.5.4 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.1
+Configuration: C:\Users\sistema\Documents\soporte\phpunit.xml.dist
+
+...FFFF..EEIIEIIEEEEEEEEEEEE...............EEEEEEEEEEEEEE         57 / 57 (100%)
+
+Time: 00:02.145, Memory: 30.00 MB
+
+There were 29 errors:
+
+1) App\Test\TestCase\Model\Table\AttachmentsTableTest::testValidationDefault
+UnexpectedValueException: Could not find fixture `app.Comments`.
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:90
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:51
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Model\Table\AttachmentsTableTest.php:39
+
+2) App\Test\TestCase\Model\Table\AttachmentsTableTest::testBuildRules
+UnexpectedValueException: Could not find fixture `app.Comments`.
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:90
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:51
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Model\Table\AttachmentsTableTest.php:39
+
+3) App\Test\TestCase\Model\Table\OrganizationsTableTest::testValidationDefault
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Model\Table\OrganizationsTableTest.php:39
+
+4) App\Test\TestCase\Model\Table\TagsTableTest::testValidationDefault
+Cake\Database\Exception\DatabaseException: Cannot describe ticket_tags. It has 0 columns.
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Schema\SchemaDialect.php:445
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Schema\Collection.php:87
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Schema\CachedCollection.php:107
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:277
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:241
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:135
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Model\Table\TagsTableTest.php:38
+
+5) App\Test\TestCase\Model\Table\TagsTableTest::testBuildRules
+Cake\Database\Exception\DatabaseException: Cannot describe ticket_tags. It has 0 columns.
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Schema\SchemaDialect.php:445
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Schema\Collection.php:87
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Schema\CachedCollection.php:107
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:277
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:241
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:135
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Model\Table\TagsTableTest.php:38
+
+6) App\Test\TestCase\Model\Table\TicketCommentsTableTest::testValidationDefault
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Model\Table\TicketCommentsTableTest.php:39
+
+7) App\Test\TestCase\Model\Table\TicketCommentsTableTest::testBuildRules
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Model\Table\TicketCommentsTableTest.php:39
+
+8) App\Test\TestCase\Model\Table\TicketFollowersTableTest::testValidationDefault
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Model\Table\TicketFollowersTableTest.php:39
+
+9) App\Test\TestCase\Model\Table\TicketFollowersTableTest::testBuildRules
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Model\Table\TicketFollowersTableTest.php:39
+
+10) App\Test\TestCase\Model\Table\TicketTagsTableTest::testValidationDefault
+Cake\Database\Exception\DatabaseException: Cannot describe ticket_tags. It has 0 columns.
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Schema\SchemaDialect.php:445
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Schema\Collection.php:87
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Schema\CachedCollection.php:107
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:277
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:241
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:135
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Model\Table\TicketTagsTableTest.php:39
+
+11) App\Test\TestCase\Model\Table\TicketTagsTableTest::testBuildRules
+Cake\Database\Exception\DatabaseException: Cannot describe ticket_tags. It has 0 columns.
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Schema\SchemaDialect.php:445
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Schema\Collection.php:87
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Schema\CachedCollection.php:107
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:277
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:241
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:135
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Model\Table\TicketTagsTableTest.php:39
+
+12) App\Test\TestCase\Model\Table\TicketsTableTest::testValidationDefault
+UnexpectedValueException: Could not find fixture `app.Requesters`.
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:90
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:51
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Model\Table\TicketsTableTest.php:44
+
+13) App\Test\TestCase\Model\Table\TicketsTableTest::testBuildRules
+UnexpectedValueException: Could not find fixture `app.Requesters`.
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:90
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:51
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Model\Table\TicketsTableTest.php:44
+
+14) App\Test\TestCase\Model\Table\UsersTableTest::testValidationDefault
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Model\Table\UsersTableTest.php:40
+
+15) App\Test\TestCase\Model\Table\UsersTableTest::testBuildRules
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Model\Table\UsersTableTest.php:40
+
+16) App\Test\TestCase\Service\TicketServiceTest::testIsEmailInTicketRecipientsReturnsTrueForEmailInTo
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Service\TicketServiceTest.php:40
+
+17) App\Test\TestCase\Service\TicketServiceTest::testIsEmailInTicketRecipientsReturnsTrueForEmailInCc
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Service\TicketServiceTest.php:40
+
+18) App\Test\TestCase\Service\TicketServiceTest::testIsEmailInTicketRecipientsReturnsTrueForRequesterEmail
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Service\TicketServiceTest.php:40
+
+19) App\Test\TestCase\Service\TicketServiceTest::testIsEmailInTicketRecipientsIsCaseInsensitive
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Service\TicketServiceTest.php:40
+
+20) App\Test\TestCase\Service\TicketServiceTest::testIsEmailInTicketRecipientsHandlesWhitespace
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Service\TicketServiceTest.php:40
+
+21) App\Test\TestCase\Service\TicketServiceTest::testIsEmailInTicketRecipientsReturnsFalseForUnauthorizedEmail
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Service\TicketServiceTest.php:40
+
+22) App\Test\TestCase\Service\TicketServiceTest::testIsEmailInTicketRecipientsReturnsFalseForEmptyRecipients
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Service\TicketServiceTest.php:40
+
+23) App\Test\TestCase\Service\TicketServiceTest::testIsEmailInTicketRecipientsHandlesRecipientWithoutEmailKey
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Service\TicketServiceTest.php:40
+
+24) App\Test\TestCase\Service\TicketServiceTest::testIsEmailInTicketRecipientsWithBothToAndCc
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Service\TicketServiceTest.php:40
+
+25) App\Test\TestCase\Service\TicketServiceTest::testCreateCommentFromEmailWithAuthorizedSenderCreatesComment
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Service\TicketServiceTest.php:40
+
+26) App\Test\TestCase\Service\TicketServiceTest::testCreateCommentFromEmailWithUnauthorizedSenderReturnsNull
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Service\TicketServiceTest.php:40
+
+27) App\Test\TestCase\Service\TicketServiceTest::testCreateCommentFromEmailTruncatesOversizedBody
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Service\TicketServiceTest.php:40
+
+28) App\Test\TestCase\Service\TicketServiceTest::testCreateCommentFromEmailAutoCreatesUser
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Service\TicketServiceTest.php:40
+
+29) App\Test\TestCase\Service\TicketServiceTest::testCreateCommentFromEmailProcessesAttachments
+Cake\Core\Exception\CakeException: Unable to insert rows for table `users`. Fixture records might have invalid data or unknown constraints.
+SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.first_name
+Query: INSERT INTO users (id, email, password, role, organization_id, is_active, created) VALUES (1, 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor sit amet', 'Lorem ipsum dolor ', 1, TRUE, '2025-11-08 13:10:24')
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:169
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:141
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:708
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Core\Retry\CommandRetry.php:71
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\Database\Connection.php:704
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\ConnectionHelper.php:154
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:139
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:120
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\FixtureHelper.php:133
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\Fixture\TruncateStrategy.php:52
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:293
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\TestCase.php:243
+C:\Users\sistema\Documents\soporte\tests\TestCase\Service\TicketServiceTest.php:40
+
+--
+
+There were 4 failures:
+
+1) App\Test\TestCase\Controller\PagesControllerTest::testDisplay
+Failed asserting that 302 is between 200 and 204.
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\IntegrationTestTrait.php:866
+C:\Users\sistema\Documents\soporte\tests\TestCase\Controller\PagesControllerTest.php:40
+
+2) App\Test\TestCase\Controller\PagesControllerTest::testMissingTemplate
+Failed asserting that 302 is between 400 and 429.
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\IntegrationTestTrait.php:889
+C:\Users\sistema\Documents\soporte\tests\TestCase\Controller\PagesControllerTest.php:55
+
+3) App\Test\TestCase\Controller\PagesControllerTest::testMissingTemplateInDebug
+Failed asserting that 302 is between 500 and 505.
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\IntegrationTestTrait.php:900
+C:\Users\sistema\Documents\soporte\tests\TestCase\Controller\PagesControllerTest.php:69
+
+4) App\Test\TestCase\Controller\PagesControllerTest::testDirectoryTraversalProtection
+Failed asserting that `403` matches response status code `302`.
+
+C:\Users\sistema\Documents\soporte\vendor\cakephp\cakephp\src\TestSuite\IntegrationTestTrait.php:912
+C:\Users\sistema\Documents\soporte\tests\TestCase\Controller\PagesControllerTest.php:83
+
+ERRORS!
+Tests: 57, Assertions: 33, Errors: 29, Failures: 4, Incomplete: 4.

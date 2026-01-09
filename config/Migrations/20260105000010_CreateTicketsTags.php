@@ -47,10 +47,10 @@ class CreateTicketsTags extends AbstractMigration
 
             // Indexes for lookups
             ->addIndex(['tag_id'], [
-                'name' => 'idx_tag_id',
+                'name' => 'idx_tickets_tags_tag_id',
             ])
             ->addIndex(['ticket_id'], [
-                'name' => 'idx_ticket_id',
+                'name' => 'idx_tickets_tags_ticket_id',
             ])
 
             // Foreign key constraints

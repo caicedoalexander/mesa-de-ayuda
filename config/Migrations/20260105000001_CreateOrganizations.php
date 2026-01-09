@@ -53,10 +53,10 @@ class CreateOrganizations extends AbstractMigration
 
             // Indexes
             ->addIndex(['name'], [
-                'name' => 'idx_name',
+                'name' => 'idx_organizations_name',
             ])
             ->addIndex(['domain'], [
-                'name' => 'idx_domain',
+                'name' => 'idx_organizations_domain',
             ])
 
             ->create();

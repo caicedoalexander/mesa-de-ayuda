@@ -73,13 +73,13 @@ class CreatePqrsAttachments extends AbstractMigration
 
             // Indexes for performance
             ->addIndex(['pqrs_id'], [
-                'name' => 'idx_pqrs_id',
+                'name' => 'idx_pqrs_attachments_pqrs_id',
             ])
             ->addIndex(['comment_id'], [
-                'name' => 'idx_comment_id',
+                'name' => 'idx_pqrs_attachments_comment_id',
             ])
             ->addIndex(['uploaded_by'], [
-                'name' => 'idx_uploaded_by',
+                'name' => 'idx_pqrs_attachments_uploaded_by',
             ])
 
             // Foreign key constraints

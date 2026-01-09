@@ -77,17 +77,17 @@ class CreateTickets extends AbstractMigration
             ])
 
             // Status and priority
-            ->addColumn('status', 'enum', [
-                'values' => ['nuevo', 'abierto', 'pendiente', 'resuelto', 'convertido'],
+            ->addColumn('status', 'string', [
+                'limit' => 20,
                 'default' => 'nuevo',
                 'null' => false,
-                'comment' => 'Ticket status. "convertido" = converted to purchase request',
+                'comment' => 'Ticket status (nuevo|abierto|pendiente|resuelto|convertido). "convertido" = converted to purchase request',
             ])
-            ->addColumn('priority', 'enum', [
-                'values' => ['baja', 'media', 'alta', 'urgente'],
+            ->addColumn('priority', 'string', [
+                'limit' => 20,
                 'default' => 'media',
                 'null' => false,
-                'comment' => 'Ticket priority level',
+                'comment' => 'Ticket priority level (baja|media|alta|urgente)',
             ])
 
             // User relationships
@@ -139,30 +139,30 @@ class CreateTickets extends AbstractMigration
                 'name' => 'idx_gmail_thread_id',
             ])
             ->addIndex(['priority'], [
-                'name' => 'idx_priority',
+                'name' => 'idx_tickets_priority',
             ])
             ->addIndex(['assignee_id'], [
-                'name' => 'idx_assignee_id',
+                'name' => 'idx_tickets_assignee_id',
             ])
             ->addIndex(['requester_id'], [
-                'name' => 'idx_requester_id',
+                'name' => 'idx_tickets_requester_id',
             ])
             ->addIndex(['created'], [
-                'name' => 'idx_created',
+                'name' => 'idx_tickets_created',
             ])
             ->addIndex(['channel'], [
-                'name' => 'idx_channel',
+                'name' => 'idx_tickets_channel',
             ])
 
             // Composite indexes for common queries
             ->addIndex(['status', 'priority'], [
-                'name' => 'idx_status_priority',
+                'name' => 'idx_tickets_status_priority',
             ])
             ->addIndex(['assignee_id', 'status'], [
-                'name' => 'idx_assignee_status',
+                'name' => 'idx_tickets_assignee_status',
             ])
             ->addIndex(['status', 'created'], [
-                'name' => 'idx_status_created',
+                'name' => 'idx_tickets_status_created',
             ])
 
             // Foreign key constraints

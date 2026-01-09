@@ -65,16 +65,16 @@ class CreateComprasHistory extends AbstractMigration
 
             // Indexes for performance
             ->addIndex(['compra_id'], [
-                'name' => 'idx_compra_id',
+                'name' => 'idx_compras_history_compra_id',
             ])
             ->addIndex(['changed_by'], [
-                'name' => 'idx_changed_by',
+                'name' => 'idx_compras_history_changed_by',
             ])
             ->addIndex(['field_name'], [
-                'name' => 'idx_field_name',
+                'name' => 'idx_compras_history_field_name',
             ])
             ->addIndex(['compra_id', 'created'], [
-                'name' => 'idx_compra_created',
+                'name' => 'idx_compras_history_compra_created',
             ])
 
             // Foreign key constraints
