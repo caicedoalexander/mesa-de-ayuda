@@ -31,20 +31,34 @@ class TicketService
 
     private EmailService $emailService;
     private WhatsappService $whatsappService;
+    private GmailService $gmailService;
     private ?N8nService $n8nService = null;
     private ?array $systemConfig = null;
 
     /**
-     * Constructor
+     * Constructor with Dependency Injection
+     *
+     * Resolves: ARCH-004 (Incomplete DI - services instantiated multiple times)
      *
      * @param array|null $systemConfig Optional system configuration to avoid redundant DB queries
+     * @param GmailService|null $gmailService Optional Gmail service instance (for DI/testing)
+     * @param EmailService|null $emailService Optional Email service instance (for DI/testing)
+     * @param WhatsappService|null $whatsappService Optional WhatsApp service instance (for DI/testing)
      */
-    public function __construct(?array $systemConfig = null)
-    {
-        $this->emailService = new EmailService($systemConfig);
-        $this->whatsappService = new WhatsappService($systemConfig);
+    public function __construct(
+        ?array $systemConfig = null,
+        ?GmailService $gmailService = null,
+        ?EmailService $emailService = null,
+        ?WhatsappService $whatsappService = null
+    ) {
         $this->systemConfig = $systemConfig;
-        // N8nService NOT initialized here - loaded lazily only when needed
+
+        // Inject dependencies with sensible defaults
+        $this->gmailService = $gmailService ?? new GmailService($systemConfig);
+        $this->emailService = $emailService ?? new EmailService($systemConfig);
+        $this->whatsappService = $whatsappService ?? new WhatsappService($systemConfig);
+
+        // N8nService loaded lazily only when needed
     }
 
     /**
@@ -83,10 +97,9 @@ class TicketService
             }
         }
 
-        // Extract email address from From header
-        $gmailService = new GmailService();
-        $fromEmail = $gmailService->extractEmailAddress($emailData['from']);
-        $fromName = $gmailService->extractName($emailData['from']);
+        // Extract email address from From header (use injected service)
+        $fromEmail = $this->gmailService->extractEmailAddress($emailData['from']);
+        $fromName = $this->gmailService->extractName($emailData['from']);
 
         // Find or create user
         $user = $this->findOrCreateUser($fromEmail, $fromName);
@@ -175,10 +188,9 @@ class TicketService
     {
         $ticketCommentsTable = $this->fetchTable('TicketComments');
 
-        // Extract sender email and name from emailData
-        $gmailService = new GmailService();
-        $fromEmail = $gmailService->extractEmailAddress($emailData['from']);
-        $fromName = $gmailService->extractName($emailData['from']);
+        // Extract sender email and name from emailData (use injected service)
+        $fromEmail = $this->gmailService->extractEmailAddress($emailData['from']);
+        $fromName = $this->gmailService->extractName($emailData['from']);
 
         // Validate sender using isEmailInTicketRecipients() - return null if unauthorized
         if (!$this->isEmailInTicketRecipients($ticket, $fromEmail)) {
@@ -386,8 +398,8 @@ class TicketService
     private function processEmailAttachments(\Cake\Datasource\EntityInterface $ticket, array $attachments, int $userId, ?int $commentId = null): void
     {
         assert($ticket instanceof \App\Model\Entity\Ticket);
-        $gmailService = new GmailService(GmailService::loadConfigFromDatabase());
 
+        // Use injected service (ARCH-004 resolved)
         foreach ($attachments as $attachmentData) {
             try {
                 // PERFORMANCE FIX: Reduced sleep from 1000ms to 200ms
@@ -396,7 +408,7 @@ class TicketService
                 usleep(200000);
 
                 // Download attachment from Gmail
-                $content = $gmailService->downloadAttachment(
+                $content = $this->gmailService->downloadAttachment(
                     $ticket->gmail_message_id,
                     $attachmentData['attachment_id']
                 );
