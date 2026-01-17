@@ -6,14 +6,16 @@ namespace App\Service;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use Cake\Log\Log;
 use Cake\I18n\FrozenTime;
+use GuzzleHttp\Client;
 
 /**
  * N8n Service
  *
  * Handles webhook integration with n8n for AI-powered tag assignment
  *
- * Refactored to use SystemSettingsService for centralized configuration management.
- * Resolves: ARCH-002 (part of centralized settings)
+ * Refactored to use:
+ * - SystemSettingsService for centralized configuration (ARCH-002)
+ * - GuzzleHttp\Client instead of raw cURL (ARCH-012)
  */
 class N8nService
 {
@@ -21,16 +23,22 @@ class N8nService
 
     private array $config;
     private ?SystemSettingsService $settingsService;
+    private ?Client $httpClient;
 
     /**
      * Constructor
      *
      * @param array|null $config Optional configuration array. If not provided, loads from SystemSettingsService.
      * @param SystemSettingsService|null $settingsService Optional settings service (for DI/testing)
+     * @param Client|null $httpClient Optional HTTP client (for DI/testing)
      */
-    public function __construct(?array $config = null, ?SystemSettingsService $settingsService = null)
-    {
+    public function __construct(
+        ?array $config = null,
+        ?SystemSettingsService $settingsService = null,
+        ?Client $httpClient = null
+    ) {
         $this->settingsService = $settingsService;
+        $this->httpClient = $httpClient;
 
         // Use provided config or load from SystemSettingsService
         if ($config !== null) {
@@ -199,7 +207,10 @@ class N8nService
     }
 
     /**
-     * Send webhook via cURL
+     * Send webhook via HTTP client (Guzzle)
+     *
+     * Refactored from raw cURL to use GuzzleHttp\Client for better testability.
+     * Resolves: ARCH-012 (cURL hardcoded)
      *
      * @param string $url Webhook URL
      * @param array $payload Payload data
@@ -211,52 +222,58 @@ class N8nService
 
         // Build headers
         $headers = [
-            'Content-Type: application/json',
-            'User-Agent: TicketSystem/1.0',
+            'Content-Type' => 'application/json',
+            'User-Agent' => 'TicketSystem/1.0',
         ];
 
         // Add API key header if configured
         if (!empty($this->config['n8n_api_key'])) {
-            $headers[] = 'X-API-Key: ' . $this->config['n8n_api_key'];
+            $headers['X-API-Key'] = $this->config['n8n_api_key'];
         }
 
-        // Initialize cURL
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // For development, remove in production
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        try {
+            // Get or create HTTP client
+            $client = $this->getHttpClient();
 
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-        // curl_close() is deprecated in PHP 8.5+ (auto-closes when out of scope)
+            // Send POST request via Guzzle
+            $response = $client->post($url, [
+                'json' => $payload,
+                'headers' => $headers,
+                'timeout' => $timeout,
+                'allow_redirects' => true,
+                'verify' => $this->shouldVerifySSL(), // Environment-aware SSL verification
+            ]);
 
-        if ($error) {
+            $httpCode = $response->getStatusCode();
+            $body = (string)$response->getBody();
+
+            if ($httpCode >= 200 && $httpCode < 300) {
+                return [
+                    'success' => true,
+                    'http_code' => $httpCode,
+                    'response' => $body,
+                ];
+            }
+
             return [
                 'success' => false,
-                'error' => $error,
+                'http_code' => $httpCode,
+                'response' => $body,
+                'error' => 'HTTP ' . $httpCode,
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('n8n webhook HTTP error', [
+                'url' => $url,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
                 'http_code' => 0,
             ];
         }
-
-        if ($httpCode >= 200 && $httpCode < 300) {
-            return [
-                'success' => true,
-                'http_code' => $httpCode,
-                'response' => $response,
-            ];
-        }
-
-        return [
-            'success' => false,
-            'http_code' => $httpCode,
-            'response' => $response,
-            'error' => 'HTTP ' . $httpCode,
-        ];
     }
 
     /**
@@ -269,6 +286,54 @@ class N8nService
         // You can implement this later when you need n8n to send tags back
         // For now, return a placeholder
         return env('APP_URL', 'http://localhost') . '/api/webhooks/n8n/tags';
+    }
+
+    /**
+     * Get or create HTTP client
+     *
+     * Creates a GuzzleHttp\Client instance with default configuration.
+     * Uses injected client if available (for testing).
+     *
+     * @return Client HTTP client instance
+     */
+    private function getHttpClient(): Client
+    {
+        if ($this->httpClient === null) {
+            $this->httpClient = new Client([
+                'timeout' => 10,
+                'http_errors' => false, // Don't throw exceptions on 4xx/5xx responses
+            ]);
+        }
+
+        return $this->httpClient;
+    }
+
+    /**
+     * Determine if SSL verification should be enabled
+     *
+     * SSL verification is disabled ONLY in development mode with debug enabled.
+     * This prevents MITM attacks in production while allowing development flexibility.
+     *
+     * Resolves: BLK-001 (SSL verification hardcoded to false)
+     *
+     * @return bool True if SSL should be verified, false otherwise
+     */
+    private function shouldVerifySSL(): bool
+    {
+        $isDebug = filter_var(env('APP_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+        $isDevelopment = env('APP_ENV', 'production') === 'development';
+
+        // Only disable SSL verification in development with debug mode
+        $verifySSL = !($isDebug && $isDevelopment);
+
+        if (!$verifySSL) {
+            Log::warning(
+                'N8nService: SSL verification is DISABLED. This should only happen in development.',
+                ['env' => env('APP_ENV'), 'debug' => $isDebug]
+            );
+        }
+
+        return $verifySSL;
     }
 
     /**

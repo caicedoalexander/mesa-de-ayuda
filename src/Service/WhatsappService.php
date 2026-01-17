@@ -6,6 +6,7 @@ namespace App\Service;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use Cake\Log\Log;
 use Cake\Core\Configure;
+use GuzzleHttp\Client;
 
 /**
  * WhatsApp Service
@@ -14,12 +15,16 @@ use Cake\Core\Configure;
  * - New ticket notifications (to tickets team)
  * - New PQRS notifications (to customer service team)
  * - New compra notifications (to purchasing team)
+ *
+ * Refactored to use GuzzleHttp\Client instead of raw cURL for better testability.
+ * Resolves: ARCH-009 (HTTP Client hardcoded)
  */
 class WhatsappService
 {
     use LocatorAwareTrait;
 
     private \App\Service\Renderer\NotificationRenderer $renderer;
+    private ?Client $httpClient;
 
     /**
      * Evolution API configuration
@@ -30,10 +35,12 @@ class WhatsappService
      * Constructor
      *
      * @param array|null $systemConfig Optional system configuration to avoid redundant DB queries
+     * @param Client|null $httpClient Optional HTTP client (for DI/testing)
      */
-    public function __construct(?array $systemConfig = null)
+    public function __construct(?array $systemConfig = null, ?Client $httpClient = null)
     {
         $this->renderer = new \App\Service\Renderer\NotificationRenderer();
+        $this->httpClient = $httpClient;
 
         // Pre-load config if provided
         if ($systemConfig !== null) {
@@ -160,29 +167,20 @@ class WhatsappService
                 'text' => $text,
             ];
 
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Content-Type: application/json',
-                'apikey: ' . $config['whatsapp_api_key'],
+            // Get or create HTTP client
+            $client = $this->getHttpClient();
+
+            // Send POST request via Guzzle
+            $response = $client->post($url, [
+                'json' => $data,
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'apikey' => $config['whatsapp_api_key'],
+                ],
+                'timeout' => 10,
             ]);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
 
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $error = curl_error($ch);
-            curl_close($ch);
-
-            if ($error) {
-                Log::error('WhatsApp API cURL error', [
-                    'error' => $error,
-                    'number' => $number,
-                ]);
-                return false;
-            }
+            $httpCode = $response->getStatusCode();
 
             if ($httpCode >= 200 && $httpCode < 300) {
                 Log::info('WhatsApp message sent successfully', [
@@ -193,7 +191,7 @@ class WhatsappService
             } else {
                 Log::error('WhatsApp API returned error', [
                     'http_code' => $httpCode,
-                    'response' => $response,
+                    'response' => (string)$response->getBody(),
                     'number' => $number,
                 ]);
                 return false;
@@ -342,5 +340,25 @@ class WhatsappService
                 ? 'Mensaje de prueba enviado exitosamente'
                 : 'Error al enviar mensaje de prueba. Revisa los logs para más detalles.',
         ];
+    }
+
+    /**
+     * Get or create HTTP client
+     *
+     * Creates a GuzzleHttp\Client instance with default configuration.
+     * Uses injected client if available (for testing).
+     *
+     * @return Client HTTP client instance
+     */
+    private function getHttpClient(): Client
+    {
+        if ($this->httpClient === null) {
+            $this->httpClient = new Client([
+                'timeout' => 10,
+                'http_errors' => false, // Don't throw exceptions on 4xx/5xx responses
+            ]);
+        }
+
+        return $this->httpClient;
     }
 }
