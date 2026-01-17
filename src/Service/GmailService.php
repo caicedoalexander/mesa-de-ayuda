@@ -9,6 +9,7 @@ use Google\Service\Gmail\Message;
 use Cake\Log\Log;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use App\Utility\SettingsEncryptionTrait;
+use App\Service\S3Service;
 
 /**
  * Gmail Service
@@ -28,6 +29,7 @@ class GmailService
     private GoogleClient $client;
     private ?Gmail $service = null;
     private array $config;
+    private S3Service $s3Service;
 
     /**
      * Load Gmail configuration from database
@@ -63,10 +65,12 @@ class GmailService
      * Constructor
      *
      * @param array $config Configuration array with client_secret_path and refresh_token
+     * @param S3Service|null $s3Service Optional S3Service instance (for DI/testing)
      */
-    public function __construct(array $config = [])
+    public function __construct(array $config = [], ?S3Service $s3Service = null)
     {
         $this->config = $config;
+        $this->s3Service = $s3Service ?? new S3Service();
         $this->initializeClient();
     }
 
@@ -79,11 +83,12 @@ class GmailService
     {
         $this->client = new GoogleClient();
 
-        // Load client secret from file
+        // Load client secret from file (local or S3)
         $clientSecretPath = $this->config['client_secret_path'] ?? CONFIG . 'google' . DS . 'client_secret.json';
+        $actualFilePath = $this->resolveClientSecretPath($clientSecretPath);
 
-        if (file_exists($clientSecretPath)) {
-            $this->client->setAuthConfig($clientSecretPath);
+        if ($actualFilePath && file_exists($actualFilePath)) {
+            $this->client->setAuthConfig($actualFilePath);
         } else {
             Log::error('Client secret file not found: ' . $clientSecretPath);
         }
@@ -114,6 +119,63 @@ class GmailService
                 throw new \RuntimeException('Gmail authentication failed. Please re-authenticate in Admin Settings.');
             }
         }
+    }
+
+    /**
+     * Resolve client secret path - download from S3 if needed
+     *
+     * Now uses injected S3Service instead of creating new instance.
+     * Resolves: ARCH-003 (S3Service not injected)
+     *
+     * @param string $path Path from config (could be local path or S3 key)
+     * @return string|null Actual local file path
+     */
+    private function resolveClientSecretPath(string $path): ?string
+    {
+        // If it's already a local file that exists, return it
+        if (file_exists($path)) {
+            return $path;
+        }
+
+        // Check if S3 is enabled using injected service
+        if (!$this->s3Service->isEnabled()) {
+            // S3 not enabled, path should be local but doesn't exist
+            return null;
+        }
+
+        // Check if this looks like an S3 key (starts with 'config/' or doesn't start with '/')
+        $isS3Key = (strpos($path, 'config/') === 0) || (strpos($path, '/') !== 0 && strpos($path, DS) !== 0);
+
+        if (!$isS3Key) {
+            // Not an S3 key format
+            return null;
+        }
+
+        // Download from S3 to cache directory
+        $cacheDir = TMP . 'config_cache' . DS;
+        if (!is_dir($cacheDir)) {
+            mkdir($cacheDir, 0755, true);
+        }
+
+        $localCachePath = $cacheDir . basename($path);
+
+        // Check if we have a recent cached version (valid for 1 hour)
+        if (file_exists($localCachePath)) {
+            $fileAge = time() - filemtime($localCachePath);
+            if ($fileAge < 3600) {
+                // Cache is still valid
+                return $localCachePath;
+            }
+        }
+
+        // Download from S3 using injected service
+        if ($this->s3Service->downloadFile($path, $localCachePath)) {
+            Log::info('Downloaded client secret from S3', ['s3_key' => $path]);
+            return $localCachePath;
+        }
+
+        Log::error('Failed to download client secret from S3', ['s3_key' => $path]);
+        return null;
     }
 
     /**

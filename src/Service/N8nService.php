@@ -11,21 +11,28 @@ use Cake\I18n\FrozenTime;
  * N8n Service
  *
  * Handles webhook integration with n8n for AI-powered tag assignment
+ *
+ * Refactored to use SystemSettingsService for centralized configuration management.
+ * Resolves: ARCH-002 (part of centralized settings)
  */
 class N8nService
 {
     use LocatorAwareTrait;
 
     private array $config;
+    private ?SystemSettingsService $settingsService;
 
     /**
      * Constructor
      *
-     * @param array|null $config Optional configuration array. If not provided, loads from database.
+     * @param array|null $config Optional configuration array. If not provided, loads from SystemSettingsService.
+     * @param SystemSettingsService|null $settingsService Optional settings service (for DI/testing)
      */
-    public function __construct(?array $config = null)
+    public function __construct(?array $config = null, ?SystemSettingsService $settingsService = null)
     {
-        // Use provided config or load from database
+        $this->settingsService = $settingsService;
+
+        // Use provided config or load from SystemSettingsService
         if ($config !== null) {
             $this->config = $config;
         } else {
@@ -34,29 +41,26 @@ class N8nService
     }
 
     /**
-     * Load n8n configuration from database with cache
+     * Load n8n configuration using SystemSettingsService
+     *
+     * Leverages centralized cache layer instead of custom cache implementation.
      *
      * @return void
      */
     private function loadConfig(): void
     {
-        $this->config = \Cake\Cache\Cache::remember('n8n_settings', function () {
-            $settingsTable = $this->fetchTable('SystemSettings');
-            $settings = $settingsTable->find()
-                ->select(['setting_key', 'setting_value'])
-                ->where([
-                    'setting_key IN' => [
-                        'n8n_enabled',
-                        'n8n_webhook_url',
-                        'n8n_api_key',
-                        'n8n_send_tags_list',
-                        'n8n_timeout'
-                    ]
-                ])
-                ->toArray();
+        if ($this->settingsService === null) {
+            $this->settingsService = new SystemSettingsService();
+        }
 
-            return collection($settings)->combine('setting_key', 'setting_value')->toArray();
-        }, '_cake_core_');
+        // Get only n8n-related settings from centralized service
+        $this->config = $this->settingsService->getMany([
+            'n8n_enabled',
+            'n8n_webhook_url',
+            'n8n_api_key',
+            'n8n_send_tags_list',
+            'n8n_timeout',
+        ]);
     }
 
     /**
