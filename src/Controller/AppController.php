@@ -16,7 +16,7 @@ declare(strict_types=1);
  */
 namespace App\Controller;
 
-use App\Utility\SettingsEncryptionTrait;
+use App\Service\SystemSettingsService;
 use Cake\Controller\Controller;
 
 /**
@@ -30,7 +30,6 @@ use Cake\Controller\Controller;
  */
 class AppController extends Controller
 {
-    use SettingsEncryptionTrait;
     /**
      * Initialization hook method.
      *
@@ -68,21 +67,10 @@ class AppController extends Controller
         $user = $this->Authentication->getIdentity();
         $this->set('currentUser', $user);
 
-        // Load system settings with cache (1 hour TTL)
-        $systemConfig = \Cake\Cache\Cache::remember('system_settings', function () {
-            $systemSettingsTable = $this->fetchTable('SystemSettings');
-            $settings = $systemSettingsTable->find()
-                ->select(['setting_key', 'setting_value'])
-                ->toArray();
-
-            $config = [];
-            foreach ($settings as $setting) {
-                $config[$setting->setting_key] = $setting->setting_value;
-            }
-
-            // Decrypt sensitive values automatically
-            return $this->processSettings($config);
-        }, '_cake_core_');
+        // Load system settings via centralized service (cached, auto-decrypted)
+        // Resolves: CTRL-001 (Database queries in beforeFilter)
+        $settingsService = new SystemSettingsService();
+        $systemConfig = $settingsService->getAll();
 
         // Make system settings available in views
         $this->set('systemConfig', $systemConfig);
