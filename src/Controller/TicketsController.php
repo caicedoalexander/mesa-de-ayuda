@@ -192,31 +192,15 @@ class TicketsController extends AppController
     {
         $this->request->allowMethod(['post']);
 
-        // Verify ticket exists
-        $this->Tickets->get($id);
         $tagId = (int) $this->request->getData('tag_id');
 
-        $ticketTagsTable = $this->fetchTable('TicketTags');
+        // Use service for business logic (CTRL-003 resolved)
+        $result = $this->ticketService->addTag((int)$id, $tagId);
 
-        // Check if already exists
-        $exists = $ticketTagsTable->find()
-            ->where(['ticket_id' => $id, 'tag_id' => $tagId])
-            ->count();
-
-        if ($exists) {
-            $this->Flash->warning('Esta etiqueta ya está agregada.');
-            return $this->redirect(['action' => 'view', $id]);
-        }
-
-        $ticketTag = $ticketTagsTable->newEntity([
-            'ticket_id' => $id,
-            'tag_id' => $tagId,
-        ]);
-
-        if ($ticketTagsTable->save($ticketTag)) {
-            $this->Flash->success('Etiqueta agregada.');
+        if ($result['success']) {
+            $this->Flash->success($result['message']);
         } else {
-            $this->Flash->error('Error al agregar la etiqueta.');
+            $this->Flash->warning($result['message']);
         }
 
         return $this->redirect(['action' => 'view', $id]);
@@ -233,16 +217,13 @@ class TicketsController extends AppController
     {
         $this->request->allowMethod(['post', 'delete']);
 
-        $ticketTagsTable = $this->fetchTable('TicketTags');
+        // Use service for business logic (CTRL-003 resolved)
+        $result = $this->ticketService->removeTag((int)$id, (int)$tagId);
 
-        $ticketTag = $ticketTagsTable->find()
-            ->where(['ticket_id' => $id, 'tag_id' => $tagId])
-            ->first();
-
-        if ($ticketTag && $ticketTagsTable->delete($ticketTag)) {
-            $this->Flash->success('Etiqueta eliminada.');
+        if ($result['success']) {
+            $this->Flash->success($result['message']);
         } else {
-            $this->Flash->error('Error al eliminar la etiqueta.');
+            $this->Flash->error($result['message']);
         }
 
         return $this->redirect(['action' => 'view', $id]);
@@ -260,27 +241,13 @@ class TicketsController extends AppController
 
         $userId = (int) $this->request->getData('user_id');
 
-        $followersTable = $this->fetchTable('TicketFollowers');
+        // Use service for business logic (CTRL-003 resolved)
+        $result = $this->ticketService->addFollower((int)$id, $userId);
 
-        // Check if already following
-        $exists = $followersTable->find()
-            ->where(['ticket_id' => $id, 'user_id' => $userId])
-            ->count();
-
-        if ($exists) {
-            $this->Flash->warning('Este usuario ya está siguiendo el ticket.');
-            return $this->redirect(['action' => 'view', $id]);
-        }
-
-        $follower = $followersTable->newEntity([
-            'ticket_id' => $id,
-            'user_id' => $userId,
-        ]);
-
-        if ($followersTable->save($follower)) {
-            $this->Flash->success('Seguidor agregado.');
+        if ($result['success']) {
+            $this->Flash->success($result['message']);
         } else {
-            $this->Flash->error('Error al agregar seguidor.');
+            $this->Flash->warning($result['message']);
         }
 
         return $this->redirect(['action' => 'view', $id]);

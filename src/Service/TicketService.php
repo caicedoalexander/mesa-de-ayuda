@@ -621,4 +621,192 @@ class TicketService
             return false;
         }
     }
+
+    /**
+     * Add tag to ticket
+     *
+     * Handles tag assignment with duplicate validation.
+     * Resolves: CTRL-003 (Direct queries in controller)
+     *
+     * @param int $ticketId Ticket ID
+     * @param int $tagId Tag ID
+     * @return array Result with success status and message
+     */
+    public function addTag(int $ticketId, int $tagId): array
+    {
+        try {
+            $ticketsTable = $this->fetchTable('Tickets');
+            $ticketTagsTable = $this->fetchTable('TicketTags');
+
+            // Verify ticket exists
+            $ticketsTable->get($ticketId);
+
+            // Check if already exists
+            $exists = $ticketTagsTable->find()
+                ->where(['ticket_id' => $ticketId, 'tag_id' => $tagId])
+                ->count();
+
+            if ($exists) {
+                return [
+                    'success' => false,
+                    'message' => 'Esta etiqueta ya está agregada.',
+                ];
+            }
+
+            // Create new tag assignment
+            $ticketTag = $ticketTagsTable->newEntity([
+                'ticket_id' => $ticketId,
+                'tag_id' => $tagId,
+            ]);
+
+            if ($ticketTagsTable->save($ticketTag)) {
+                Log::info('Tag added to ticket', [
+                    'ticket_id' => $ticketId,
+                    'tag_id' => $tagId,
+                ]);
+
+                return [
+                    'success' => true,
+                    'message' => 'Etiqueta agregada.',
+                ];
+            }
+
+            return [
+                'success' => false,
+                'message' => 'Error al agregar la etiqueta.',
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Error adding tag to ticket: ' . $e->getMessage(), [
+                'ticket_id' => $ticketId,
+                'tag_id' => $tagId,
+                'exception' => $e,
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Error al agregar la etiqueta.',
+            ];
+        }
+    }
+
+    /**
+     * Remove tag from ticket
+     *
+     * Resolves: CTRL-003 (Direct queries in controller)
+     *
+     * @param int $ticketId Ticket ID
+     * @param int $tagId Tag ID
+     * @return array Result with success status and message
+     */
+    public function removeTag(int $ticketId, int $tagId): array
+    {
+        try {
+            $ticketTagsTable = $this->fetchTable('TicketTags');
+
+            $ticketTag = $ticketTagsTable->find()
+                ->where(['ticket_id' => $ticketId, 'tag_id' => $tagId])
+                ->first();
+
+            if (!$ticketTag) {
+                return [
+                    'success' => false,
+                    'message' => 'Etiqueta no encontrada.',
+                ];
+            }
+
+            if ($ticketTagsTable->delete($ticketTag)) {
+                Log::info('Tag removed from ticket', [
+                    'ticket_id' => $ticketId,
+                    'tag_id' => $tagId,
+                ]);
+
+                return [
+                    'success' => true,
+                    'message' => 'Etiqueta eliminada.',
+                ];
+            }
+
+            return [
+                'success' => false,
+                'message' => 'Error al eliminar la etiqueta.',
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Error removing tag from ticket: ' . $e->getMessage(), [
+                'ticket_id' => $ticketId,
+                'tag_id' => $tagId,
+                'exception' => $e,
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Error al eliminar la etiqueta.',
+            ];
+        }
+    }
+
+    /**
+     * Add follower to ticket
+     *
+     * Handles follower assignment with duplicate validation.
+     * Resolves: CTRL-003 (Direct queries in controller)
+     *
+     * @param int $ticketId Ticket ID
+     * @param int $userId User ID
+     * @return array Result with success status and message
+     */
+    public function addFollower(int $ticketId, int $userId): array
+    {
+        try {
+            $followersTable = $this->fetchTable('TicketFollowers');
+
+            // Check if already following
+            $exists = $followersTable->find()
+                ->where(['ticket_id' => $ticketId, 'user_id' => $userId])
+                ->count();
+
+            if ($exists) {
+                return [
+                    'success' => false,
+                    'message' => 'Este usuario ya está siguiendo el ticket.',
+                ];
+            }
+
+            // Create new follower
+            $follower = $followersTable->newEntity([
+                'ticket_id' => $ticketId,
+                'user_id' => $userId,
+            ]);
+
+            if ($followersTable->save($follower)) {
+                Log::info('Follower added to ticket', [
+                    'ticket_id' => $ticketId,
+                    'user_id' => $userId,
+                ]);
+
+                return [
+                    'success' => true,
+                    'message' => 'Seguidor agregado.',
+                ];
+            }
+
+            return [
+                'success' => false,
+                'message' => 'Error al agregar seguidor.',
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Error adding follower to ticket: ' . $e->getMessage(), [
+                'ticket_id' => $ticketId,
+                'user_id' => $userId,
+                'exception' => $e,
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Error al agregar seguidor.',
+            ];
+        }
+    }
 }
