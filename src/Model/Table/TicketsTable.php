@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Table\Traits\FilterableTrait;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
@@ -36,6 +37,8 @@ use Cake\Validation\Validator;
  */
 class TicketsTable extends Table
 {
+    use FilterableTrait;
+
     /**
      * Initialize method
      *
@@ -215,7 +218,36 @@ class TicketsTable extends Table
     }
 
     /**
+     * Get filter configuration for Tickets
+     *
+     * Required by FilterableTrait
+     * Resolves: MODEL-001 (findWithFilters duplication)
+     *
+     * @return array Filter configuration
+     */
+    protected function getFilterConfig(): array
+    {
+        return [
+            'tableAlias' => 'Tickets',
+            'numberField' => 'ticket_number',
+            'resolvedStatuses' => ['resuelto', 'convertido'],
+            'searchFields' => [
+                'Tickets.ticket_number',
+                'Tickets.subject',
+                'Tickets.description',
+                'Tickets.source_email',
+                'Requesters.name',
+                'Requesters.email',
+            ],
+            'viewConfig' => [], // Use default views from trait
+        ];
+    }
+
+    /**
      * Find tickets with filters
+     *
+     * Refactored to use FilterableTrait for DRY code.
+     * Resolves: MODEL-001 (findWithFilters duplication)
      *
      * @param \Cake\ORM\Query\SelectQuery $query Query object
      * @param array $options Filter options
@@ -226,120 +258,7 @@ class TicketsTable extends Table
         $filters = $options['filters'] ?? [];
         $view = $options['view'] ?? 'todos_sin_resolver';
         $user = $options['user'] ?? null;
-        $userRole = $user ? $user->get('role') : null;
-        $userId = $user ? $user->get('id') : null;
 
-        // Determine if user is agent (filter by assigned tickets for certain views)
-        $isAgent = $userRole === 'agent';
-        $isAdmin = $userRole === 'admin';
-
-        // Apply view-based filters (if no search is active)
-        if (empty($filters['search'])) {
-            switch ($view) {
-                case 'sin_asignar':
-                    $query->where([
-                        'Tickets.assignee_id IS' => null,
-                        'Tickets.status NOT IN' => ['resuelto', 'convertido']
-                    ]);
-                    break;
-                case 'mis_tickets':
-                    if ($user) {
-                        $query->where([
-                            'Tickets.assignee_id' => $user->get('id'),
-                            'Tickets.status NOT IN' => ['resuelto', 'convertido']
-                        ]);
-                    }
-                    break;
-                case 'creados_por_mi':
-                    if ($user) {
-                        $query->where([
-                            'Tickets.requester_id' => $user->get('id'),
-                            'Tickets.status !=' => 'convertido'
-                        ]);
-                    }
-                    break;
-                case 'todos_sin_resolver':
-                    $query->where(['Tickets.status NOT IN' => ['resuelto', 'convertido']]);
-                    break;
-                case 'pendientes':
-                    $conditions = ['Tickets.status' => 'pendiente'];
-                    // Agents see only their assigned tickets, admins see all
-                    if ($isAgent && $userId) {
-                        $conditions['Tickets.assignee_id'] = $userId;
-                    }
-                    $query->where($conditions);
-                    break;
-                case 'nuevos':
-                    $conditions = ['Tickets.status' => 'nuevo'];
-                    // Agents see only their assigned tickets, admins see all
-                    if ($isAgent && $userId) {
-                        $conditions['Tickets.assignee_id'] = $userId;
-                    }
-                    $query->where($conditions);
-                    break;
-                case 'abiertos':
-                    $conditions = ['Tickets.status' => 'abierto'];
-                    // Agents see only their assigned tickets, admins see all
-                    if ($isAgent && $userId) {
-                        $conditions['Tickets.assignee_id'] = $userId;
-                    }
-                    $query->where($conditions);
-                    break;
-                case 'resueltos':
-                    $query->where(['Tickets.status' => 'resuelto']);
-                    break;
-                case 'convertidos':
-                    $query->where(['Tickets.status' => 'convertido']);
-                    break;
-                case 'recientes':
-                    $query->where([
-                        'Tickets.created >=' => date('Y-m-d', strtotime('-7 days')),
-                        'Tickets.status !=' => 'convertido'
-                    ]);
-                    break;
-            }
-        }
-
-        // Apply search filter
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
-            $query->where([
-                'OR' => [
-                    'Tickets.ticket_number LIKE' => '%' . $search . '%',
-                    'Tickets.subject LIKE' => '%' . $search . '%',
-                    'Tickets.description LIKE' => '%' . $search . '%',
-                    'Tickets.source_email LIKE' => '%' . $search . '%',
-                    'Requesters.name LIKE' => '%' . $search . '%',
-                    'Requesters.email LIKE' => '%' . $search . '%',
-                ]
-            ]);
-            // Exclude converted tickets from search unless explicitly viewing convertidos
-            if ($view !== 'convertidos') {
-                $query->where(['Tickets.status !=' => 'convertido']);
-            }
-        }
-
-        // Apply specific filters
-        if (!empty($filters['status'])) {
-            $query->where(['Tickets.status' => $filters['status']]);
-        }
-        if (!empty($filters['priority'])) {
-            $query->where(['Tickets.priority' => $filters['priority']]);
-        }
-        if (!empty($filters['assignee_id'])) {
-            if ($filters['assignee_id'] === 'unassigned') {
-                $query->where(['Tickets.assignee_id IS' => null]);
-            } else {
-                $query->where(['Tickets.assignee_id' => $filters['assignee_id']]);
-            }
-        }
-        if (!empty($filters['date_from'])) {
-            $query->where(['Tickets.created >=' => $filters['date_from'] . ' 00:00:00']);
-        }
-        if (!empty($filters['date_to'])) {
-            $query->where(['Tickets.created <=' => $filters['date_to'] . ' 23:59:59']);
-        }
-
-        return $query;
+        return $this->applyGenericFilters($query, $filters, $view, $user);
     }
 }
