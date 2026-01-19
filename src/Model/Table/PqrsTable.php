@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Table\Traits\FilterableTrait;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
@@ -34,6 +35,8 @@ use Cake\Validation\Validator;
  */
 class PqrsTable extends Table
 {
+    use FilterableTrait;
+
     /**
      * Initialize method
      *
@@ -213,7 +216,35 @@ class PqrsTable extends Table
     }
 
     /**
+     * Get filter configuration for PQRS
+     *
+     * Required by FilterableTrait
+     * Resolves: MODEL-001 (findWithFilters duplication)
+     *
+     * @return array Filter configuration
+     */
+    protected function getFilterConfig(): array
+    {
+        return [
+            'tableAlias' => 'Pqrs',
+            'numberField' => 'pqrs_number',
+            'resolvedStatuses' => ['resuelto', 'cerrado'],
+            'searchFields' => [
+                'Pqrs.pqrs_number',
+                'Pqrs.subject',
+                'Pqrs.requester_name',
+                'Pqrs.requester_email',
+                'Pqrs.description',
+            ],
+            'viewConfig' => [], // Use default views from trait
+        ];
+    }
+
+    /**
      * Find PQRS with filters
+     *
+     * Refactored to use FilterableTrait for DRY code.
+     * Resolves: MODEL-001 (findWithFilters duplication)
      *
      * @param \Cake\ORM\Query\SelectQuery $query Query object
      * @param array $options Filter options
@@ -225,73 +256,7 @@ class PqrsTable extends Table
         $view = $options['view'] ?? 'todos_sin_resolver';
         $user = $options['user'] ?? null;
 
-        // Apply view-based filters
-        if (empty($filters['search'])) {
-            switch ($view) {
-                case 'sin_asignar':
-                    $query->where(['Pqrs.assignee_id IS' => null, 'Pqrs.status NOT IN' => ['resuelto', 'cerrado']]);
-                    break;
-                case 'mis_pqrs':
-                    if ($user) {
-                        $query->where(['Pqrs.assignee_id' => $user->get('id'), 'Pqrs.status NOT IN' => ['resuelto', 'cerrado']]);
-                    }
-                    break;
-                case 'todos_sin_resolver':
-                    $query->where(['Pqrs.status NOT IN' => ['resuelto', 'cerrado']]);
-                    break;
-                case 'nuevas':
-                    $query->where(['Pqrs.status' => 'nuevo']);
-                    break;
-                case 'en_revision':
-                    $query->where(['Pqrs.status' => 'en_revision']);
-                    break;
-                case 'en_proceso':
-                    $query->where(['Pqrs.status' => 'en_proceso']);
-                    break;
-                case 'resueltas':
-                    $query->where(['Pqrs.status' => 'resuelto']);
-                    break;
-                case 'cerradas':
-                    $query->where(['Pqrs.status' => 'cerrado']);
-                    break;
-            }
-        }
-
-        // Apply search filter
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
-            $query->where([
-                'OR' => [
-                    'Pqrs.pqrs_number LIKE' => '%' . $search . '%',
-                    'Pqrs.subject LIKE' => '%' . $search . '%',
-                    'Pqrs.requester_name LIKE' => '%' . $search . '%',
-                    'Pqrs.requester_email LIKE' => '%' . $search . '%',
-                    'Pqrs.description LIKE' => '%' . $search . '%',
-                ]
-            ]);
-        }
-
-        // Apply specific filters
-        if (!empty($filters['status'])) {
-            $query->where(['Pqrs.status' => $filters['status']]);
-        }
-        if (!empty($filters['type'])) {
-            $query->where(['Pqrs.type' => $filters['type']]);
-        }
-        if (!empty($filters['priority'])) {
-            $query->where(['Pqrs.priority' => $filters['priority']]);
-        }
-        if (!empty($filters['assignee_id'])) {
-            $query->where(['Pqrs.assignee_id' => $filters['assignee_id']]);
-        }
-        if (!empty($filters['date_from'])) {
-            $query->where(['Pqrs.created >=' => $filters['date_from'] . ' 00:00:00']);
-        }
-        if (!empty($filters['date_to'])) {
-            $query->where(['Pqrs.created <=' => $filters['date_to'] . ' 23:59:59']);
-        }
-
-        return $query;
+        return $this->applyGenericFilters($query, $filters, $view, $user);
     }
 
     /**

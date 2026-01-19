@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Table\Traits\FilterableTrait;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
@@ -10,6 +11,7 @@ use Cake\Validation\Validator;
 
 class ComprasTable extends Table
 {
+    use FilterableTrait;
     public function initialize(array $config): void
     {
         parent::initialize($config);
@@ -160,105 +162,47 @@ class ComprasTable extends Table
     }
 
     /**
-     * Custom finder con filtros (mismo patrón que TicketsTable y PqrsTable)
+     * Get filter configuration for Compras
+     *
+     * Required by FilterableTrait
+     * Resolves: MODEL-001 (findWithFilters duplication)
+     *
+     * @return array Filter configuration
+     */
+    protected function getFilterConfig(): array
+    {
+        return [
+            'tableAlias' => 'Compras',
+            'numberField' => 'compra_number',
+            'resolvedStatuses' => ['completado', 'rechazado', 'convertido'],
+            'searchFields' => [
+                'Compras.compra_number',
+                'Compras.subject',
+                'Compras.description',
+                'Compras.original_ticket_number',
+                'Requesters.name',
+                'Requesters.email',
+            ],
+            'viewConfig' => [], // Use default views from trait
+        ];
+    }
+
+    /**
+     * Custom finder con filtros
+     *
+     * Refactored to use FilterableTrait for DRY code.
+     * Resolves: MODEL-001 (findWithFilters duplication)
+     *
+     * @param \Cake\ORM\Query\SelectQuery $query Query object
+     * @param array $options Filter options
+     * @return \Cake\ORM\Query\SelectQuery
      */
     public function findWithFilters(SelectQuery $query, array $options): SelectQuery
     {
         $filters = $options['filters'] ?? [];
         $view = $options['view'] ?? 'todos_sin_resolver';
         $user = $options['user'] ?? null;
-        $userId = $user ? $user->get('id') : null;
 
-        // Vistas predefinidas
-        if (empty($filters['search'])) {
-            switch ($view) {
-                case 'sin_asignar':
-                    $query->where([
-                        'Compras.assignee_id IS' => null,
-                        'Compras.status NOT IN' => ['completado', 'rechazado', 'convertido']
-                    ]);
-                    break;
-                case 'mis_compras':
-                    if ($userId) {
-                        $query->where([
-                            'Compras.assignee_id' => $userId,
-                            'Compras.status NOT IN' => ['completado', 'rechazado', 'convertido']
-                        ]);
-                    }
-                    break;
-                case 'todos_sin_resolver':
-                    $query->where(['Compras.status NOT IN' => ['completado', 'rechazado', 'convertido']]);
-                    break;
-                case 'nuevos':
-                    $query->where(['Compras.status' => 'nuevo']);
-                    break;
-                case 'en_revision':
-                    $query->where(['Compras.status' => 'en_revision']);
-                    break;
-                case 'aprobados':
-                    $query->where(['Compras.status' => 'aprobado']);
-                    break;
-                case 'en_proceso':
-                    $query->where(['Compras.status' => 'en_proceso']);
-                    break;
-                case 'completados':
-                    $query->where(['Compras.status' => 'completado']);
-                    break;
-                case 'rechazados':
-                    $query->where(['Compras.status' => 'rechazado']);
-                    break;
-                case 'convertidos':
-                    $query->where(['Compras.status' => 'convertido']);
-                    break;
-                case 'vencidos_sla':
-                    $query->where([
-                        'Compras.sla_due_date <' => new \DateTime(),
-                        'Compras.status NOT IN' => ['completado', 'rechazado', 'convertido']
-                    ]);
-                    break;
-            }
-        }
-
-        // Búsqueda full-text
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
-            $query->where([
-                'OR' => [
-                    'Compras.compra_number LIKE' => '%' . $search . '%',
-                    'Compras.subject LIKE' => '%' . $search . '%',
-                    'Compras.description LIKE' => '%' . $search . '%',
-                    'Compras.original_ticket_number LIKE' => '%' . $search . '%',
-                    'Requesters.name LIKE' => '%' . $search . '%',
-                    'Requesters.email LIKE' => '%' . $search . '%',
-                ]
-            ]);
-            // Exclude converted compras from search unless explicitly viewing convertidos
-            if ($view !== 'convertidos') {
-                $query->where(['Compras.status !=' => 'convertido']);
-            }
-        }
-
-        // Filtros específicos
-        if (!empty($filters['status'])) {
-            $query->where(['Compras.status' => $filters['status']]);
-        }
-        if (!empty($filters['priority'])) {
-            $query->where(['Compras.priority' => $filters['priority']]);
-        }
-        if (!empty($filters['assignee_id'])) {
-            if ($filters['assignee_id'] === 'unassigned') {
-                $query->where(['Compras.assignee_id IS' => null]);
-            } else {
-                $query->where(['Compras.assignee_id' => $filters['assignee_id']]);
-            }
-        }
-        if (!empty($filters['date_from'])) {
-            $query->where(['Compras.created >=' => $filters['date_from'] . ' 00:00:00']);
-        }
-        if (!empty($filters['date_to'])) {
-            $query->where(['Compras.created <=' => $filters['date_to'] . ' 23:59:59']);
-        }
-
-        return $query;
+        return $this->applyGenericFilters($query, $filters, $view, $user);
     }
 }
