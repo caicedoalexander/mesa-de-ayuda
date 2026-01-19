@@ -24,19 +24,34 @@ class ResponseService
     private ComprasService $comprasService;
     private EmailService $emailService;
     private WhatsappService $whatsappService;
+    private ?array $systemConfig;
 
     /**
-     * Constructor
+     * Constructor with Dependency Injection
      *
-     * @param array|null $systemConfig Optional system configuration to avoid redundant DB queries
+     * Resolves: ARCH-007 (Incomplete DI in ResponseService)
+     *
+     * @param array|null $systemConfig Optional system configuration
+     * @param TicketService|null $ticketService Optional ticket service (for DI/testing)
+     * @param PqrsService|null $pqrsService Optional PQRS service (for DI/testing)
+     * @param ComprasService|null $comprasService Optional compras service (for DI/testing)
+     * @param EmailService|null $emailService Optional email service (for DI/testing)
+     * @param WhatsappService|null $whatsappService Optional WhatsApp service (for DI/testing)
      */
-    public function __construct(?array $systemConfig = null)
-    {
-        $this->ticketService = new TicketService($systemConfig);
-        $this->pqrsService = new PqrsService($systemConfig);
-        $this->comprasService = new ComprasService($systemConfig);
-        $this->emailService = new EmailService($systemConfig);
-        $this->whatsappService = new WhatsappService($systemConfig);
+    public function __construct(
+        ?array $systemConfig = null,
+        ?TicketService $ticketService = null,
+        ?PqrsService $pqrsService = null,
+        ?ComprasService $comprasService = null,
+        ?EmailService $emailService = null,
+        ?WhatsappService $whatsappService = null
+    ) {
+        $this->systemConfig = $systemConfig;
+        $this->ticketService = $ticketService ?? new TicketService($systemConfig);
+        $this->pqrsService = $pqrsService ?? new PqrsService($systemConfig);
+        $this->comprasService = $comprasService ?? new ComprasService($systemConfig);
+        $this->emailService = $emailService ?? new EmailService($systemConfig);
+        $this->whatsappService = $whatsappService ?? new WhatsappService($systemConfig);
     }
 
     /**

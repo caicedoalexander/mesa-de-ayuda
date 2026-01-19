@@ -24,12 +24,26 @@ class ComprasService
     private SlaManagementService $slaService;
     private ?array $systemConfig;
 
-    public function __construct(?array $systemConfig = null)
-    {
+    /**
+     * Constructor with Dependency Injection
+     *
+     * Resolves: ARCH-010 (Incomplete DI in ComprasService)
+     *
+     * @param array|null $systemConfig Optional system configuration
+     * @param EmailService|null $emailService Optional email service (for DI/testing)
+     * @param WhatsappService|null $whatsappService Optional WhatsApp service (for DI/testing)
+     * @param SlaManagementService|null $slaService Optional SLA service (for DI/testing)
+     */
+    public function __construct(
+        ?array $systemConfig = null,
+        ?EmailService $emailService = null,
+        ?WhatsappService $whatsappService = null,
+        ?SlaManagementService $slaService = null
+    ) {
         $this->systemConfig = $systemConfig;
-        $this->emailService = new EmailService($systemConfig);
-        $this->whatsappService = new WhatsappService($systemConfig);
-        $this->slaService = new SlaManagementService();
+        $this->emailService = $emailService ?? new EmailService($systemConfig);
+        $this->whatsappService = $whatsappService ?? new WhatsappService($systemConfig);
+        $this->slaService = $slaService ?? new SlaManagementService();
     }
 
     /**

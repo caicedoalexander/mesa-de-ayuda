@@ -29,17 +29,28 @@ class PqrsService
     private EmailService $emailService;
     private WhatsappService $whatsappService;
     private SlaManagementService $slaService;
+    private ?array $systemConfig;
 
     /**
-     * Constructor
+     * Constructor with Dependency Injection
      *
-     * @param array|null $systemConfig Optional system configuration to avoid redundant DB queries
+     * Resolves: ARCH-011 (Incomplete DI in PqrsService)
+     *
+     * @param array|null $systemConfig Optional system configuration
+     * @param EmailService|null $emailService Optional email service (for DI/testing)
+     * @param WhatsappService|null $whatsappService Optional WhatsApp service (for DI/testing)
+     * @param SlaManagementService|null $slaService Optional SLA service (for DI/testing)
      */
-    public function __construct(?array $systemConfig = null)
-    {
-        $this->emailService = new EmailService($systemConfig);
-        $this->whatsappService = new WhatsappService($systemConfig);
-        $this->slaService = new SlaManagementService();
+    public function __construct(
+        ?array $systemConfig = null,
+        ?EmailService $emailService = null,
+        ?WhatsappService $whatsappService = null,
+        ?SlaManagementService $slaService = null
+    ) {
+        $this->systemConfig = $systemConfig;
+        $this->emailService = $emailService ?? new EmailService($systemConfig);
+        $this->whatsappService = $whatsappService ?? new WhatsappService($systemConfig);
+        $this->slaService = $slaService ?? new SlaManagementService();
     }
 
     /**
