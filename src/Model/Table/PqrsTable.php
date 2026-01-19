@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Model\Table;
 
 use App\Model\Table\Traits\FilterableTrait;
+use App\Model\Table\Traits\NumberGeneratorTrait;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
@@ -36,6 +37,7 @@ use Cake\Validation\Validator;
 class PqrsTable extends Table
 {
     use FilterableTrait;
+    use NumberGeneratorTrait;
 
     /**
      * Initialize method
@@ -260,28 +262,41 @@ class PqrsTable extends Table
     }
 
     /**
+     * Get the prefix for PQRS numbers
+     *
+     * Required by NumberGeneratorTrait
+     * Resolves: MODEL-002 (generateXXXNumber() duplication)
+     *
+     * @return string
+     */
+    protected function getNumberPrefix(): string
+    {
+        return 'PQRS';
+    }
+
+    /**
+     * Get the field name for PQRS numbers
+     *
+     * Required by NumberGeneratorTrait
+     * Resolves: MODEL-002 (generateXXXNumber() duplication)
+     *
+     * @return string
+     */
+    protected function getNumberField(): string
+    {
+        return 'pqrs_number';
+    }
+
+    /**
      * Generate next PQRS number
+     *
+     * Wrapper for backward compatibility.
+     * Uses NumberGeneratorTrait::generateNumber() internally.
      *
      * @return string Format: PQRS-2025-00001
      */
     public function generatePqrsNumber(): string
     {
-        $year = date('Y');
-        $prefix = "PQRS-{$year}-";
-
-        $lastPqrs = $this->find()
-            ->select(['pqrs_number'])
-            ->where(['pqrs_number LIKE' => "{$prefix}%"])
-            ->orderBy(['pqrs_number' => 'DESC'])
-            ->first();
-
-        if ($lastPqrs) {
-            $lastNumber = (int) substr($lastPqrs->pqrs_number, -5);
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
-
-        return $prefix . str_pad((string) $newNumber, 5, '0', STR_PAD_LEFT);
+        return $this->generateNumber();
     }
 }

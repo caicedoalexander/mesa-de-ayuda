@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Model\Table;
 
 use App\Model\Table\Traits\FilterableTrait;
+use App\Model\Table\Traits\NumberGeneratorTrait;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
@@ -12,6 +13,7 @@ use Cake\Validation\Validator;
 class ComprasTable extends Table
 {
     use FilterableTrait;
+    use NumberGeneratorTrait;
     public function initialize(array $config): void
     {
         parent::initialize($config);
@@ -136,29 +138,45 @@ class ComprasTable extends Table
     }
 
     /**
+     * Get the prefix for compra numbers
+     *
+     * Required by NumberGeneratorTrait
+     * Resolves: MODEL-002 (generateXXXNumber() duplication)
+     *
+     * @return string
+     */
+    protected function getNumberPrefix(): string
+    {
+        return 'CPR';
+    }
+
+    /**
+     * Get the field name for compra numbers
+     *
+     * Required by NumberGeneratorTrait
+     * Resolves: MODEL-002 (generateXXXNumber() duplication)
+     *
+     * @return string
+     */
+    protected function getNumberField(): string
+    {
+        return 'compra_number';
+    }
+
+    /**
      * Genera número único de compra
+     *
+     * Wrapper for backward compatibility.
+     * Uses NumberGeneratorTrait::generateNumber() internally.
+     *
      * Formato: CPR-{YEAR}-{SEQUENCE}
      * Ejemplo: CPR-2025-00001
+     *
+     * @return string
      */
     public function generateCompraNumber(): string
     {
-        $year = date('Y');
-        $prefix = "CPR-{$year}-";
-
-        $lastCompra = $this->find()
-            ->select(['compra_number'])
-            ->where(['compra_number LIKE' => $prefix . '%'])
-            ->order(['compra_number' => 'DESC'])
-            ->first();
-
-        if ($lastCompra) {
-            $lastNumber = (int)substr($lastCompra->compra_number, -5);
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
-
-        return $prefix . str_pad((string)$newNumber, 5, '0', STR_PAD_LEFT);
+        return $this->generateNumber();
     }
 
     /**

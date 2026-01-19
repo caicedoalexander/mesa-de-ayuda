@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Model\Table;
 
 use App\Model\Table\Traits\FilterableTrait;
+use App\Model\Table\Traits\NumberGeneratorTrait;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
@@ -38,6 +39,7 @@ use Cake\Validation\Validator;
 class TicketsTable extends Table
 {
     use FilterableTrait;
+    use NumberGeneratorTrait;
 
     /**
      * Initialize method
@@ -191,30 +193,42 @@ class TicketsTable extends Table
     }
 
     /**
+     * Get the prefix for ticket numbers
+     *
+     * Required by NumberGeneratorTrait
+     * Resolves: MODEL-002 (generateXXXNumber() duplication)
+     *
+     * @return string
+     */
+    protected function getNumberPrefix(): string
+    {
+        return 'TKT';
+    }
+
+    /**
+     * Get the field name for ticket numbers
+     *
+     * Required by NumberGeneratorTrait
+     * Resolves: MODEL-002 (generateXXXNumber() duplication)
+     *
+     * @return string
+     */
+    protected function getNumberField(): string
+    {
+        return 'ticket_number';
+    }
+
+    /**
      * Generate unique ticket number in format TKT-YYYY-NNNNN
+     *
+     * Wrapper for backward compatibility.
+     * Uses NumberGeneratorTrait::generateNumber() internally.
      *
      * @return string
      */
     public function generateTicketNumber(): string
     {
-        $year = date('Y');
-        $prefix = "TKT-{$year}-";
-
-        // Get last ticket number for this year
-        $lastTicket = $this->find()
-            ->where(['ticket_number LIKE' => $prefix . '%'])
-            ->orderBy(['id' => 'DESC'])
-            ->first();
-
-        if ($lastTicket) {
-            // Extract sequence number and increment
-            $parts = explode('-', $lastTicket->ticket_number);
-            $sequence = (int) $parts[2] + 1;
-        } else {
-            $sequence = 1;
-        }
-
-        return $prefix . str_pad((string) $sequence, 5, '0', STR_PAD_LEFT);
+        return $this->generateNumber();
     }
 
     /**
