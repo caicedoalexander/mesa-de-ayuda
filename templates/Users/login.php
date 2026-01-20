@@ -129,8 +129,7 @@ $this->assign('title', 'Iniciar Sesión');
             </div>
             <div class="text-center mt-5">
                 <small class="fw-light d-flex flex-column gap-0" style="font-size: 13px;">
-                    &copy; <?= date('Y') ?> Compañía Operadora Portuaria Cafetera S.A.
-                    <span>Todos los derechos reservados.</span>
+                    &copy; <?= date('Y') ?> Casi todos los derechos reservados.
                 </small>
             </div>
         </div>
