@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\View\Helper;
 
+use App\Service\S3Service;
 use Cake\View\Helper;
 
 /**
@@ -12,26 +13,54 @@ use Cake\View\Helper;
  */
 class UserHelper extends Helper
 {
+    private ?S3Service $s3Service = null;
+
+    /**
+     * Get S3Service instance (lazy loaded)
+     *
+     * @return S3Service
+     */
+    private function getS3Service(): S3Service
+    {
+        return $this->s3Service ??= new S3Service();
+    }
+
     /**
      * Get profile image URL with fallback to default avatar
+     *
+     * Supports both S3 and local paths.
+     * Convention: 'uploads/' prefix = local, no prefix = S3.
      *
      * @param string|null $profileImage Profile image path from user entity
      * @return string URL to profile image or default avatar
      */
     public function profileImage(?string $profileImage): string
     {
-        if ($profileImage) {
-            // Normalize path for file_exists check (handle both / and \ separators)
-            $normalizedPath = str_replace('/', DS, $profileImage);
-            $fullPath = WWW_ROOT . $normalizedPath;
-
-            if (file_exists($fullPath)) {
-                // Always return URL with forward slashes
-                return '/' . str_replace('\\', '/', $profileImage);
-            }
+        if (empty($profileImage)) {
+            return $this->defaultAvatar();
         }
 
-        // Return default avatar (using Bootstrap Icons initials)
+        // S3 file (no 'uploads/' prefix)
+        if (!str_starts_with($profileImage, 'uploads/')) {
+            $s3Service = $this->getS3Service();
+            if ($s3Service->isEnabled()) {
+                $url = $s3Service->getPresignedUrl($profileImage, 60);
+                if ($url) {
+                    return $url;
+                }
+            }
+
+            return $this->defaultAvatar();
+        }
+
+        // Local file
+        $normalizedPath = str_replace('/', DS, $profileImage);
+        $fullPath = WWW_ROOT . $normalizedPath;
+
+        if (file_exists($fullPath)) {
+            return '/' . str_replace('\\', '/', $profileImage);
+        }
+
         return $this->defaultAvatar();
     }
 
