@@ -21,9 +21,14 @@ class WhatsappService
     private \App\Service\Renderer\NotificationRenderer $renderer;
 
     /**
-     * Evolution API configuration
+     * Resolved WhatsApp configuration (null = not yet resolved, false = disabled/invalid)
      */
-    private ?array $config = null;
+    private array|false|null $config = null;
+
+    /**
+     * Raw system configuration from constructor
+     */
+    private ?array $systemConfig;
 
     /**
      * Constructor
@@ -33,93 +38,47 @@ class WhatsappService
     public function __construct(?array $systemConfig = null)
     {
         $this->renderer = new \App\Service\Renderer\NotificationRenderer();
-
-        // Pre-load config if provided
-        if ($systemConfig !== null) {
-            $this->loadConfigFromArray($systemConfig);
-        }
+        $this->systemConfig = $systemConfig;
     }
 
     /**
-     * Load WhatsApp configuration from provided system settings array
+     * Get WhatsApp configuration with 3-tier resolution:
+     * 1. Constructor-provided systemConfig (fastest, no I/O)
+     * 2. Main 'system_settings' cache (populated by AppController)
+     * 3. Service-specific DB query with cache
      *
-     * @param array $systemConfig System configuration array
-     * @return void
-     */
-    private function loadConfigFromArray(array $systemConfig): void
-    {
-        // Check if WhatsApp is enabled
-        if (empty($systemConfig['whatsapp_enabled']) || $systemConfig['whatsapp_enabled'] !== '1') {
-            $this->config = null;
-            return;
-        }
-
-        // Validate required settings
-        if (
-            empty($systemConfig['whatsapp_api_url']) ||
-            empty($systemConfig['whatsapp_api_key']) ||
-            empty($systemConfig['whatsapp_instance_name'])
-        ) {
-            Log::warning('WhatsApp configuration incomplete');
-            $this->config = null;
-            return;
-        }
-
-        $this->config = [
-            'api_url' => rtrim($systemConfig['whatsapp_api_url'], '/'),
-            'api_key' => $systemConfig['whatsapp_api_key'],
-            'instance_name' => $systemConfig['whatsapp_instance_name'],
-            'tickets_number' => $systemConfig['whatsapp_tickets_number'] ?? null,
-            'pqrs_number' => $systemConfig['whatsapp_pqrs_number'] ?? null,
-            'compras_number' => $systemConfig['whatsapp_compras_number'] ?? null,
-        ];
-    }
-
-    /**
-     * Get WhatsApp configuration from system_settings (with cache)
-     *
-     * @return array|null Configuration array or null if not configured
+     * @return array|null Configuration array or null if not configured/disabled
      */
     private function getConfig(): ?array
     {
+        // Already resolved
         if ($this->config !== null) {
-            return $this->config;
+            return $this->config === false ? null : $this->config;
         }
 
         try {
-            $settings = \Cake\Cache\Cache::remember('whatsapp_settings', function () {
-                $settingsTable = $this->fetchTable('SystemSettings');
-                return $settingsTable->find()
-                    ->where([
-                        'setting_key IN' => [
-                            'whatsapp_enabled',
-                            'whatsapp_api_url',
-                            'whatsapp_api_key',
-                            'whatsapp_instance_name',
-                            'whatsapp_tickets_number',
-                            'whatsapp_pqrs_number',
-                            'whatsapp_compras_number',
-                        ]
-                    ])
-                    ->all()
-                    ->combine('setting_key', 'setting_value')
-                    ->toArray();
-            }, '_cake_core_');
+            // Resolve settings from best available source
+            $settings = $this->resolveSettings();
 
-            // Check if WhatsApp is enabled
-            if (empty($settings['whatsapp_enabled']) || $settings['whatsapp_enabled'] !== '1') {
-                $this->config = null;
+            if ($settings === null) {
+                $this->config = false;
                 return null;
             }
 
-            // Validate required settings
+            // Validate: enabled check
+            if (empty($settings['whatsapp_enabled']) || $settings['whatsapp_enabled'] !== '1') {
+                $this->config = false;
+                return null;
+            }
+
+            // Validate: required fields
             if (
                 empty($settings['whatsapp_api_url']) ||
                 empty($settings['whatsapp_api_key']) ||
                 empty($settings['whatsapp_instance_name'])
             ) {
                 Log::warning('WhatsApp configuration incomplete');
-                $this->config = null;
+                $this->config = false;
                 return null;
             }
 
@@ -129,8 +88,44 @@ class WhatsappService
             Log::error('Failed to load WhatsApp configuration', [
                 'error' => $e->getMessage(),
             ]);
+            $this->config = false;
             return null;
         }
+    }
+
+    /**
+     * Resolve WhatsApp settings from the best available source
+     *
+     * @return array|null Settings array with whatsapp_* keys, or null
+     */
+    private function resolveSettings(): ?array
+    {
+        $requiredKeys = [
+            'whatsapp_enabled', 'whatsapp_api_url', 'whatsapp_api_key',
+            'whatsapp_instance_name', 'whatsapp_tickets_number',
+            'whatsapp_pqrs_number', 'whatsapp_compras_number',
+        ];
+
+        // 1. From constructor systemConfig
+        if ($this->systemConfig !== null && isset($this->systemConfig['whatsapp_enabled'])) {
+            return $this->systemConfig;
+        }
+
+        // 2. From main settings cache (populated by AppController::beforeFilter)
+        $cachedConfig = \Cake\Cache\Cache::read('system_settings', '_cake_core_');
+        if ($cachedConfig && isset($cachedConfig['whatsapp_enabled'])) {
+            return $cachedConfig;
+        }
+
+        // 3. Service-specific DB query with its own cache
+        return \Cake\Cache\Cache::remember('whatsapp_settings', function () use ($requiredKeys) {
+            $settingsTable = $this->fetchTable('SystemSettings');
+            return $settingsTable->find()
+                ->where(['setting_key IN' => $requiredKeys])
+                ->all()
+                ->combine('setting_key', 'setting_value')
+                ->toArray();
+        }, '_cake_core_');
     }
 
     /**

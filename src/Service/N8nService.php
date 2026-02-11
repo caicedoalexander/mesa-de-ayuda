@@ -21,26 +21,37 @@ class N8nService
     /**
      * Constructor
      *
-     * @param array|null $config Optional configuration array. If not provided, loads from database.
+     * @param array|null $systemConfig Optional system configuration to avoid redundant DB queries
      */
-    public function __construct(?array $config = null)
+    public function __construct(?array $systemConfig = null)
     {
-        // Use provided config or load from database
-        if ($config !== null) {
-            $this->config = $config;
-        } else {
-            $this->loadConfig();
-        }
+        $this->config = $this->resolveConfig($systemConfig);
     }
 
     /**
-     * Load n8n configuration from database with cache
+     * Resolve n8n configuration with 3-tier resolution:
+     * 1. Constructor-provided systemConfig (fastest, no I/O)
+     * 2. Main 'system_settings' cache (populated by AppController)
+     * 3. Service-specific DB query with cache
      *
-     * @return void
+     * @param array|null $systemConfig System configuration from constructor
+     * @return array Resolved configuration
      */
-    private function loadConfig(): void
+    private function resolveConfig(?array $systemConfig): array
     {
-        $this->config = \Cake\Cache\Cache::remember('n8n_settings', function () {
+        // 1. From constructor systemConfig (contains all settings including n8n_*)
+        if ($systemConfig !== null && isset($systemConfig['n8n_enabled'])) {
+            return $systemConfig;
+        }
+
+        // 2. From main settings cache (populated by AppController::beforeFilter)
+        $cachedConfig = \Cake\Cache\Cache::read('system_settings', '_cake_core_');
+        if ($cachedConfig && isset($cachedConfig['n8n_enabled'])) {
+            return $cachedConfig;
+        }
+
+        // 3. Service-specific DB query with its own cache
+        return \Cake\Cache\Cache::remember('n8n_settings', function () {
             $settingsTable = $this->fetchTable('SystemSettings');
             $settings = $settingsTable->find()
                 ->select(['setting_key', 'setting_value'])
@@ -50,7 +61,7 @@ class N8nService
                         'n8n_webhook_url',
                         'n8n_api_key',
                         'n8n_send_tags_list',
-                        'n8n_timeout'
+                        'n8n_timeout',
                     ]
                 ])
                 ->toArray();
