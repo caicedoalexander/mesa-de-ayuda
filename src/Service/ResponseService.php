@@ -157,15 +157,11 @@ class ResponseService
                 ];
             }
 
-            // 2. Handle File Uploads (all services now use GenericAttachmentTrait)
+            // 2. Handle File Uploads (unified signature across all services)
             if (!empty($files['attachments'])) {
                 foreach ($files['attachments'] as $file) {
                     if ($file->getError() === UPLOAD_ERR_OK) {
-                        if ($type === 'ticket') {
-                            $result = $service->saveUploadedFile($entityId, $comment->id, $file, $userId);
-                        } else {
-                            $result = $service->saveUploadedFile($entity, $file, $comment->id, $userId);
-                        }
+                        $result = $service->saveUploadedFile($entity, $file, $comment->id, $userId);
 
                         if ($result) {
                             $uploadedCount++;

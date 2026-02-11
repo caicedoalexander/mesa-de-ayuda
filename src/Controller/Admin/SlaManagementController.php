@@ -77,72 +77,16 @@ class SlaManagementController extends AppController
             return $this->redirect(['action' => 'index']);
         }
 
-        $data = $this->request->getData();
-        $errors = [];
-        $successCount = 0;
-
         try {
-            // Save PQRS SLA settings
-            $pqrsTypes = ['peticion', 'queja', 'reclamo', 'sugerencia'];
-            foreach ($pqrsTypes as $type) {
-                // First response
-                $firstResponseKey = "sla_pqrs_{$type}_first_response_days";
-                if (isset($data[$firstResponseKey])) {
-                    $value = (int)$data[$firstResponseKey];
-                    if ($value > 0) {
-                        if ($this->slaService->updateSetting($firstResponseKey, $value)) {
-                            $successCount++;
-                        } else {
-                            $errors[] = "Error al guardar {$firstResponseKey}";
-                        }
-                    }
-                }
+            $result = $this->slaService->saveAllSettings($this->request->getData());
 
-                // Resolution
-                $resolutionKey = "sla_pqrs_{$type}_resolution_days";
-                if (isset($data[$resolutionKey])) {
-                    $value = (int)$data[$resolutionKey];
-                    if ($value > 0) {
-                        if ($this->slaService->updateSetting($resolutionKey, $value)) {
-                            $successCount++;
-                        } else {
-                            $errors[] = "Error al guardar {$resolutionKey}";
-                        }
-                    }
-                }
-            }
-
-            // Save Compras SLA settings
-            if (isset($data['sla_compras_first_response_days'])) {
-                $value = (int)$data['sla_compras_first_response_days'];
-                if ($value > 0) {
-                    if ($this->slaService->updateSetting('sla_compras_first_response_days', $value)) {
-                        $successCount++;
-                    } else {
-                        $errors[] = "Error al guardar sla_compras_first_response_days";
-                    }
-                }
-            }
-
-            if (isset($data['sla_compras_resolution_days'])) {
-                $value = (int)$data['sla_compras_resolution_days'];
-                if ($value > 0) {
-                    if ($this->slaService->updateSetting('sla_compras_resolution_days', $value)) {
-                        $successCount++;
-                    } else {
-                        $errors[] = "Error al guardar sla_compras_resolution_days";
-                    }
-                }
-            }
-
-            if (empty($errors)) {
-                $this->Flash->success("Se guardaron {$successCount} configuraciones de SLA correctamente. Los cambios se aplicarán inmediatamente a nuevas solicitudes.");
-                Log::info('SLA settings updated successfully', ['count' => $successCount, 'user' => $this->Authentication->getIdentity()?->get('email')]);
+            if ($result['success']) {
+                $this->Flash->success($result['message']);
+                Log::info('SLA settings updated successfully', ['count' => $result['count'], 'user' => $this->Authentication->getIdentity()?->get('email')]);
             } else {
-                $this->Flash->warning("Se guardaron {$successCount} configuraciones, pero hubo algunos errores: " . implode(', ', $errors));
-                Log::warning('Some SLA settings failed to save', ['errors' => $errors]);
+                $this->Flash->warning($result['message']);
+                Log::warning('Some SLA settings failed to save', ['errors' => $result['errors']]);
             }
-
         } catch (\Exception $e) {
             $this->Flash->error('Error al guardar la configuración de SLA: ' . $e->getMessage());
             Log::error('Error saving SLA settings', ['exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);

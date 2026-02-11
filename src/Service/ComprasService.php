@@ -194,20 +194,6 @@ class ComprasService
     }
 
     /**
-     * Calcula fecha de vencimiento de SLA (DEPRECATED - Use SlaManagementService)
-     *
-     * @deprecated Use SlaManagementService::calculateComprasSlaDeadlines() instead
-     * @param Compra|null $compra Compra entity
-     * @return DateTime
-     */
-    public function calculateSLA(?Compra $compra = null): DateTime
-    {
-        $createdDate = $compra ? $compra->created : new DateTime();
-        $deadlines = $this->slaService->calculateComprasSlaDeadlines($createdDate);
-        return $deadlines['resolution_sla_due'];
-    }
-
-    /**
      * Verifica si el SLA de resolución está vencido
      *
      * @param Compra $compra Compra entity

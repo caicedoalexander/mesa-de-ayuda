@@ -106,6 +106,25 @@ class AppController extends Controller
     }
 
     /**
+     * Get the default redirect target for a given role
+     *
+     * @param string $role User role
+     * @return array CakePHP-style URL array
+     */
+    protected function getDefaultRedirectForRole(string $role): array
+    {
+        $roleRedirects = [
+            'servicio_cliente' => ['controller' => 'Pqrs', 'action' => 'index', '?' => ['view' => 'mis_pqrs']],
+            'compras' => ['controller' => 'Compras', 'action' => 'index', '?' => ['view' => 'mis_compras']],
+            'agent' => ['controller' => 'Tickets', 'action' => 'index', '?' => ['view' => 'mis_tickets']],
+            'requester' => ['controller' => 'Tickets', 'action' => 'index', '?' => ['view' => 'mis_tickets']],
+            'admin' => ['controller' => 'Tickets', 'action' => 'index'],
+        ];
+
+        return $roleRedirects[$role] ?? ['controller' => 'Tickets', 'action' => 'index'];
+    }
+
+    /**
      * Redirect user by role if not allowed for current module
      *
      * Eliminates ~45 lines of duplicated code across 3 controllers
@@ -129,17 +148,9 @@ class AppController extends Controller
             return null; // Access granted
         }
 
-        // User not allowed - determine redirect based on their role
-        $redirectMap = [
-            'compras' => ['controller' => 'Compras', 'action' => 'index'],
-            'servicio_cliente' => ['controller' => 'Pqrs', 'action' => 'index'],
-            'agent' => ['controller' => 'Tickets', 'action' => 'index'],
-            'requester' => ['controller' => 'Tickets', 'action' => 'index'],
-            'admin' => ['controller' => 'Tickets', 'action' => 'index'], // Fallback for admin
-        ];
-
+        // User not allowed - redirect to their default module
         $this->Flash->error(__('No tienes permiso para acceder al módulo de {0}.', $moduleName));
 
-        return $this->redirect($redirectMap[$role] ?? ['controller' => 'Tickets', 'action' => 'index']);
+        return $this->redirect($this->getDefaultRedirectForRole($role));
     }
 }

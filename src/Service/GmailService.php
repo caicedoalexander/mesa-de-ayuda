@@ -6,6 +6,7 @@ namespace App\Service;
 use Google\Client as GoogleClient;
 use Google\Service\Gmail;
 use Google\Service\Gmail\Message;
+use Cake\Cache\Cache;
 use Cake\Log\Log;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use App\Utility\SettingsEncryptionTrait;
@@ -39,24 +40,26 @@ class GmailService
      */
     public static function loadConfigFromDatabase(): array
     {
-        // Create temporary instance to use traits
-        $instance = new self([]);
+        return Cache::remember('gmail_settings', function () {
+            // Create temporary instance to use traits
+            $instance = new self([]);
 
-        $settingsTable = $instance->fetchTable('SystemSettings');
-        $settings = $settingsTable->find()
-            ->where(['setting_key IN' => ['gmail_refresh_token', 'gmail_client_secret_path']])
-            ->all();
+            $settingsTable = $instance->fetchTable('SystemSettings');
+            $settings = $settingsTable->find()
+                ->where(['setting_key IN' => ['gmail_refresh_token', 'gmail_client_secret_path']])
+                ->all();
 
-        $config = [];
-        foreach ($settings as $setting) {
-            $key = str_replace('gmail_', '', $setting->setting_key);
-            // Decrypt sensitive values using SettingsEncryptionTrait
-            $config[$key] = $instance->shouldEncrypt($setting->setting_key)
-                ? $instance->decryptSetting($setting->setting_value, $setting->setting_key)
-                : $setting->setting_value;
-        }
+            $config = [];
+            foreach ($settings as $setting) {
+                $key = str_replace('gmail_', '', $setting->setting_key);
+                // Decrypt sensitive values using SettingsEncryptionTrait
+                $config[$key] = $instance->shouldEncrypt($setting->setting_key)
+                    ? $instance->decryptSetting($setting->setting_value, $setting->setting_key)
+                    : $setting->setting_value;
+            }
 
-        return $config;
+            return $config;
+        }, '_cake_core_');
     }
 
     /**

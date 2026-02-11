@@ -25,9 +25,8 @@ class SlaManagementService
 {
     use LocatorAwareTrait;
 
-    // Cache disabled - always reads from DB to ensure fresh data
-    // private const CACHE_KEY = 'sla_settings';
-    // private const CACHE_DURATION = '+1 hour';
+    private const CACHE_KEY = 'sla_settings';
+    private const CACHE_CONFIG = '_cake_core_';
 
     /**
      * Get SLA settings for PQRS by type
@@ -233,39 +232,36 @@ class SlaManagementService
     }
 
     /**
-     * Get all SLA settings from database (NO CACHE to avoid stale data issues)
+     * Get all SLA settings from database with caching
      *
      * @return array
      */
     private function getSlaSettings(): array
     {
-        // Read directly from database - no caching to ensure always fresh data
-        $settingsTable = $this->fetchTable('SystemSettings');
+        return Cache::remember(self::CACHE_KEY, function () {
+            $settingsTable = $this->fetchTable('SystemSettings');
 
-        $slaSettings = $settingsTable->find()
-            ->where(['setting_key LIKE' => 'sla_%'])
-            ->all();
+            $slaSettings = $settingsTable->find()
+                ->where(['setting_key LIKE' => 'sla_%'])
+                ->all();
 
-        $settings = [];
-        foreach ($slaSettings as $setting) {
-            $settings[$setting->setting_key] = $setting->setting_value;
-        }
+            $settings = [];
+            foreach ($slaSettings as $setting) {
+                $settings[$setting->setting_key] = $setting->setting_value;
+            }
 
-        return $settings;
+            return $settings;
+        }, self::CACHE_CONFIG);
     }
 
     /**
      * Clear SLA settings cache
      *
-     * NOTE: Cache has been disabled for SLA settings to ensure always fresh data.
-     * This method is kept for backward compatibility but does nothing.
-     *
      * @return void
      */
     public function clearCache(): void
     {
-        // Cache is no longer used for SLA settings - always reads from DB
-        \Cake\Log\Log::debug('SLA cache clearing called (cache disabled, always reads from DB)');
+        Cache::delete(self::CACHE_KEY, self::CACHE_CONFIG);
     }
 
     /**
@@ -314,6 +310,7 @@ class SlaManagementService
         $result = $settingsTable->save($setting);
 
         if ($result) {
+            $this->clearCache();
             \Cake\Log\Log::info("SLA setting updated", ['key' => $key, 'value' => $value]);
         } else {
             \Cake\Log\Log::error("Failed to update SLA setting", [
@@ -324,6 +321,62 @@ class SlaManagementService
         }
 
         return (bool)$result;
+    }
+
+    /**
+     * Save all SLA settings from form data
+     *
+     * @param array $data Form data with SLA setting keys/values
+     * @return array{success: bool, message: string, count: int, errors: array}
+     */
+    public function saveAllSettings(array $data): array
+    {
+        $errors = [];
+        $successCount = 0;
+
+        $slaKeys = [
+            'sla_pqrs_peticion_first_response_days',
+            'sla_pqrs_peticion_resolution_days',
+            'sla_pqrs_queja_first_response_days',
+            'sla_pqrs_queja_resolution_days',
+            'sla_pqrs_reclamo_first_response_days',
+            'sla_pqrs_reclamo_resolution_days',
+            'sla_pqrs_sugerencia_first_response_days',
+            'sla_pqrs_sugerencia_resolution_days',
+            'sla_compras_first_response_days',
+            'sla_compras_resolution_days',
+        ];
+
+        foreach ($slaKeys as $key) {
+            if (!isset($data[$key])) {
+                continue;
+            }
+            $value = (int) $data[$key];
+            if ($value <= 0) {
+                continue;
+            }
+            if ($this->updateSetting($key, $value)) {
+                $successCount++;
+            } else {
+                $errors[] = "Error al guardar {$key}";
+            }
+        }
+
+        if (empty($errors)) {
+            return [
+                'success' => true,
+                'message' => "Se guardaron {$successCount} configuraciones de SLA correctamente. Los cambios se aplicarán inmediatamente a nuevas solicitudes.",
+                'count' => $successCount,
+                'errors' => [],
+            ];
+        }
+
+        return [
+            'success' => false,
+            'message' => "Se guardaron {$successCount} configuraciones, pero hubo algunos errores: " . implode(', ', $errors),
+            'count' => $successCount,
+            'errors' => $errors,
+        ];
     }
 
     /**

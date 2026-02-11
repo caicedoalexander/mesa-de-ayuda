@@ -4,12 +4,10 @@ declare(strict_types=1);
 namespace App\Controller\Traits;
 
 use App\Service\ComprasService;
-use App\Service\EmailService;
 use App\Service\PqrsService;
 use App\Service\ResponseService;
 use App\Service\StatisticsService;
 use App\Service\TicketService;
-use App\Service\WhatsappService;
 
 /**
  * ServiceInitializerTrait
@@ -30,7 +28,6 @@ trait ServiceInitializerTrait
      * ```php
      * $this->initializeServices([
      *     'ticketService' => TicketService::class,
-     *     'emailService' => EmailService::class,
      *     'statisticsService' => StatisticsService::class, // No systemConfig needed
      * ]);
      * ```
@@ -70,8 +67,6 @@ trait ServiceInitializerTrait
     {
         $this->initializeServices([
             'ticketService' => TicketService::class,
-            'emailService' => EmailService::class,
-            'whatsappService' => WhatsappService::class,
             'responseService' => ResponseService::class,
             'statisticsService' => StatisticsService::class,
             'comprasService' => ComprasService::class,

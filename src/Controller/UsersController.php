@@ -39,30 +39,7 @@ class UsersController extends AppController
         // If user is already logged in, redirect
         if ($result && $result->isValid()) {
             $user = $this->Authentication->getIdentity();
-            $role = $user->get('role');
-
-            // Redirect based on user role
-            if ($role === 'servicio_cliente') {
-                $target = $this->request->getQuery('redirect', [
-                    'controller' => 'Pqrs',
-                    'action' => 'index', '?' => ['view' => 'mis_pqrs']
-                ]);
-            } elseif ($role === 'compras') {
-                $target = $this->request->getQuery('redirect', [
-                    'controller' => 'Compras',
-                    'action' => 'index', '?' => ['view' => 'mis_compras']
-                ]);
-            } elseif ($role !== 'admin') {
-                $target = $this->request->getQuery('redirect', [
-                    'controller' => 'Tickets',
-                    'action' => 'index', '?' => ['view' => 'mis_tickets'],
-                ]);
-            } else {
-                $target = $this->request->getQuery('redirect', [
-                    'controller' => 'Tickets',
-                    'action' => 'index',
-                ]);
-            }
+            $target = $this->request->getQuery('redirect', $this->getDefaultRedirectForRole($user->get('role')));
 
             return $this->redirect($target);
         }

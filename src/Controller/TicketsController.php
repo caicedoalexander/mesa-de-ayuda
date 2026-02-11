@@ -7,11 +7,7 @@ use App\Controller\Traits\StatisticsControllerTrait;
 use App\Controller\Traits\TicketSystemControllerTrait;
 use App\Controller\Traits\ServiceInitializerTrait;
 use App\Service\TicketService;
-use App\Service\EmailService;
-use App\Service\WhatsappService;
 use App\Service\StatisticsService;
-use App\Service\ResponseService;
-use Cake\Cache\Cache;
 
 /**
  * Tickets Controller
@@ -25,9 +21,7 @@ class TicketsController extends AppController
     use ServiceInitializerTrait;
 
     private TicketService $ticketService;
-    private EmailService $emailService;
-    private WhatsappService $whatsappService;
-    private ResponseService $responseService;
+    private \App\Service\ResponseService $responseService;
     private StatisticsService $statisticsService;
     private \App\Service\ComprasService $comprasService;
 
@@ -192,32 +186,10 @@ class TicketsController extends AppController
     {
         $this->request->allowMethod(['post']);
 
-        // Verify ticket exists
-        $this->Tickets->get($id);
         $tagId = (int) $this->request->getData('tag_id');
+        $result = $this->ticketService->addTag((int) $id, $tagId);
 
-        $ticketTagsTable = $this->fetchTable('TicketTags');
-
-        // Check if already exists
-        $exists = $ticketTagsTable->find()
-            ->where(['ticket_id' => $id, 'tag_id' => $tagId])
-            ->count();
-
-        if ($exists) {
-            $this->Flash->warning('Esta etiqueta ya está agregada.');
-            return $this->redirect(['action' => 'view', $id]);
-        }
-
-        $ticketTag = $ticketTagsTable->newEntity([
-            'ticket_id' => $id,
-            'tag_id' => $tagId,
-        ]);
-
-        if ($ticketTagsTable->save($ticketTag)) {
-            $this->Flash->success('Etiqueta agregada.');
-        } else {
-            $this->Flash->error('Error al agregar la etiqueta.');
-        }
+        $this->Flash->{$result['success'] ? 'success' : ($result['message'] === 'Esta etiqueta ya está agregada.' ? 'warning' : 'error')}($result['message']);
 
         return $this->redirect(['action' => 'view', $id]);
     }
@@ -233,17 +205,9 @@ class TicketsController extends AppController
     {
         $this->request->allowMethod(['post', 'delete']);
 
-        $ticketTagsTable = $this->fetchTable('TicketTags');
+        $result = $this->ticketService->removeTag((int) $id, (int) $tagId);
 
-        $ticketTag = $ticketTagsTable->find()
-            ->where(['ticket_id' => $id, 'tag_id' => $tagId])
-            ->first();
-
-        if ($ticketTag && $ticketTagsTable->delete($ticketTag)) {
-            $this->Flash->success('Etiqueta eliminada.');
-        } else {
-            $this->Flash->error('Error al eliminar la etiqueta.');
-        }
+        $this->Flash->{$result['success'] ? 'success' : 'error'}($result['message']);
 
         return $this->redirect(['action' => 'view', $id]);
     }
@@ -259,29 +223,9 @@ class TicketsController extends AppController
         $this->request->allowMethod(['post']);
 
         $userId = (int) $this->request->getData('user_id');
+        $result = $this->ticketService->addFollower((int) $id, $userId);
 
-        $followersTable = $this->fetchTable('TicketFollowers');
-
-        // Check if already following
-        $exists = $followersTable->find()
-            ->where(['ticket_id' => $id, 'user_id' => $userId])
-            ->count();
-
-        if ($exists) {
-            $this->Flash->warning('Este usuario ya está siguiendo el ticket.');
-            return $this->redirect(['action' => 'view', $id]);
-        }
-
-        $follower = $followersTable->newEntity([
-            'ticket_id' => $id,
-            'user_id' => $userId,
-        ]);
-
-        if ($followersTable->save($follower)) {
-            $this->Flash->success('Seguidor agregado.');
-        } else {
-            $this->Flash->error('Error al agregar seguidor.');
-        }
+        $this->Flash->{$result['success'] ? 'success' : ($result['message'] === 'Este usuario ya está siguiendo el ticket.' ? 'warning' : 'error')}($result['message']);
 
         return $this->redirect(['action' => 'view', $id]);
     }

@@ -7,6 +7,7 @@ use App\Controller\AppController;
 use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Log\Log;
+use Psr\Http\Message\UploadedFileInterface;
 
 /**
  * Config Files Controller
@@ -17,6 +18,18 @@ use Cake\Log\Log;
 class ConfigFilesController extends AppController
 {
     /**
+     * Supported config file types and their destinations
+     */
+    private const FILE_DESTINATIONS = [
+        'gmail' => [
+            'filename' => 'client_secret.json',
+            'subdir' => 'google',
+            'setting_key' => 'gmail_client_secret_path',
+            'success_message' => 'Gmail client_secret.json subido correctamente.',
+        ],
+    ];
+
+    /**
      * Upload configuration file
      *
      * @return \Cake\Http\Response|null|void
@@ -25,85 +38,45 @@ class ConfigFilesController extends AppController
     {
         $this->request->allowMethod(['post']);
 
-        $fileType = $this->request->getData('file_type'); // 'gmail', 's3', 'evolution', etc.
+        $fileType = $this->request->getData('file_type');
         $file = $this->request->getData('config_file');
+
+        $redirect = ['controller' => 'Settings', 'action' => 'index'];
 
         if (!$file || $file->getError() !== UPLOAD_ERR_OK) {
             $this->Flash->error('No se pudo cargar el archivo. Por favor intenta nuevamente.');
-            return $this->redirect(['controller' => 'Settings', 'action' => 'index']);
+            return $this->redirect($redirect);
         }
 
-        // Validar tipo de archivo
-        $allowedTypes = ['application/json', 'text/plain'];
-        if (!in_array($file->getClientMediaType(), $allowedTypes)) {
-            $this->Flash->error('El archivo debe ser un JSON válido.');
-            return $this->redirect(['controller' => 'Settings', 'action' => 'index']);
+        $error = $this->validateJsonFile($file);
+        if ($error !== null) {
+            $this->Flash->error($error);
+            return $this->redirect($redirect);
         }
 
-        // Leer contenido y validar JSON
-        $content = file_get_contents($file->getStream()->getMetadata('uri'));
-        $jsonData = json_decode($content);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $this->Flash->error('El archivo no es un JSON válido: ' . json_last_error_msg());
-            return $this->redirect(['controller' => 'Settings', 'action' => 'index']);
-        }
-
-        // Determinar destino según el tipo
-        $destinations = [
-            'gmail' => [
-                'path' => CONFIG . 'google' . DS . 'client_secret.json',
-                'setting_key' => 'gmail_client_secret_path',
-                'success_message' => 'Gmail client_secret.json subido correctamente.'
-            ],
-        ];
-
-        if (!isset($destinations[$fileType])) {
-            throw new BadRequestException('Tipo de archivo no soportado.');
-        }
-
-        $destination = $destinations[$fileType];
+        $destination = $this->getDestination($fileType);
         $targetPath = $destination['path'];
 
-        // Crear directorio si no existe
-        $dir = dirname($targetPath);
-        if (!is_dir($dir)) {
-            mkdir($dir, 0775, true);
-        }
-
-        // Guardar archivo
         try {
-            $file->moveTo($targetPath);
-
-            // Cambiar permisos para www-data
-            chmod($targetPath, 0664);
-            if (function_exists('posix_getpwnam')) {
-                $wwwData = posix_getpwnam('www-data');
-                if ($wwwData) {
-                    chown($targetPath, $wwwData['uid']);
-                    chgrp($targetPath, $wwwData['gid']);
-                }
-            }
-
-            // Actualizar setting en base de datos
-            $this->_updateConfigPath($destination['setting_key'], $targetPath);
+            $this->saveConfigFile($file, $targetPath);
+            $this->updateConfigPath($destination['setting_key'], $targetPath);
 
             $this->Flash->success($destination['success_message']);
             Log::info('Config file uploaded', [
                 'type' => $fileType,
                 'path' => $targetPath,
-                'user' => $this->Authentication->getIdentity()?->get('email')
+                'user' => $this->Authentication->getIdentity()?->get('email'),
             ]);
         } catch (\Exception $e) {
             $this->Flash->error('Error al guardar el archivo: ' . $e->getMessage());
             Log::error('Config file upload failed', [
                 'type' => $fileType,
                 'error' => $e->getMessage(),
-                'user' => $this->Authentication->getIdentity()?->get('email')
+                'user' => $this->Authentication->getIdentity()?->get('email'),
             ]);
         }
 
-        return $this->redirect(['controller' => 'Settings', 'action' => 'index']);
+        return $this->redirect($redirect);
     }
 
     /**
@@ -114,15 +87,7 @@ class ConfigFilesController extends AppController
      */
     public function download(string $type)
     {
-        $paths = [
-            'gmail' => CONFIG . 'google' . DS . 'client_secret.json',
-        ];
-
-        if (!isset($paths[$type])) {
-            throw new NotFoundException('Archivo no encontrado.');
-        }
-
-        $filePath = $paths[$type];
+        $filePath = $this->getDestination($type)['path'];
 
         if (!file_exists($filePath)) {
             $this->Flash->error('El archivo de configuración aún no existe.');
@@ -147,22 +112,14 @@ class ConfigFilesController extends AppController
     {
         $this->request->allowMethod(['post', 'delete']);
 
-        $paths = [
-            'gmail' => CONFIG . 'google' . DS . 'client_secret.json',
-        ];
-
-        if (!isset($paths[$type])) {
-            throw new NotFoundException('Archivo no encontrado.');
-        }
-
-        $filePath = $paths[$type];
+        $filePath = $this->getDestination($type)['path'];
 
         if (file_exists($filePath)) {
             unlink($filePath);
             $this->Flash->success('Archivo de configuración eliminado correctamente.');
             Log::info('Config file deleted', [
                 'type' => $type,
-                'user' => $this->Authentication->getIdentity()?->get('email')
+                'user' => $this->Authentication->getIdentity()?->get('email'),
             ]);
         } else {
             $this->Flash->warning('El archivo ya no existe.');
@@ -172,13 +129,84 @@ class ConfigFilesController extends AppController
     }
 
     /**
+     * Get destination config for a file type
+     *
+     * @param string $fileType File type key
+     * @return array{path: string, setting_key: string, success_message: string}
+     * @throws \Cake\Http\Exception\BadRequestException|\Cake\Http\Exception\NotFoundException
+     */
+    private function getDestination(string $fileType): array
+    {
+        if (!isset(self::FILE_DESTINATIONS[$fileType])) {
+            throw new BadRequestException('Tipo de archivo no soportado.');
+        }
+
+        $config = self::FILE_DESTINATIONS[$fileType];
+
+        return [
+            'path' => CONFIG . $config['subdir'] . DS . $config['filename'],
+            'setting_key' => $config['setting_key'],
+            'success_message' => $config['success_message'],
+        ];
+    }
+
+    /**
+     * Validate uploaded file is valid JSON
+     *
+     * @param \Psr\Http\Message\UploadedFileInterface $file Uploaded file
+     * @return string|null Error message or null if valid
+     */
+    private function validateJsonFile(UploadedFileInterface $file): ?string
+    {
+        $allowedTypes = ['application/json', 'text/plain'];
+        if (!in_array($file->getClientMediaType(), $allowedTypes)) {
+            return 'El archivo debe ser un JSON válido.';
+        }
+
+        $content = file_get_contents($file->getStream()->getMetadata('uri'));
+        json_decode($content);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return 'El archivo no es un JSON válido: ' . json_last_error_msg();
+        }
+
+        return null;
+    }
+
+    /**
+     * Save config file to target path with proper permissions
+     *
+     * @param \Psr\Http\Message\UploadedFileInterface $file Uploaded file
+     * @param string $targetPath Destination path
+     * @return void
+     */
+    private function saveConfigFile(UploadedFileInterface $file, string $targetPath): void
+    {
+        $dir = dirname($targetPath);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+
+        $file->moveTo($targetPath);
+        chmod($targetPath, 0664);
+
+        if (function_exists('posix_getpwnam')) {
+            $wwwData = posix_getpwnam('www-data');
+            if ($wwwData) {
+                chown($targetPath, $wwwData['uid']);
+                chgrp($targetPath, $wwwData['gid']);
+            }
+        }
+    }
+
+    /**
      * Update config path setting in database
      *
      * @param string $key Setting key
      * @param string $path File path
      * @return void
      */
-    private function _updateConfigPath(string $key, string $path): void
+    private function updateConfigPath(string $key, string $path): void
     {
         $settingsTable = $this->fetchTable('SystemSettings');
         $setting = $settingsTable->find()->where(['setting_key' => $key])->first();
@@ -190,7 +218,7 @@ class ConfigFilesController extends AppController
                 'setting_key' => $key,
                 'setting_value' => $path,
                 'setting_type' => 'string',
-                'description' => 'Path to ' . $key . ' configuration file'
+                'description' => 'Path to ' . $key . ' configuration file',
             ]);
         }
 

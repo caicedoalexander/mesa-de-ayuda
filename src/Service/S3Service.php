@@ -165,26 +165,6 @@ class S3Service
     }
 
     /**
-     * Check if file exists in S3
-     *
-     * @param string $s3Path S3 object key (path in bucket)
-     * @return bool True if file exists
-     */
-    public function fileExists(string $s3Path): bool
-    {
-        if (!$this->isEnabled()) {
-            return false;
-        }
-
-        try {
-            return $this->client->doesObjectExist($this->bucket, $s3Path);
-        } catch (AwsException $e) {
-            Log::error("S3Service: Failed to check file existence: {$e->getMessage()}");
-            return false;
-        }
-    }
-
-    /**
      * Generate presigned URL for secure file access
      *
      * @param string $s3Path S3 object key (path in bucket)
@@ -208,36 +188,6 @@ class S3Service
             return (string)$request->getUri();
         } catch (AwsException $e) {
             Log::error("S3Service: Failed to generate presigned URL: {$e->getMessage()}");
-            return null;
-        }
-    }
-
-    /**
-     * Get S3 object metadata
-     *
-     * @param string $s3Path S3 object key (path in bucket)
-     * @return array|null Object metadata or null on failure
-     */
-    public function getObjectMetadata(string $s3Path): ?array
-    {
-        if (!$this->isEnabled()) {
-            return null;
-        }
-
-        try {
-            $result = $this->client->headObject([
-                'Bucket' => $this->bucket,
-                'Key' => $s3Path,
-            ]);
-
-            return [
-                'ContentType' => $result->get('ContentType'),
-                'ContentLength' => $result->get('ContentLength'),
-                'LastModified' => $result->get('LastModified'),
-                'ETag' => $result->get('ETag'),
-            ];
-        } catch (AwsException $e) {
-            Log::error("S3Service: Failed to get object metadata: {$e->getMessage()}");
             return null;
         }
     }
@@ -267,23 +217,4 @@ class S3Service
         }
     }
 
-    /**
-     * Get bucket name
-     *
-     * @return string
-     */
-    public function getBucket(): string
-    {
-        return $this->bucket;
-    }
-
-    /**
-     * Get region
-     *
-     * @return string
-     */
-    public function getRegion(): string
-    {
-        return $this->region;
-    }
 }

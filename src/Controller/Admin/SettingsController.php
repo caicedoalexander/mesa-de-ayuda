@@ -54,9 +54,10 @@ class SettingsController extends AppController
         // Clear all settings caches when a setting is updated
         if ($result) {
             \Cake\Cache\Cache::delete('system_settings', '_cake_core_');
-            \Cake\Cache\Cache::delete('system_title', '_cake_core_');
             \Cake\Cache\Cache::delete('whatsapp_settings', '_cake_core_');
             \Cake\Cache\Cache::delete('n8n_settings', '_cake_core_');
+            \Cake\Cache\Cache::delete('gmail_settings', '_cake_core_');
+            \Cake\Cache\Cache::delete('sla_settings', '_cake_core_');
         }
 
         return $result;

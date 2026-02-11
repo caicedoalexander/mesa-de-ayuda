@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Service\Traits\StatisticsServiceTrait;
+use Cake\Cache\Cache;
 use Cake\ORM\Locator\LocatorAwareTrait;
 
 /**
@@ -17,6 +18,21 @@ class StatisticsService
     use LocatorAwareTrait;
     use StatisticsServiceTrait;
 
+    private const CACHE_TTL = '+5 minutes';
+    private const CACHE_CONFIG = '_cake_core_';
+
+    /**
+     * Build a cache key from method name and filters
+     *
+     * @param string $prefix Cache key prefix
+     * @param array $filters Filters used for the query
+     * @return string
+     */
+    private function buildCacheKey(string $prefix, array $filters = []): string
+    {
+        return $prefix . '_' . md5(serialize($filters));
+    }
+
     /**
      * Get ticket statistics
      *
@@ -24,6 +40,21 @@ class StatisticsService
      * @return array Statistics data
      */
     public function getTicketStats(array $filters = []): array
+    {
+        $cacheKey = $this->buildCacheKey('stats_tickets', $filters);
+
+        return Cache::remember($cacheKey, function () use ($filters) {
+            return $this->computeTicketStats($filters);
+        }, self::CACHE_CONFIG);
+    }
+
+    /**
+     * Compute ticket statistics (uncached)
+     *
+     * @param array $filters Optional filters
+     * @return array Statistics data
+     */
+    private function computeTicketStats(array $filters = []): array
     {
         $parsedFilters = $this->parseDateFilters($filters);
         $baseQuery = $this->buildBaseQuery('Tickets', $parsedFilters);
@@ -215,6 +246,21 @@ class StatisticsService
      */
     public function getPqrsStats(array $filters = []): array
     {
+        $cacheKey = $this->buildCacheKey('stats_pqrs', $filters);
+
+        return Cache::remember($cacheKey, function () use ($filters) {
+            return $this->computePqrsStats($filters);
+        }, self::CACHE_CONFIG);
+    }
+
+    /**
+     * Compute PQRS statistics (uncached)
+     *
+     * @param array $filters Optional filters
+     * @return array PQRS statistics data
+     */
+    private function computePqrsStats(array $filters = []): array
+    {
         // Handle both old format (date_from/date_to) and new format (date_range)
         if (!isset($filters['date_range']) && (isset($filters['date_from']) || isset($filters['date_to']))) {
             // Convert old format to new format
@@ -314,6 +360,21 @@ class StatisticsService
      * @return array Compras statistics data
      */
     public function getComprasStats(array $filters = []): array
+    {
+        $cacheKey = $this->buildCacheKey('stats_compras', $filters);
+
+        return Cache::remember($cacheKey, function () use ($filters) {
+            return $this->computeComprasStats($filters);
+        }, self::CACHE_CONFIG);
+    }
+
+    /**
+     * Compute Compras statistics (uncached)
+     *
+     * @param array $filters Optional filters
+     * @return array Compras statistics data
+     */
+    private function computeComprasStats(array $filters = []): array
     {
         $parsedFilters = $this->parseDateFilters($filters);
 

@@ -395,23 +395,22 @@ class TicketService
     /**
      * Save uploaded file (using GenericAttachmentTrait for form uploads)
      *
-     * This method provides a consistent interface for ResponseService while leveraging
-     * the robust security validation from GenericAttachmentTrait.
-     *
-     * @param int $ticketId Ticket ID
-     * @param int|null $commentId Comment ID
+     * @param \App\Model\Entity\Ticket|int $ticket Ticket entity or ID
      * @param \Psr\Http\Message\UploadedFileInterface $file Uploaded file
-     * @param int $userId User ID
+     * @param int|null $commentId Comment ID
+     * @param int|null $userId User ID
      * @return \App\Model\Entity\Attachment|null
      */
     public function saveUploadedFile(
-        int $ticketId,
-        ?int $commentId,
+        \App\Model\Entity\Ticket|int $ticket,
         \Psr\Http\Message\UploadedFileInterface $file,
-        int $userId
+        ?int $commentId = null,
+        ?int $userId = null
     ): ?\App\Model\Entity\Attachment {
-        $ticketsTable = $this->fetchTable('Tickets');
-        $ticket = $ticketsTable->get($ticketId);
+        if (is_int($ticket)) {
+            $ticketsTable = $this->fetchTable('Tickets');
+            $ticket = $ticketsTable->get($ticket);
+        }
         assert($ticket instanceof \App\Model\Entity\Ticket);
 
         $result = $this->saveGenericUploadedFile('ticket', $ticket, $file, $commentId, $userId);
@@ -542,6 +541,93 @@ class TicketService
             ]);
             return null;
         }
+    }
+
+    /**
+     * Add tag to ticket
+     *
+     * @param int $ticketId Ticket ID
+     * @param int $tagId Tag ID
+     * @return array{success: bool, message: string}
+     */
+    public function addTag(int $ticketId, int $tagId): array
+    {
+        $ticketsTable = $this->fetchTable('Tickets');
+        $ticketsTable->get($ticketId);
+
+        $ticketTagsTable = $this->fetchTable('TicketTags');
+
+        $exists = $ticketTagsTable->find()
+            ->where(['ticket_id' => $ticketId, 'tag_id' => $tagId])
+            ->count();
+
+        if ($exists) {
+            return ['success' => false, 'message' => 'Esta etiqueta ya está agregada.'];
+        }
+
+        $ticketTag = $ticketTagsTable->newEntity([
+            'ticket_id' => $ticketId,
+            'tag_id' => $tagId,
+        ]);
+
+        if ($ticketTagsTable->save($ticketTag)) {
+            return ['success' => true, 'message' => 'Etiqueta agregada.'];
+        }
+
+        return ['success' => false, 'message' => 'Error al agregar la etiqueta.'];
+    }
+
+    /**
+     * Remove tag from ticket
+     *
+     * @param int $ticketId Ticket ID
+     * @param int $tagId Tag ID
+     * @return array{success: bool, message: string}
+     */
+    public function removeTag(int $ticketId, int $tagId): array
+    {
+        $ticketTagsTable = $this->fetchTable('TicketTags');
+
+        $ticketTag = $ticketTagsTable->find()
+            ->where(['ticket_id' => $ticketId, 'tag_id' => $tagId])
+            ->first();
+
+        if ($ticketTag && $ticketTagsTable->delete($ticketTag)) {
+            return ['success' => true, 'message' => 'Etiqueta eliminada.'];
+        }
+
+        return ['success' => false, 'message' => 'Error al eliminar la etiqueta.'];
+    }
+
+    /**
+     * Add follower to ticket
+     *
+     * @param int $ticketId Ticket ID
+     * @param int $userId User ID
+     * @return array{success: bool, message: string}
+     */
+    public function addFollower(int $ticketId, int $userId): array
+    {
+        $followersTable = $this->fetchTable('TicketFollowers');
+
+        $exists = $followersTable->find()
+            ->where(['ticket_id' => $ticketId, 'user_id' => $userId])
+            ->count();
+
+        if ($exists) {
+            return ['success' => false, 'message' => 'Este usuario ya está siguiendo el ticket.'];
+        }
+
+        $follower = $followersTable->newEntity([
+            'ticket_id' => $ticketId,
+            'user_id' => $userId,
+        ]);
+
+        if ($followersTable->save($follower)) {
+            return ['success' => true, 'message' => 'Seguidor agregado.'];
+        }
+
+        return ['success' => false, 'message' => 'Error al agregar seguidor.'];
     }
 
     /**
