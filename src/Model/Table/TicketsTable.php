@@ -8,6 +8,7 @@ use App\Model\Table\Traits\NumberGeneratorTrait;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
+use App\Model\Enum\TicketStatus;
 use Cake\Validation\Validator;
 
 /**
@@ -244,7 +245,7 @@ class TicketsTable extends Table
         return [
             'tableAlias' => 'Tickets',
             'numberField' => 'ticket_number',
-            'resolvedStatuses' => ['resuelto', 'convertido'],
+            'resolvedStatuses' => TicketStatus::resolvedValues(),
             'searchFields' => [
                 'Tickets.ticket_number',
                 'Tickets.subject',

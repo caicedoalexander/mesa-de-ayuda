@@ -8,6 +8,9 @@ use App\Model\Table\Traits\NumberGeneratorTrait;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
+use App\Model\Enum\Channel;
+use App\Model\Enum\CompraStatus;
+use App\Model\Enum\Priority;
 use Cake\Validation\Validator;
 
 class ComprasTable extends Table
@@ -83,12 +86,12 @@ class ComprasTable extends Table
 
         $validator
             ->scalar('status')
-            ->inList('status', ['nuevo', 'en_revision', 'aprobado', 'en_proceso', 'completado', 'rechazado'])
+            ->inList('status', CompraStatus::values())
             ->notEmptyString('status');
 
         $validator
             ->scalar('priority')
-            ->inList('priority', ['baja', 'media', 'alta', 'urgente'])
+            ->inList('priority', Priority::values())
             ->notEmptyString('priority');
 
         $validator
@@ -103,7 +106,7 @@ class ComprasTable extends Table
             ->scalar('channel')
             ->maxLength('channel', 20)
             ->notEmptyString('channel')
-            ->inList('channel', ['email', 'whatsapp']);
+            ->inList('channel', [Channel::Email->value, Channel::Whatsapp->value]);
 
         $validator
             ->dateTime('sla_due_date')
@@ -192,7 +195,7 @@ class ComprasTable extends Table
         return [
             'tableAlias' => 'Compras',
             'numberField' => 'compra_number',
-            'resolvedStatuses' => ['completado', 'rechazado', 'convertido'],
+            'resolvedStatuses' => CompraStatus::resolvedValues(),
             'searchFields' => [
                 'Compras.compra_number',
                 'Compras.subject',

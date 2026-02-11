@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Service\Traits;
 
+use App\Model\Enum\Priority;
+
 /**
  * Statistics Service Trait
  *
@@ -126,7 +128,7 @@ trait StatisticsServiceTrait
             $baseQuery = $table->find();
         }
 
-        $validPriorities = ['baja', 'media', 'alta', 'urgente'];
+        $validPriorities = Priority::values();
 
         $priorityCountsRaw = (clone $baseQuery)
             ->select([

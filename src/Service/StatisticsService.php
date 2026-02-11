@@ -4,6 +4,9 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Service\Traits\StatisticsServiceTrait;
+use App\Model\Enum\CompraStatus;
+use App\Model\Enum\PqrsStatus;
+use App\Model\Enum\TicketStatus;
 use Cake\ORM\Locator\LocatorAwareTrait;
 
 /**
@@ -31,7 +34,7 @@ class StatisticsService
         // Use trait methods for common metrics
         $statusDistribution = $this->getStatusDistribution(
             'Tickets',
-            ['nuevo', 'abierto', 'pendiente', 'resuelto', 'convertido'],
+            TicketStatus::values(),
             $baseQuery
         );
 
@@ -117,8 +120,8 @@ class StatisticsService
         $commentsTable = $this->fetchTable('TicketComments');
 
         // Most active requesters (top 5) with detailed metrics
-        $resolvedStatuses = ['cerrado', 'resuelto'];
-        $activeStatuses = ['abierto', 'en_progreso', 'pendiente'];
+        $resolvedStatuses = [TicketStatus::Resuelto->value, 'cerrado'];
+        $activeStatuses = TicketStatus::activeValues();
 
         $query = $ticketsTable->find()
             ->contain(['Requesters']);
@@ -236,7 +239,7 @@ class StatisticsService
         // Use trait methods
         $statusCounts = $this->getStatusDistribution(
             'Pqrs',
-            ['nuevo', 'en_revision', 'en_proceso', 'resuelto', 'cerrado'],
+            PqrsStatus::values(),
             $baseQuery
         );
 
@@ -274,7 +277,7 @@ class StatisticsService
         $avgResolutionDays = $avgResolutionHours > 0 ? round($avgResolutionHours / 24, 1) : 0;
 
         // Top agents
-        $agentPerformance = $this->getAgentPerformance('Pqrs', ['resuelto', 'cerrado'], 5);
+        $agentPerformance = $this->getAgentPerformance('Pqrs', PqrsStatus::resolvedValues(), 5);
 
         return [
             'total_pqrs' => $totalPqrs,
@@ -328,7 +331,7 @@ class StatisticsService
         // Use trait methods
         $statusCounts = $this->getStatusDistribution(
             'Compras',
-            ['nuevo', 'en_revision', 'aprobado', 'en_proceso', 'completado', 'rechazado', 'convertido'],
+            CompraStatus::values(),
             $baseQuery
         );
 
@@ -347,7 +350,7 @@ class StatisticsService
         $avgResolutionDays = $avgResolutionHours > 0 ? round($avgResolutionHours / 24, 1) : 0;
 
         // Agent performance (by completed compras)
-        $agentPerformance = $this->getAgentPerformance('Compras', ['completado'], 5);
+        $agentPerformance = $this->getAgentPerformance('Compras', [CompraStatus::Completado->value], 5);
 
         // Top requesters
         $topRequesters = $this->getTopRequestersCompras(5);

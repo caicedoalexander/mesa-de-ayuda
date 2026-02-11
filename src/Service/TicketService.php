@@ -10,6 +10,9 @@ use Cake\I18n\FrozenTime;
 use HTMLPurifier;
 use HTMLPurifier_Config;
 use App\Service\Traits\EntityConversionTrait;
+use App\Model\Enum\TicketStatus;
+use App\Model\Enum\Channel;
+use App\Model\Enum\Priority;
 
 /**
  * Ticket Service
@@ -26,14 +29,27 @@ class TicketService
     use SettingsEncryptionTrait;
     use \App\Service\Traits\TicketSystemTrait;
     use \App\Service\Traits\NotificationDispatcherTrait;
-    use \App\Service\Traits\GenericAttachmentTrait;
     use EntityConversionTrait;
 
     private EmailService $emailService;
     private WhatsappService $whatsappService;
     private GmailService $gmailService;
+    private FileStorageService $fileStorageService;
     private ?N8nService $n8nService = null;
     private ?array $systemConfig = null;
+
+    /**
+     * Get notification services for NotificationDispatcherTrait (ARCH-016)
+     *
+     * @return array{email: EmailService, whatsapp: WhatsappService}
+     */
+    protected function getNotificationServices(): array
+    {
+        return [
+            'email' => $this->emailService,
+            'whatsapp' => $this->whatsappService,
+        ];
+    }
 
     /**
      * Constructor with Dependency Injection
@@ -49,7 +65,8 @@ class TicketService
         ?array $systemConfig = null,
         ?GmailService $gmailService = null,
         ?EmailService $emailService = null,
-        ?WhatsappService $whatsappService = null
+        ?WhatsappService $whatsappService = null,
+        ?FileStorageService $fileStorageService = null
     ) {
         $this->systemConfig = $systemConfig;
 
@@ -57,6 +74,7 @@ class TicketService
         $this->gmailService = $gmailService ?? new GmailService($systemConfig);
         $this->emailService = $emailService ?? new EmailService($systemConfig);
         $this->whatsappService = $whatsappService ?? new WhatsappService($systemConfig);
+        $this->fileStorageService = $fileStorageService ?? new FileStorageService(new S3Service());
 
         // N8nService loaded lazily only when needed
     }
@@ -122,10 +140,10 @@ class TicketService
         }
 
         // Determine channel: if email comes from WhatsApp bot email, set channel as 'whatsapp'
-        $channel = 'email';
+        $channel = Channel::Email->value;
         $whatsappBotEmail = 'mesadeayuda.whatsapp@gmail.com';
         if (strtolower($fromEmail) === strtolower($whatsappBotEmail)) {
-            $channel = 'whatsapp';
+            $channel = Channel::Whatsapp->value;
         }
 
         // Create ticket
@@ -135,8 +153,8 @@ class TicketService
             'gmail_thread_id' => $emailData['gmail_thread_id'] ?? null,
             'subject' => $subject,
             'description' => $description,
-            'status' => 'nuevo',
-            'priority' => 'media',
+            'status' => TicketStatus::Nuevo->value,
+            'priority' => Priority::Media->value,
             'requester_id' => $user->id,
             'channel' => $channel,
             'source_email' => $fromEmail,
@@ -313,32 +331,6 @@ class TicketService
     }
 
     /**
-     * Get system email address from settings
-     *
-     * @return string System email or empty string
-     */
-    private function getSystemEmail(): string
-    {
-        try {
-            // Try to get from systemConfig first (if passed in constructor)
-            if ($this->systemConfig !== null && !empty($this->systemConfig['gmail_user_email'])) {
-                return $this->systemConfig['gmail_user_email'];
-            }
-
-            // Otherwise load from database
-            $settingsTable = $this->fetchTable('SystemSettings');
-            $setting = $settingsTable->find()
-                ->where(['setting_key' => 'gmail_user_email'])
-                ->first();
-
-            return $setting ? $setting->setting_value : '';
-        } catch (\Exception $e) {
-            Log::error('Failed to load system email: ' . $e->getMessage());
-            return '';
-        }
-    }
-
-    /**
      * Check if email address is in ticket's original To/CC recipients
      *
      * @param \App\Model\Entity\Ticket $ticket The ticket entity
@@ -387,7 +379,7 @@ class TicketService
     }
 
     /**
-     * Process email attachments (now using GenericAttachmentTrait)
+     * Process email attachments (using FileStorageService)
      *
      * @param \Cake\Datasource\EntityInterface $ticket Ticket entity
      * @param array $attachments Array of attachment data
@@ -413,8 +405,8 @@ class TicketService
                     $attachmentData['attachment_id']
                 );
 
-                // Save attachment using GenericAttachmentTrait
-                $this->saveAttachmentFromBinary(
+                // Save attachment using FileStorageService
+                $this->fileStorageService->saveFromBinary(
                     'ticket',
                     $ticket,
                     $attachmentData['filename'],
@@ -434,10 +426,10 @@ class TicketService
     }
 
     /**
-     * Save uploaded file (using GenericAttachmentTrait for form uploads)
+     * Save uploaded file (using FileStorageService for form uploads)
      *
      * This method provides a consistent interface for ResponseService while leveraging
-     * the robust security validation from GenericAttachmentTrait.
+     * the robust security validation from FileStorageService.
      *
      * @param int $ticketId Ticket ID
      * @param int|null $commentId Comment ID
@@ -455,7 +447,7 @@ class TicketService
         $ticket = $ticketsTable->get($ticketId);
         assert($ticket instanceof \App\Model\Entity\Ticket);
 
-        $result = $this->saveGenericUploadedFile('ticket', $ticket, $file, $commentId, $userId);
+        $result = $this->fileStorageService->saveUploadedFile('ticket', $ticket, $file, $commentId, $userId);
         assert($result instanceof \App\Model\Entity\Attachment || $result === null);
         return $result;
     }
@@ -547,11 +539,11 @@ class TicketService
                 'ticket_number' => $ticketNumber,
                 'subject' => "{$compra->subject}",
                 'description' => $compra->description,
-                'status' => 'nuevo',
+                'status' => TicketStatus::Nuevo->value,
                 'priority' => $compra->priority,
                 'requester_id' => $compra->requester_id,
                 'assignee_id' => $data['assignee_id'] ?? null,
-                'channel' => $compra->channel ?? 'email',
+                'channel' => $compra->channel ?? Channel::Email->value,
                 'email_to' => $compra->email_to,
                 'email_cc' => $compra->email_cc,
                 'source_email' => $compra->requester->email ?? null,

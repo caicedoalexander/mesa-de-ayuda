@@ -3,22 +3,47 @@ declare(strict_types=1);
 
 namespace App\Service\Traits;
 
+use App\Service\EmailService;
+use App\Service\WhatsappService;
 use Cake\Datasource\EntityInterface;
 use Cake\Log\Log;
 
 /**
  * NotificationDispatcherTrait
  *
+ * REFACTORED (ARCH-016): Services now obtained via abstract method instead of assumed properties.
+ *
  * Centralizes notification dispatch logic with clear rules:
  * - WhatsApp: ONLY on entity creation
  * - Email: Creation, status changes, comments
  *
- * Requires using class to have:
- * - emailService property (EmailService instance)
- * - whatsappService property (WhatsappService instance)
+ * BEFORE: Assumed $this->emailService and $this->whatsappService existed (hidden dependencies)
+ * AFTER: Services obtained via getNotificationServices() abstract method
+ *
+ * Benefits:
+ * - Testable: Services can be mocks
+ * - Explicit: No hidden dependencies
+ * - Flexible: Services don't have to be named specific properties
+ * - SOLID compliant: Dependency Inversion Principle respected
+ *
+ * Required in using class:
+ * - Implement getNotificationServices() method returning ['email' => EmailService, 'whatsapp' => WhatsappService]
+ *
+ * @package App\Service\Traits
  */
 trait NotificationDispatcherTrait
 {
+    /**
+     * Get notification services from using class
+     *
+     * Must be implemented by using class to provide service instances.
+     * This method allows each service to provide its own EmailService/WhatsappService
+     * instances without the trait assuming property names.
+     *
+     * @return array{email: EmailService, whatsapp: WhatsappService}
+     */
+    abstract protected function getNotificationServices(): array;
+
     /**
      * Dispatch creation notifications (Email + WhatsApp)
      *
@@ -36,12 +61,13 @@ trait NotificationDispatcherTrait
         bool $sendEmail = true,
         bool $sendWhatsapp = true
     ): void {
+        $services = $this->getNotificationServices();
         $methods = $this->getNotificationMethods($entityType, 'creation');
 
         // Send Email
         if ($sendEmail && !empty($methods['email'])) {
             try {
-                $this->emailService->{$methods['email']}($entity);
+                $services['email']->{$methods['email']}($entity);
             } catch (\Exception $e) {
                 Log::error("Failed to send {$entityType} creation email", [
                     'error' => $e->getMessage(),
@@ -53,7 +79,7 @@ trait NotificationDispatcherTrait
         // Send WhatsApp (ONLY for creation)
         if ($sendWhatsapp && !empty($methods['whatsapp'])) {
             try {
-                $this->whatsappService->{$methods['whatsapp']}($entity);
+                $services['whatsapp']->{$methods['whatsapp']}($entity);
             } catch (\Exception $e) {
                 Log::error("Failed to send {$entityType} creation WhatsApp", [
                     'error' => $e->getMessage(),
@@ -80,6 +106,7 @@ trait NotificationDispatcherTrait
         string $notificationType,
         array $context = []
     ): void {
+        $services = $this->getNotificationServices();
         $methods = $this->getNotificationMethods($entityType, $notificationType);
 
         // Email ONLY (WhatsApp never sent for updates)
@@ -91,7 +118,7 @@ trait NotificationDispatcherTrait
         try {
             switch ($notificationType) {
                 case 'status_change':
-                    $this->emailService->{$methods['email']}(
+                    $services['email']->{$methods['email']}(
                         $entity,
                         $context['old_status'] ?? '',
                         $context['new_status'] ?? ''
@@ -99,7 +126,7 @@ trait NotificationDispatcherTrait
                     break;
 
                 case 'comment':
-                    $this->emailService->{$methods['email']}(
+                    $services['email']->{$methods['email']}(
                         $entity,
                         $context['comment'] ?? null,
                         $context['additional_to'] ?? [],
@@ -108,7 +135,7 @@ trait NotificationDispatcherTrait
                     break;
 
                 case 'response':
-                    $this->emailService->{$methods['email']}(
+                    $services['email']->{$methods['email']}(
                         $entity,
                         $context['comment'] ?? null,
                         $context['old_status'] ?? '',

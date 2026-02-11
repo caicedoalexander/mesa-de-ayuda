@@ -22,7 +22,7 @@ namespace App\Service\Traits;
  * ```php
  * class TicketService {
  *     use TicketSystemTrait;
- *     use GenericAttachmentTrait; // For getEntityNumber()
+ *     // FileStorageService injected via constructor (TRAIT-002)
  *
  *     private EmailService $emailService;
  *     private WhatsappService $whatsappService;

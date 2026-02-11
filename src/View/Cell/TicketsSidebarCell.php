@@ -5,6 +5,7 @@ namespace App\View\Cell;
 
 use Cake\I18n\DateTime;
 use Cake\ORM\Locator\LocatorAwareTrait;
+use App\Model\Enum\TicketStatus;
 use Cake\View\Cell;
 
 class TicketsSidebarCell extends Cell
@@ -50,7 +51,7 @@ class TicketsSidebarCell extends Cell
         if ($isAgent && $userId) {
             $agentStatusCounts = $ticketsTable->find()
                 ->select(['status', 'count' => $ticketsTable->find()->func()->count('*')])
-                ->where(['assignee_id' => $userId, 'status IN' => ['nuevo', 'abierto', 'pendiente']])
+                ->where(['assignee_id' => $userId, 'status IN' => TicketStatus::activeValues()])
                 ->group(['status'])
                 ->all()
                 ->combine('status', 'count')
@@ -60,7 +61,7 @@ class TicketsSidebarCell extends Cell
         // Calculate counts from grouped results
         $counts = [
             'sin_asignar' => (clone $baseQuery)
-                ->where(['assignee_id IS' => null, 'status !=' => 'resuelto'])
+                ->where(['assignee_id IS' => null, 'status !=' => TicketStatus::Resuelto->value])
                 ->count(),
             'todos_sin_resolver' => ($statusCounts['nuevo'] ?? 0) + ($statusCounts['abierto'] ?? 0) + ($statusCounts['pendiente'] ?? 0),
             'pendientes' => $isAgent ? ($agentStatusCounts['pendiente'] ?? 0) : ($statusCounts['pendiente'] ?? 0),
@@ -73,7 +74,7 @@ class TicketsSidebarCell extends Cell
         // Add "mis_tickets" count for agents
         if ($isAgent && $userId) {
             $counts['mis_tickets'] = $ticketsTable->find()
-                ->where(['assignee_id' => $userId, 'status !=' => 'resuelto'])
+                ->where(['assignee_id' => $userId, 'status !=' => TicketStatus::Resuelto->value])
                 ->count();
         }
 

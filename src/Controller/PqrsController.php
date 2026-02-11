@@ -9,6 +9,7 @@ use App\Controller\Traits\ServiceInitializerTrait;
 use App\Service\PqrsService;
 use App\Service\StatisticsService;
 use App\Service\ResponseService;
+use App\Model\Enum\Channel;
 use Cake\Event\EventInterface;
 
 /**
@@ -84,7 +85,7 @@ class PqrsController extends AppController
             $data['ip_address'] = $this->request->clientIp();
             $data['user_agent'] = $this->request->getHeaderLine('User-Agent');
             $data['source_url'] = $this->request->referer();
-            $data['channel'] = 'web';
+            $data['channel'] = Channel::Web->value;
 
             // Get uploaded files
             $files = [];

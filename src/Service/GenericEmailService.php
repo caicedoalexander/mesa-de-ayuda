@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Service\Traits\GenericAttachmentTrait;
 use App\Utility\SettingsEncryptionTrait;
 use Cake\Datasource\EntityInterface;
 use Cake\ORM\Locator\LocatorAwareTrait;
@@ -23,10 +22,10 @@ class GenericEmailService
 {
     use LocatorAwareTrait;
     use SettingsEncryptionTrait;
-    use GenericAttachmentTrait;
 
     private EmailTemplateService $templateService;
     private \App\Service\Renderer\NotificationRenderer $renderer;
+    private FileStorageService $fileStorageService;
     private ?array $systemConfig;
     private ?GmailService $gmailService = null;
 
@@ -40,11 +39,13 @@ class GenericEmailService
     public function __construct(
         ?array $systemConfig = null,
         ?EmailTemplateService $templateService = null,
-        ?\App\Service\Renderer\NotificationRenderer $renderer = null
+        ?\App\Service\Renderer\NotificationRenderer $renderer = null,
+        ?FileStorageService $fileStorageService = null
     ) {
         $this->systemConfig = $systemConfig;
         $this->templateService = $templateService ?? new EmailTemplateService();
         $this->renderer = $renderer ?? new \App\Service\Renderer\NotificationRenderer();
+        $this->fileStorageService = $fileStorageService ?? new FileStorageService(new S3Service());
     }
 
     /**
@@ -167,10 +168,10 @@ class GenericEmailService
                 }
             }
 
-            // Build attachment file paths using GenericAttachmentTrait
+            // Build attachment file paths using FileStorageService
             $attachmentPaths = [];
             foreach ($attachments as $attachment) {
-                $filePath = $this->getFullPath($attachment);
+                $filePath = $this->fileStorageService->getFullPath($attachment);
                 if (file_exists($filePath)) {
                     $attachmentPaths[] = $filePath;
                 }

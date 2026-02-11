@@ -9,6 +9,7 @@ use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use Cake\Cache\Cache;
 use Cake\Event\EventInterface;
+use App\Service\S3Service;
 
 /**
  * Users Model
@@ -167,29 +168,66 @@ class UsersTable extends Table
             return ['success' => false, 'message' => 'La imagen no debe superar 2MB'];
         }
 
-        // Create profile images directory if it doesn't exist
-        $uploadDir = WWW_ROOT . 'uploads' . DS . 'profile_images' . DS;
-        if (!is_dir($uploadDir)) {
-            if (!mkdir($uploadDir, 0755, true)) {
-                \Cake\Log\Log::error('Failed to create profile images directory', ['dir' => $uploadDir]);
-                return ['success' => false, 'message' => 'Error al crear directorio de imágenes'];
-            }
-        }
-
         // Generate unique filename
         $uniqueFilename = 'user_' . $userId . '_' . \Cake\Utility\Text::uuid() . '.' . $extension;
-        $fullPath = $uploadDir . $uniqueFilename;
-        $relativePath = 'uploads/profile_images/' . $uniqueFilename;
 
-        // Move uploaded file
-        try {
-            $uploadedFile->moveTo($fullPath);
-        } catch (\Exception $e) {
-            \Cake\Log\Log::error('Failed to save profile image', [
-                'error' => $e->getMessage(),
-                'path' => $fullPath,
-            ]);
-            return ['success' => false, 'message' => 'Error al guardar la imagen'];
+        // Check if S3 is enabled
+        $s3Service = new S3Service();
+        $useS3 = $s3Service->isEnabled();
+
+        $storagePath = null;
+
+        if ($useS3) {
+            // S3 upload path
+            $s3Key = 'profile_images/' . $uniqueFilename;
+
+            // Move to temp location first
+            $tempPath = sys_get_temp_dir() . DS . $uniqueFilename;
+            try {
+                $uploadedFile->moveTo($tempPath);
+
+                // Upload to S3
+                if (!$s3Service->uploadFile($tempPath, $s3Key, $mimeType)) {
+                    \Cake\Log\Log::error('Failed to upload profile image to S3', ['s3_key' => $s3Key]);
+                    @unlink($tempPath);
+                    return ['success' => false, 'message' => 'Error al subir la imagen a S3'];
+                }
+
+                // Clean up temp file
+                @unlink($tempPath);
+
+                // Storage path for S3 (just the S3 key)
+                $storagePath = $s3Key;
+            } catch (\Exception $e) {
+                \Cake\Log\Log::error('Failed to process profile image S3 upload', [
+                    'error' => $e->getMessage(),
+                ]);
+                @unlink($tempPath);
+                return ['success' => false, 'message' => 'Error al procesar la imagen'];
+            }
+        } else {
+            // Local storage (original behavior)
+            $uploadDir = WWW_ROOT . 'uploads' . DS . 'profile_images' . DS;
+            if (!is_dir($uploadDir)) {
+                if (!mkdir($uploadDir, 0755, true)) {
+                    \Cake\Log\Log::error('Failed to create profile images directory', ['dir' => $uploadDir]);
+                    return ['success' => false, 'message' => 'Error al crear directorio de imágenes'];
+                }
+            }
+
+            $fullPath = $uploadDir . $uniqueFilename;
+            try {
+                $uploadedFile->moveTo($fullPath);
+            } catch (\Exception $e) {
+                \Cake\Log\Log::error('Failed to save profile image', [
+                    'error' => $e->getMessage(),
+                    'path' => $fullPath,
+                ]);
+                return ['success' => false, 'message' => 'Error al guardar la imagen'];
+            }
+
+            // Storage path for local (with "uploads/" prefix)
+            $storagePath = 'uploads/profile_images/' . $uniqueFilename;
         }
 
         // Delete old profile image if exists
@@ -198,13 +236,13 @@ class UsersTable extends Table
             $this->deleteProfileImage($user->profile_image);
         }
 
-        return ['success' => true, 'filename' => $relativePath];
+        return ['success' => true, 'filename' => $storagePath];
     }
 
     /**
      * Delete a profile image file
      *
-     * @param string $filename Relative path to the profile image
+     * @param string $filename Relative path to the profile image or S3 key
      * @return bool Success status
      */
     public function deleteProfileImage(string $filename): bool
@@ -213,9 +251,19 @@ class UsersTable extends Table
             return false;
         }
 
-        $fullPath = WWW_ROOT . $filename;
-        if (file_exists($fullPath)) {
-            return @unlink($fullPath);
+        // Check if S3 is enabled
+        $s3Service = new S3Service();
+        $useS3 = $s3Service->isEnabled();
+
+        if ($useS3) {
+            // Delete from S3
+            return $s3Service->deleteFile($filename);
+        } else {
+            // Delete from local storage
+            $fullPath = WWW_ROOT . $filename;
+            if (file_exists($fullPath)) {
+                return @unlink($fullPath);
+            }
         }
 
         return false;
@@ -224,16 +272,35 @@ class UsersTable extends Table
     /**
      * Get profile image URL with fallback to default avatar
      *
-     * @param string|null $profileImage Profile image path
+     * @param string|null $profileImage Profile image path or S3 key
      * @return string URL to profile image or default avatar
      */
     public function getProfileImageUrl(?string $profileImage): string
     {
-        if ($profileImage && file_exists(WWW_ROOT . $profileImage)) {
-            return '/' . str_replace(DS, '/', $profileImage);
+        if (empty($profileImage)) {
+            // Return default avatar
+            return '/img/default-avatar.png';
         }
 
-        // Return default avatar
-        return '/img/default-avatar.png';
+        // Check if S3 is enabled
+        $s3Service = new S3Service();
+        $useS3 = $s3Service->isEnabled();
+
+        if ($useS3) {
+            // Generate presigned URL (valid for 60 minutes)
+            $presignedUrl = $s3Service->getPresignedUrl($profileImage, 60);
+            if ($presignedUrl) {
+                return $presignedUrl;
+            }
+            // If presigned URL fails, return default avatar
+            return '/img/default-avatar.png';
+        } else {
+            // Local file
+            if (file_exists(WWW_ROOT . $profileImage)) {
+                return '/' . str_replace(DS, '/', $profileImage);
+            }
+            // Return default avatar
+            return '/img/default-avatar.png';
+        }
     }
 }

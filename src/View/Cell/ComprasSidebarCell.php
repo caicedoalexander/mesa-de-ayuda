@@ -5,6 +5,7 @@ namespace App\View\Cell;
 
 use Cake\I18n\DateTime;
 use Cake\ORM\Locator\LocatorAwareTrait;
+use App\Model\Enum\CompraStatus;
 use Cake\View\Cell;
 
 /**
@@ -45,7 +46,7 @@ class ComprasSidebarCell extends Cell
         // Calculate counts from grouped results
         $counts = [
             'sin_asignar' => $comprasTable->find()
-                ->where(['assignee_id IS' => null, 'status NOT IN' => ['completado', 'rechazado', 'convertido']])
+                ->where(['assignee_id IS' => null, 'status NOT IN' => CompraStatus::resolvedValues()])
                 ->count(),
             'todos_sin_resolver' => ($statusCounts['nuevo'] ?? 0) + ($statusCounts['en_revision'] ?? 0) + ($statusCounts['aprobado'] ?? 0) + ($statusCounts['en_proceso'] ?? 0),
             'nuevos' => $statusCounts['nuevo'] ?? 0,
@@ -60,7 +61,7 @@ class ComprasSidebarCell extends Cell
         // Add "mis_compras" count for compras and admin
         if (($userRole === 'compras' || $userRole === 'admin') && $userId) {
             $counts['mis_compras'] = $comprasTable->find()
-                ->where(['assignee_id' => $userId, 'status NOT IN' => ['completado', 'rechazado', 'convertido']])
+                ->where(['assignee_id' => $userId, 'status NOT IN' => CompraStatus::resolvedValues()])
                 ->count();
         }
 
@@ -69,7 +70,7 @@ class ComprasSidebarCell extends Cell
         $counts['vencidos_sla'] = $comprasTable->find()
             ->where([
                 'sla_due_date <' => $now,
-                'status NOT IN' => ['completado', 'rechazado', 'convertido'],
+                'status NOT IN' => CompraStatus::resolvedValues(),
             ])
             ->count();
 

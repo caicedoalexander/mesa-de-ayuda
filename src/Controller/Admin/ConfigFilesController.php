@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
+use App\Service\S3Service;
 use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Log\Log;
@@ -53,6 +54,7 @@ class ConfigFilesController extends AppController
         $destinations = [
             'gmail' => [
                 'path' => CONFIG . 'google' . DS . 'client_secret.json',
+                's3_key' => 'config/google/client_secret.json',
                 'setting_key' => 'gmail_client_secret_path',
                 'success_message' => 'Gmail client_secret.json subido correctamente.'
             ],
@@ -64,36 +66,61 @@ class ConfigFilesController extends AppController
 
         $destination = $destinations[$fileType];
         $targetPath = $destination['path'];
+        $s3Key = $destination['s3_key'];
 
-        // Crear directorio si no existe
-        $dir = dirname($targetPath);
-        if (!is_dir($dir)) {
-            mkdir($dir, 0775, true);
-        }
+        // Check if S3 is enabled
+        $s3Service = new S3Service();
+        $useS3 = $s3Service->isEnabled();
 
         // Guardar archivo
         try {
-            $file->moveTo($targetPath);
+            if ($useS3) {
+                // Upload to S3
+                $tempPath = $file->getStream()->getMetadata('uri');
 
-            // Cambiar permisos para www-data
-            chmod($targetPath, 0664);
-            if (function_exists('posix_getpwnam')) {
-                $wwwData = posix_getpwnam('www-data');
-                if ($wwwData) {
-                    chown($targetPath, $wwwData['uid']);
-                    chgrp($targetPath, $wwwData['gid']);
+                if (!$s3Service->uploadFile($tempPath, $s3Key, $file->getClientMediaType())) {
+                    throw new \Exception('Failed to upload to S3');
                 }
+
+                // Actualizar setting con la clave S3
+                $this->_updateConfigPath($destination['setting_key'], $s3Key);
+
+                Log::info('Config file uploaded to S3', [
+                    'type' => $fileType,
+                    's3_key' => $s3Key,
+                    'user' => $this->Authentication->getIdentity()?->get('email')
+                ]);
+            } else {
+                // Local storage (comportamiento original)
+                // Crear directorio si no existe
+                $dir = dirname($targetPath);
+                if (!is_dir($dir)) {
+                    mkdir($dir, 0775, true);
+                }
+
+                $file->moveTo($targetPath);
+
+                // Cambiar permisos para www-data
+                chmod($targetPath, 0664);
+                if (function_exists('posix_getpwnam')) {
+                    $wwwData = posix_getpwnam('www-data');
+                    if ($wwwData) {
+                        chown($targetPath, $wwwData['uid']);
+                        chgrp($targetPath, $wwwData['gid']);
+                    }
+                }
+
+                // Actualizar setting con la ruta local
+                $this->_updateConfigPath($destination['setting_key'], $targetPath);
+
+                Log::info('Config file uploaded locally', [
+                    'type' => $fileType,
+                    'path' => $targetPath,
+                    'user' => $this->Authentication->getIdentity()?->get('email')
+                ]);
             }
 
-            // Actualizar setting en base de datos
-            $this->_updateConfigPath($destination['setting_key'], $targetPath);
-
             $this->Flash->success($destination['success_message']);
-            Log::info('Config file uploaded', [
-                'type' => $fileType,
-                'path' => $targetPath,
-                'user' => $this->Authentication->getIdentity()?->get('email')
-            ]);
         } catch (\Exception $e) {
             $this->Flash->error('Error al guardar el archivo: ' . $e->getMessage());
             Log::error('Config file upload failed', [
@@ -114,25 +141,57 @@ class ConfigFilesController extends AppController
      */
     public function download(string $type)
     {
-        $paths = [
-            'gmail' => CONFIG . 'google' . DS . 'client_secret.json',
+        $configs = [
+            'gmail' => [
+                'local_path' => CONFIG . 'google' . DS . 'client_secret.json',
+                's3_key' => 'config/google/client_secret.json',
+                'filename' => 'client_secret.json'
+            ],
         ];
 
-        if (!isset($paths[$type])) {
+        if (!isset($configs[$type])) {
             throw new NotFoundException('Archivo no encontrado.');
         }
 
-        $filePath = $paths[$type];
+        $config = $configs[$type];
+        $s3Service = new S3Service();
+        $useS3 = $s3Service->isEnabled();
 
-        if (!file_exists($filePath)) {
-            $this->Flash->error('El archivo de configuración aún no existe.');
-            return $this->redirect(['controller' => 'Settings', 'action' => 'index']);
+        if ($useS3) {
+            // Download from S3 to temp file
+            if (!$s3Service->fileExists($config['s3_key'])) {
+                $this->Flash->error('El archivo de configuración aún no existe en S3.');
+                return $this->redirect(['controller' => 'Settings', 'action' => 'index']);
+            }
+
+            $tempPath = sys_get_temp_dir() . DS . $config['filename'];
+            if (!$s3Service->downloadFile($config['s3_key'], $tempPath)) {
+                $this->Flash->error('Error al descargar el archivo desde S3.');
+                return $this->redirect(['controller' => 'Settings', 'action' => 'index']);
+            }
+
+            $this->response = $this->response->withFile(
+                $tempPath,
+                ['download' => true, 'name' => $config['filename']]
+            );
+
+            // Schedule temp file deletion after response
+            register_shutdown_function(function () use ($tempPath) {
+                @unlink($tempPath);
+            });
+        } else {
+            // Local file
+            $filePath = $config['local_path'];
+            if (!file_exists($filePath)) {
+                $this->Flash->error('El archivo de configuración aún no existe.');
+                return $this->redirect(['controller' => 'Settings', 'action' => 'index']);
+            }
+
+            $this->response = $this->response->withFile(
+                $filePath,
+                ['download' => true, 'name' => basename($filePath)]
+            );
         }
-
-        $this->response = $this->response->withFile(
-            $filePath,
-            ['download' => true, 'name' => basename($filePath)]
-        );
 
         return $this->response;
     }
@@ -147,25 +206,60 @@ class ConfigFilesController extends AppController
     {
         $this->request->allowMethod(['post', 'delete']);
 
-        $paths = [
-            'gmail' => CONFIG . 'google' . DS . 'client_secret.json',
+        $configs = [
+            'gmail' => [
+                'local_path' => CONFIG . 'google' . DS . 'client_secret.json',
+                's3_key' => 'config/google/client_secret.json',
+            ],
         ];
 
-        if (!isset($paths[$type])) {
+        if (!isset($configs[$type])) {
             throw new NotFoundException('Archivo no encontrado.');
         }
 
-        $filePath = $paths[$type];
+        $config = $configs[$type];
+        $s3Service = new S3Service();
+        $useS3 = $s3Service->isEnabled();
 
-        if (file_exists($filePath)) {
-            unlink($filePath);
-            $this->Flash->success('Archivo de configuración eliminado correctamente.');
-            Log::info('Config file deleted', [
-                'type' => $type,
-                'user' => $this->Authentication->getIdentity()?->get('email')
-            ]);
+        $deleted = false;
+
+        if ($useS3) {
+            // Delete from S3
+            if ($s3Service->fileExists($config['s3_key'])) {
+                $deleted = $s3Service->deleteFile($config['s3_key']);
+                if ($deleted) {
+                    Log::info('Config file deleted from S3', [
+                        'type' => $type,
+                        's3_key' => $config['s3_key'],
+                        'user' => $this->Authentication->getIdentity()?->get('email')
+                    ]);
+                }
+            } else {
+                $this->Flash->warning('El archivo ya no existe en S3.');
+                return $this->redirect(['controller' => 'Settings', 'action' => 'index']);
+            }
         } else {
-            $this->Flash->warning('El archivo ya no existe.');
+            // Delete from local storage
+            $filePath = $config['local_path'];
+            if (file_exists($filePath)) {
+                $deleted = unlink($filePath);
+                if ($deleted) {
+                    Log::info('Config file deleted locally', [
+                        'type' => $type,
+                        'path' => $filePath,
+                        'user' => $this->Authentication->getIdentity()?->get('email')
+                    ]);
+                }
+            } else {
+                $this->Flash->warning('El archivo ya no existe.');
+                return $this->redirect(['controller' => 'Settings', 'action' => 'index']);
+            }
+        }
+
+        if ($deleted) {
+            $this->Flash->success('Archivo de configuración eliminado correctamente.');
+        } else {
+            $this->Flash->error('Error al eliminar el archivo de configuración.');
         }
 
         return $this->redirect(['controller' => 'Settings', 'action' => 'index']);

@@ -5,6 +5,8 @@ namespace App\Service\Gmail;
 
 use Google\Service\Gmail;
 use Cake\Log\Log;
+use App\Service\Gmail\GmailHeader;
+use App\Utility\EmailParsingUtility;
 use Cake\ORM\Locator\LocatorAwareTrait;
 
 /**
@@ -53,16 +55,16 @@ class GmailMessageParser
             $headers = $message->getPayload()->getHeaders();
 
             // Parse To and CC recipients
-            $toHeader = $this->getHeader($headers, 'To');
-            $ccHeader = $this->getHeader($headers, 'Cc');
+            $toHeader = $this->getHeader($headers, GmailHeader::TO);
+            $ccHeader = $this->getHeader($headers, GmailHeader::CC);
 
             $data = [
                 'gmail_message_id' => $messageId,
                 'gmail_thread_id' => $message->getThreadId(),
-                'from' => $this->getHeader($headers, 'From'),
-                'to' => $this->getHeader($headers, 'To'),
-                'subject' => $this->getHeader($headers, 'Subject'),
-                'date' => $this->getHeader($headers, 'Date'),
+                'from' => $this->getHeader($headers, GmailHeader::FROM),
+                'to' => $this->getHeader($headers, GmailHeader::TO),
+                'subject' => $this->getHeader($headers, GmailHeader::SUBJECT),
+                'date' => $this->getHeader($headers, GmailHeader::DATE),
                 'email_to' => $this->parseRecipients($toHeader),
                 'email_cc' => $this->parseRecipients($ccHeader),
                 'body_html' => '',
@@ -103,14 +105,24 @@ class GmailMessageParser
     }
 
     /**
+     * Maximum MIME recursion depth to prevent stack overflow from malicious emails
+     */
+    private const MAX_MIME_DEPTH = 20;
+
+    /**
      * Extract message parts recursively (body, attachments, inline images)
      *
      * @param \Google\Service\Gmail\MessagePart $payload Message payload
      * @param array &$data Reference to data array to populate
+     * @param int $depth Current recursion depth (COM-002: prevents stack overflow)
      * @return void
      */
-    private function extractMessageParts($payload, array &$data): void
+    private function extractMessageParts($payload, array &$data, int $depth = 0): void
     {
+        if ($depth > self::MAX_MIME_DEPTH) {
+            Log::warning('MIME recursion depth exceeded', ['depth' => $depth]);
+            return;
+        }
         $mimeType = $payload->getMimeType();
         $parts = $payload->getParts();
         $body = $payload->getBody();
@@ -129,8 +141,8 @@ class GmailMessageParser
 
         if (!empty($filename)) {
             $headers = $payload->getHeaders();
-            $contentId = $this->getHeader($headers, 'Content-ID');
-            $contentDisposition = $this->getHeader($headers, 'Content-Disposition');
+            $contentId = $this->getHeader($headers, GmailHeader::CONTENT_ID);
+            $contentDisposition = $this->getHeader($headers, GmailHeader::CONTENT_DISPOSITION);
             $attachmentId = $body->getAttachmentId();
 
             $attachment = [
@@ -164,7 +176,7 @@ class GmailMessageParser
         // Recursively process parts
         if (!empty($parts)) {
             foreach ($parts as $part) {
-                $this->extractMessageParts($part, $data);
+                $this->extractMessageParts($part, $data, $depth + 1);
             }
         }
     }
@@ -178,25 +190,25 @@ class GmailMessageParser
     public function isAutoReply(array $headers): bool
     {
         // Check Auto-Submitted header
-        $autoSubmitted = $this->getHeader($headers, 'Auto-Submitted');
+        $autoSubmitted = $this->getHeader($headers, GmailHeader::AUTO_SUBMITTED);
         if (stripos($autoSubmitted, 'auto-replied') !== false || stripos($autoSubmitted, 'auto-generated') !== false) {
             return true;
         }
 
         // Check X-Autoreply header
-        $xAutoreply = $this->getHeader($headers, 'X-Autoreply');
+        $xAutoreply = $this->getHeader($headers, GmailHeader::X_AUTOREPLY);
         if (stripos($xAutoreply, 'yes') !== false) {
             return true;
         }
 
         // Check X-Autorespond header
-        $xAutorespond = $this->getHeader($headers, 'X-Autorespond');
+        $xAutorespond = $this->getHeader($headers, GmailHeader::X_AUTORESPOND);
         if (stripos($xAutorespond, 'yes') !== false) {
             return true;
         }
 
         // Check Precedence header
-        $precedence = $this->getHeader($headers, 'Precedence');
+        $precedence = $this->getHeader($headers, GmailHeader::PRECEDENCE);
         if (stripos($precedence, 'bulk') !== false || stripos($precedence, 'list') !== false || stripos($precedence, 'junk') !== false) {
             return true;
         }
@@ -213,13 +225,13 @@ class GmailMessageParser
     public function isSystemNotification(array $headers): bool
     {
         // Check 1: Custom Mesa de Ayuda notification header
-        $notificationHeader = $this->getHeader($headers, 'X-Mesa-Ayuda-Notification');
+        $notificationHeader = $this->getHeader($headers, GmailHeader::X_MESA_AYUDA_NOTIFICATION);
         if ($notificationHeader === 'true') {
             return true;
         }
 
         // Check 2: Sender is system email address
-        $from = $this->getHeader($headers, 'From');
+        $from = $this->getHeader($headers, GmailHeader::FROM);
         $fromEmail = $this->extractEmailAddress($from);
 
         $systemEmail = $this->getSystemEmail();
@@ -228,7 +240,7 @@ class GmailMessageParser
         }
 
         // Check 3: Subject contains notification patterns
-        $subject = $this->getHeader($headers, 'Subject');
+        $subject = $this->getHeader($headers, GmailHeader::SUBJECT);
         $notificationPatterns = [
             'Re: [Ticket #',
             'Re: [PQRS #',
@@ -254,13 +266,7 @@ class GmailMessageParser
      */
     public function getHeader(array $headers, string $name): string
     {
-        foreach ($headers as $header) {
-            if (strtolower($header->getName()) === strtolower($name)) {
-                return $header->getValue();
-            }
-        }
-
-        return '';
+        return EmailParsingUtility::getHeader($headers, $name);
     }
 
     /**
@@ -271,33 +277,7 @@ class GmailMessageParser
      */
     public function parseRecipients(string $recipientString): array
     {
-        if (empty($recipientString)) {
-            return [];
-        }
-
-        $recipients = [];
-
-        // Split by comma, but handle quoted names that may contain commas
-        preg_match_all('/(?:[^,"]|"[^"]*")+/', $recipientString, $matches);
-
-        foreach ($matches[0] as $recipient) {
-            $recipient = trim($recipient);
-            if (empty($recipient)) {
-                continue;
-            }
-
-            $email = $this->extractEmailAddress($recipient);
-            $name = $this->extractName($recipient);
-
-            if (!empty($email)) {
-                $recipients[] = [
-                    'name' => $name,
-                    'email' => $email,
-                ];
-            }
-        }
-
-        return $recipients;
+        return EmailParsingUtility::parseRecipients($recipientString);
     }
 
     /**
@@ -308,17 +288,7 @@ class GmailMessageParser
      */
     public function extractEmailAddress(string $from): string
     {
-        // Match email in angle brackets: "Name <email@domain.com>"
-        if (preg_match('/<([^>]+)>/', $from, $matches)) {
-            return strtolower(trim($matches[1]));
-        }
-
-        // Just email address without brackets
-        if (filter_var(trim($from), FILTER_VALIDATE_EMAIL)) {
-            return strtolower(trim($from));
-        }
-
-        return '';
+        return EmailParsingUtility::extractEmailAddress($from);
     }
 
     /**
@@ -329,13 +299,7 @@ class GmailMessageParser
      */
     private function extractName(string $from): string
     {
-        // Match "Name <email>"
-        if (preg_match('/^([^<]+)</', $from, $matches)) {
-            $name = trim($matches[1], " \t\n\r\0\x0B\"");
-            return $name;
-        }
-
-        return '';
+        return EmailParsingUtility::extractName($from);
     }
 
     /**

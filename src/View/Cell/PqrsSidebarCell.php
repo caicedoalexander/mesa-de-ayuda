@@ -5,6 +5,7 @@ namespace App\View\Cell;
 
 use Cake\I18n\DateTime;
 use Cake\ORM\Locator\LocatorAwareTrait;
+use App\Model\Enum\PqrsStatus;
 use Cake\View\Cell;
 
 /**
@@ -45,7 +46,7 @@ class PqrsSidebarCell extends Cell
         // Calculate counts from grouped results
         $counts = [
             'sin_asignar' => $pqrsTable->find()
-                ->where(['assignee_id IS' => null, 'status NOT IN' => ['resuelto', 'cerrado']])
+                ->where(['assignee_id IS' => null, 'status NOT IN' => PqrsStatus::resolvedValues()])
                 ->count(),
             'todos_sin_resolver' => ($statusCounts['nuevo'] ?? 0) + ($statusCounts['en_revision'] ?? 0) + ($statusCounts['en_proceso'] ?? 0),
             'nuevas' => $statusCounts['nuevo'] ?? 0,
@@ -58,14 +59,14 @@ class PqrsSidebarCell extends Cell
         // Add "mis_pqrs" count for agents, servicio_cliente, compras and admin
         if (($userRole === 'agent' || $userRole === 'servicio_cliente' || $userRole === 'compras' || $userRole === 'admin') && $userId) {
             $counts['mis_pqrs'] = $pqrsTable->find()
-                ->where(['assignee_id' => $userId, 'status NOT IN' => ['resuelto', 'cerrado']])
+                ->where(['assignee_id' => $userId, 'status NOT IN' => PqrsStatus::resolvedValues()])
                 ->count();
         }
 
         // Get counts by type with GROUP BY
         $typeCountsRaw = $pqrsTable->find()
             ->select(['type', 'count' => $pqrsTable->find()->func()->count('*')])
-            ->where(['status NOT IN' => ['resuelto', 'cerrado']])
+            ->where(['status NOT IN' => PqrsStatus::resolvedValues()])
             ->group(['type'])
             ->all()
             ->combine('type', 'count')

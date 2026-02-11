@@ -6,6 +6,7 @@ namespace App\Service;
 use Cake\Datasource\EntityInterface;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use Cake\Log\Log;
+use App\Model\Enum\EmailTemplate;
 use Cake\Core\Configure;
 
 /**
@@ -31,21 +32,25 @@ class EmailService
     private ?array $systemConfig;
 
     /**
-     * Constructor
+     * Constructor with full Dependency Injection
+     *
+     * Resolves: ARCH-006, ARCH-008 (Dependencies not injected)
      *
      * @param array|null $systemConfig Optional system configuration to avoid redundant DB queries
      * @param GenericEmailService|null $emailSender Optional email sender (for DI/testing)
      * @param EmailTemplateService|null $templateService Optional template service (for DI/testing)
+     * @param \App\Service\Renderer\NotificationRenderer|null $renderer Optional renderer (for DI/testing)
      */
     public function __construct(
         ?array $systemConfig = null,
         ?GenericEmailService $emailSender = null,
-        ?EmailTemplateService $templateService = null
+        ?EmailTemplateService $templateService = null,
+        ?\App\Service\Renderer\NotificationRenderer $renderer = null
     ) {
         $this->systemConfig = $systemConfig;
         $this->templateService = $templateService ?? new EmailTemplateService();
         $this->emailSender = $emailSender ?? new GenericEmailService($systemConfig, $this->templateService);
-        $this->renderer = new \App\Service\Renderer\NotificationRenderer();
+        $this->renderer = $renderer ?? new \App\Service\Renderer\NotificationRenderer();
     }
 
     // ===================================================================
@@ -76,7 +81,7 @@ class EmailService
         // Send using generic service
         return $this->emailSender->sendTemplateEmail(
             'ticket',
-            'nuevo_ticket',
+            EmailTemplate::NuevoTicket->value,
             $ticket,
             [],
             [],
@@ -101,7 +106,7 @@ class EmailService
 
         $assigneeName = $ticket->assignee ? $ticket->assignee->name : 'No asignado';
 
-        return $this->emailSender->sendTemplateEmail('ticket', 'ticket_estado', $ticket, [
+        return $this->emailSender->sendTemplateEmail('ticket', EmailTemplate::TicketEstado->value, $ticket, [
             'status_change_section' => $this->renderer->renderStatusChangeHtml($oldStatus, $newStatus, $assigneeName),
         ]);
     }
@@ -129,9 +134,9 @@ class EmailService
             $commentAttachments = $this->getCommentAttachments($ticket->attachments ?? [], $comment->id);
 
             // Get template
-            $template = $this->templateService->getTemplate('nuevo_comentario');
+            $template = $this->templateService->getTemplate(EmailTemplate::NuevoComentario->value);
             if (!$template) {
-                Log::error('Email template not found: nuevo_comentario');
+                Log::error('Email template not found: ' . EmailTemplate::NuevoComentario->value);
                 return false;
             }
 
@@ -200,9 +205,9 @@ class EmailService
             $commentAttachments = $this->getCommentAttachments($ticket->attachments ?? [], $comment->id);
 
             // Get template
-            $template = $this->templateService->getTemplate('ticket_respuesta');
+            $template = $this->templateService->getTemplate(EmailTemplate::TicketRespuesta->value);
             if (!$template) {
-                Log::error('Email template not found: ticket_respuesta');
+                Log::error('Email template not found: ' . EmailTemplate::TicketRespuesta->value);
                 return false;
             }
 
@@ -262,7 +267,7 @@ class EmailService
      */
     public function sendNewPqrsNotification($pqrs): bool
     {
-        return $this->emailSender->sendTemplateEmail('pqrs', 'nuevo_pqrs', $pqrs, [
+        return $this->emailSender->sendTemplateEmail('pqrs', EmailTemplate::NuevoPqrs->value, $pqrs, [
             'system_title' => 'Sistema de Atención al Cliente',
         ]);
     }
@@ -283,7 +288,7 @@ class EmailService
 
         $assigneeName = $pqrs->assignee ? $pqrs->assignee->name : 'No asignado';
 
-        return $this->emailSender->sendTemplateEmail('pqrs', 'pqrs_estado', $pqrs, [
+        return $this->emailSender->sendTemplateEmail('pqrs', EmailTemplate::PqrsEstado->value, $pqrs, [
             'status_change_section' => $this->renderer->renderStatusChangeHtml($oldStatus, $newStatus, $assigneeName),
             'system_title' => 'Sistema de Atención al Cliente',
         ]);
@@ -317,9 +322,9 @@ class EmailService
             $commentAttachments = $this->getCommentAttachments($pqrs->pqrs_attachments ?? [], $comment->id, 'pqrs_comment_id');
 
             // Get template
-            $template = $this->templateService->getTemplate('pqrs_comentario');
+            $template = $this->templateService->getTemplate(EmailTemplate::PqrsComentario->value);
             if (!$template) {
-                Log::error('Email template not found: pqrs_comentario');
+                Log::error('Email template not found: ' . EmailTemplate::PqrsComentario->value);
                 return false;
             }
 
@@ -394,9 +399,9 @@ class EmailService
             );
 
             // Get template
-            $template = $this->templateService->getTemplate('pqrs_respuesta');
+            $template = $this->templateService->getTemplate(EmailTemplate::PqrsRespuesta->value);
             if (!$template) {
-                Log::error('Email template not found: pqrs_respuesta');
+                Log::error('Email template not found: ' . EmailTemplate::PqrsRespuesta->value);
                 return false;
             }
 
@@ -471,7 +476,7 @@ class EmailService
             ? $this->renderer->formatDate($compra->sla_due_date)
             : 'No definido';
 
-        return $this->emailSender->sendTemplateEmail('compra', 'nueva_compra', $compra, [
+        return $this->emailSender->sendTemplateEmail('compra', EmailTemplate::NuevaCompra->value, $compra, [
             'assignee_name' => $compra->assignee->name,
             'priority' => ucfirst($compra->priority),
             'sla_due_date' => $slaDate,
@@ -494,7 +499,7 @@ class EmailService
 
         $assigneeName = $compra->assignee ? $compra->assignee->name : 'No asignado';
 
-        return $this->emailSender->sendTemplateEmail('compra', 'compra_estado', $compra, [
+        return $this->emailSender->sendTemplateEmail('compra', EmailTemplate::CompraEstado->value, $compra, [
             'status_change_section' => $this->renderer->renderStatusChangeHtml($oldStatus, $newStatus, $assigneeName),
         ]);
     }
@@ -531,9 +536,9 @@ class EmailService
             );
 
             // Get template
-            $template = $this->templateService->getTemplate('compra_comentario');
+            $template = $this->templateService->getTemplate(EmailTemplate::CompraComentario->value);
             if (!$template) {
-                Log::error('Email template not found: compra_comentario');
+                Log::error('Email template not found: ' . EmailTemplate::CompraComentario->value);
                 return false;
             }
 
@@ -610,9 +615,9 @@ class EmailService
             );
 
             // Get template
-            $template = $this->templateService->getTemplate('compra_respuesta');
+            $template = $this->templateService->getTemplate(EmailTemplate::CompraRespuesta->value);
             if (!$template) {
-                Log::error('Email template not found: compra_respuesta');
+                Log::error('Email template not found: ' . EmailTemplate::CompraRespuesta->value);
                 return false;
             }
 

@@ -9,6 +9,8 @@ use App\Service\Traits\TicketSystemTrait;
 use App\Service\Traits\EntityConversionTrait;
 use Cake\I18n\DateTime;
 use Cake\Log\Log;
+use App\Model\Enum\CompraStatus;
+use App\Model\Enum\Channel;
 use Cake\ORM\Locator\LocatorAwareTrait;
 
 class ComprasService
@@ -16,13 +18,26 @@ class ComprasService
     use LocatorAwareTrait;
     use TicketSystemTrait;
     use \App\Service\Traits\NotificationDispatcherTrait;
-    use \App\Service\Traits\GenericAttachmentTrait;
     use EntityConversionTrait;
 
     private EmailService $emailService;
     private WhatsappService $whatsappService;
     private SlaManagementService $slaService;
+    private FileStorageService $fileStorageService;
     private ?array $systemConfig;
+
+    /**
+     * Get notification services for NotificationDispatcherTrait (ARCH-016)
+     *
+     * @return array{email: EmailService, whatsapp: WhatsappService}
+     */
+    protected function getNotificationServices(): array
+    {
+        return [
+            'email' => $this->emailService,
+            'whatsapp' => $this->whatsappService,
+        ];
+    }
 
     /**
      * Constructor with Dependency Injection
@@ -38,12 +53,14 @@ class ComprasService
         ?array $systemConfig = null,
         ?EmailService $emailService = null,
         ?WhatsappService $whatsappService = null,
-        ?SlaManagementService $slaService = null
+        ?SlaManagementService $slaService = null,
+        ?FileStorageService $fileStorageService = null
     ) {
         $this->systemConfig = $systemConfig;
         $this->emailService = $emailService ?? new EmailService($systemConfig);
         $this->whatsappService = $whatsappService ?? new WhatsappService($systemConfig);
         $this->slaService = $slaService ?? new SlaManagementService();
+        $this->fileStorageService = $fileStorageService ?? new FileStorageService(new S3Service());
     }
 
     /**
@@ -116,11 +133,11 @@ class ComprasService
                 'original_ticket_number' => $ticket->ticket_number,
                 'subject' => $ticket->subject,
                 'description' => $ticket->description,
-                'status' => 'nuevo',
+                'status' => CompraStatus::Nuevo->value,
                 'priority' => $ticket->priority,
                 'requester_id' => $ticket->requester_id,
                 'assignee_id' => $data['assignee_id'] ?? null,
-                'channel' => $ticket->channel ?? 'email',
+                'channel' => $ticket->channel ?? Channel::Email->value,
                 'email_to' => $ticket->email_to,  // Copy email recipients
                 'email_cc' => $ticket->email_cc,  // Copy CC recipients (managers, etc.)
                 'sla_due_date' => $slaDeadlines['resolution_sla_due'], // Legacy field
@@ -266,7 +283,7 @@ class ComprasService
                     'resolution_sla_due <' => new DateTime(),
                     'sla_due_date <' => new DateTime(), // Legacy field support
                 ],
-                'status NOT IN' => ['completado', 'rechazado']
+                'status NOT IN' => [CompraStatus::Completado->value, CompraStatus::Rechazado->value]
             ])
             ->contain(['Requesters', 'Assignees'])
             ->order(['resolution_sla_due' => 'ASC'])
@@ -315,7 +332,7 @@ class ComprasService
      */
 
     /**
-     * Save uploaded file for compra (using GenericAttachmentTrait)
+     * Save uploaded file for compra (using FileStorageService)
      *
      * @param Compra $compra Compra entity
      * @param \Psr\Http\Message\UploadedFileInterface $file Uploaded file
@@ -329,7 +346,7 @@ class ComprasService
         ?int $commentId = null,
         ?int $userId = null
     ): ?\App\Model\Entity\ComprasAttachment {
-        $result = $this->saveGenericUploadedFile('compra', $compra, $file, $commentId, $userId);
+        $result = $this->fileStorageService->saveUploadedFile('compra', $compra, $file, $commentId, $userId);
         assert($result instanceof \App\Model\Entity\ComprasAttachment || $result === null);
         return $result;
     }

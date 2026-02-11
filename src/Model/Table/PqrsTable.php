@@ -8,6 +8,9 @@ use App\Model\Table\Traits\NumberGeneratorTrait;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
+use App\Model\Enum\Channel;
+use App\Model\Enum\PqrsStatus;
+use App\Model\Enum\Priority;
 use Cake\Validation\Validator;
 
 /**
@@ -116,14 +119,14 @@ class PqrsTable extends Table
             ->maxLength('status', 20)
             ->requirePresence('status', 'create')
             ->notEmptyString('status')
-            ->inList('status', ['nuevo', 'en_revision', 'en_proceso', 'resuelto', 'cerrado']);
+            ->inList('status', PqrsStatus::values());
 
         $validator
             ->scalar('priority')
             ->maxLength('priority', 20)
             ->requirePresence('priority', 'create')
             ->notEmptyString('priority')
-            ->inList('priority', ['baja', 'media', 'alta', 'urgente']);
+            ->inList('priority', Priority::values());
 
         $validator
             ->scalar('requester_name')
@@ -159,7 +162,7 @@ class PqrsTable extends Table
             ->scalar('channel')
             ->maxLength('channel', 20)
             ->notEmptyString('channel')
-            ->inList('channel', ['web', 'whatsapp']);
+            ->inList('channel', [Channel::Web->value, Channel::Whatsapp->value]);
 
         $validator
             ->integer('assignee_id')
@@ -230,7 +233,7 @@ class PqrsTable extends Table
         return [
             'tableAlias' => 'Pqrs',
             'numberField' => 'pqrs_number',
-            'resolvedStatuses' => ['resuelto', 'cerrado'],
+            'resolvedStatuses' => PqrsStatus::resolvedValues(),
             'searchFields' => [
                 'Pqrs.pqrs_number',
                 'Pqrs.subject',

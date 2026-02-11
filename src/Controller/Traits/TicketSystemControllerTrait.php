@@ -3,7 +3,8 @@ declare(strict_types=1);
 
 namespace App\Controller\Traits;
 
-use App\Service\Traits\GenericAttachmentTrait;
+use App\Service\FileStorageService;
+use App\Service\S3Service;
 
 /**
  * TicketSystemControllerTrait
@@ -44,8 +45,20 @@ use App\Service\Traits\GenericAttachmentTrait;
  */
 trait TicketSystemControllerTrait
 {
-    // Attachment handling for file downloads
-    use GenericAttachmentTrait;
+    private ?FileStorageService $fileStorageService = null;
+
+    /**
+     * Get FileStorageService instance (lazy-loaded)
+     *
+     * @return FileStorageService
+     */
+    protected function getFileStorageService(): FileStorageService
+    {
+        if ($this->fileStorageService === null) {
+            $this->fileStorageService = new FileStorageService(new S3Service());
+        }
+        return $this->fileStorageService;
+    }
 
     // View data normalization
     use ViewDataNormalizerTrait;

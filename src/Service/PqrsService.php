@@ -6,6 +6,9 @@ namespace App\Service;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use App\Service\EmailService;
 use App\Service\WhatsappService;
+use App\Model\Enum\PqrsStatus;
+use App\Model\Enum\Channel;
+use App\Model\Enum\Priority;
 
 /**
  * PQRS Service
@@ -24,12 +27,25 @@ class PqrsService
     use LocatorAwareTrait;
     use \App\Service\Traits\TicketSystemTrait;
     use \App\Service\Traits\NotificationDispatcherTrait;
-    use \App\Service\Traits\GenericAttachmentTrait;
 
     private EmailService $emailService;
     private WhatsappService $whatsappService;
     private SlaManagementService $slaService;
+    private FileStorageService $fileStorageService;
     private ?array $systemConfig;
+
+    /**
+     * Get notification services for NotificationDispatcherTrait (ARCH-016)
+     *
+     * @return array{email: EmailService, whatsapp: WhatsappService}
+     */
+    protected function getNotificationServices(): array
+    {
+        return [
+            'email' => $this->emailService,
+            'whatsapp' => $this->whatsappService,
+        ];
+    }
 
     /**
      * Constructor with Dependency Injection
@@ -45,12 +61,14 @@ class PqrsService
         ?array $systemConfig = null,
         ?EmailService $emailService = null,
         ?WhatsappService $whatsappService = null,
-        ?SlaManagementService $slaService = null
+        ?SlaManagementService $slaService = null,
+        ?FileStorageService $fileStorageService = null
     ) {
         $this->systemConfig = $systemConfig;
         $this->emailService = $emailService ?? new EmailService($systemConfig);
         $this->whatsappService = $whatsappService ?? new WhatsappService($systemConfig);
         $this->slaService = $slaService ?? new SlaManagementService();
+        $this->fileStorageService = $fileStorageService ?? new FileStorageService(new S3Service());
     }
 
     /**
@@ -82,9 +100,9 @@ class PqrsService
             'type' => $type,
             'subject' => $formData['subject'] ?? '',
             'description' => $formData['description'] ?? '',
-            'status' => 'nuevo',
-            'priority' => $formData['priority'] ?? 'media',
-            'channel' => 'web',
+            'status' => PqrsStatus::Nuevo->value,
+            'priority' => $formData['priority'] ?? Priority::Media->value,
+            'channel' => Channel::Web->value,
             'first_response_sla_due' => $slaDeadlines['first_response_sla_due'],
             'resolution_sla_due' => $slaDeadlines['resolution_sla_due'],
         ]);
@@ -116,7 +134,7 @@ class PqrsService
     }
 
     /**
-     * Save uploaded file (using GenericAttachmentTrait)
+     * Save uploaded file (using FileStorageService)
      *
      * @param \App\Model\Entity\Pqr $pqrs PQRS entity
      * @param \Psr\Http\Message\UploadedFileInterface $file Uploaded file
@@ -130,7 +148,7 @@ class PqrsService
         ?int $commentId = null,
         ?int $userId = null
     ): ?\App\Model\Entity\PqrsAttachment {
-        $result = $this->saveGenericUploadedFile('pqrs', $pqrs, $file, $commentId, $userId);
+        $result = $this->fileStorageService->saveUploadedFile('pqrs', $pqrs, $file, $commentId, $userId);
         assert($result instanceof \App\Model\Entity\PqrsAttachment || $result === null);
         return $result;
     }
@@ -199,7 +217,7 @@ class PqrsService
         return $pqrsTable->find()
             ->where([
                 'resolution_sla_due <' => new \Cake\I18n\DateTime(),
-                'status NOT IN' => ['completado', 'cerrado', 'resuelto']
+                'status NOT IN' => [PqrsStatus::Resuelto->value, PqrsStatus::Cerrado->value]
             ])
             ->order(['resolution_sla_due' => 'ASC'])
             ->toArray();

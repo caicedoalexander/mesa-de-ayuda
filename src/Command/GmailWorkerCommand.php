@@ -191,7 +191,7 @@ class GmailWorkerCommand extends Command
             return false;
         }
 
-        // Check for client_secret.json file
+        // Check for client_secret.json file (local or S3)
         $clientSecretPath = $settingsTable->find()
             ->where(['setting_key' => 'gmail_client_secret_path'])
             ->first();
@@ -200,11 +200,19 @@ class GmailWorkerCommand extends Command
             return false;
         }
 
-        if (!file_exists($clientSecretPath->setting_value)) {
-            return false;
+        // Check if file exists locally
+        if (file_exists($clientSecretPath->setting_value)) {
+            return true;
         }
 
-        return true;
+        // Check if S3 is enabled and file exists in S3
+        $s3Service = new \App\Service\S3Service();
+        if ($s3Service->isEnabled()) {
+            // Assume it's an S3 key if not found locally
+            return $s3Service->fileExists($clientSecretPath->setting_value);
+        }
+
+        return false;
     }
 
     /**

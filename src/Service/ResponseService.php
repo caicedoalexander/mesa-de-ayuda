@@ -27,6 +27,19 @@ class ResponseService
     private ?array $systemConfig;
 
     /**
+     * Get notification services for NotificationDispatcherTrait (ARCH-016)
+     *
+     * @return array{email: EmailService, whatsapp: WhatsappService}
+     */
+    protected function getNotificationServices(): array
+    {
+        return [
+            'email' => $this->emailService,
+            'whatsapp' => $this->whatsappService,
+        ];
+    }
+
+    /**
      * Constructor with Dependency Injection
      *
      * Resolves: ARCH-007 (Incomplete DI in ResponseService)
@@ -74,14 +87,6 @@ class ResponseService
         // Frontend sends these as JSON strings, so we need to decode them
         $emailTo = $this->decodeEmailRecipients($data['email_to'] ?? null);
         $emailCc = $this->decodeEmailRecipients($data['email_cc'] ?? null);
-
-        // DEBUG: Log recipients for troubleshooting
-        Log::debug('Response email recipients', [
-            'raw_email_to' => $data['email_to'] ?? null,
-            'raw_email_cc' => $data['email_cc'] ?? null,
-            'decoded_email_to' => $emailTo,
-            'decoded_email_cc' => $emailCc,
-        ]);
 
         $hasComment = !empty(trim($commentBody));
 

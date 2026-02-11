@@ -4,626 +4,291 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Mesa de Ayuda** - An enterprise-grade integrated corporate management system built on CakePHP 5.x. This is a multi-module platform handling:
-- **Tickets** (Helpdesk/Internal Support)
-- **Compras** (Purchase Requests)
-- **PQRS** (External Customer Requests)
+Mesa de Ayuda is a CakePHP 5.x enterprise platform integrating three critical business modules:
+- **Soporte Interno (Helpdesk)**: Internal IT support ticketing system with Gmail-to-Ticket automation
+- **Gestión de Compras**: Procurement and purchase request management with approval workflows
+- **PQRS (External)**: Public-facing customer feedback system (Petitions, Complaints, Claims, Suggestions)
 
-The system integrates with Gmail API, n8n automation workflows, and WhatsApp Business (Evolution API) for comprehensive business process automation.
+The system features deep integrations with Gmail (OAuth2), WhatsApp Business (Evolution API), n8n automation platform, and AWS S3 for file storage.
 
-## Development Commands
+## Essential Commands
 
-### Essential Commands
-
+### Development
 ```bash
-# Install dependencies
-composer install
-
-# Development server (runs on http://localhost:8765)
+# Start development server
 bin/cake server
 
-# Database migrations
-bin/cake migrations migrate        # Apply pending migrations
-bin/cake migrations seed          # Seed test/demo data
+# Clear all caches
+bin/cake cache clear_all
 
-# Code quality checks
-composer check                    # Run all checks (tests + linting + analysis)
-composer test                     # Run PHPUnit tests
-composer cs-check                 # Check code style (PHP CodeSniffer)
-composer cs-fix                   # Auto-fix code style issues
-composer stan                     # Run PHPStan static analysis (level 5)
-```
+# Run migrations
+bin/cake migrations migrate
 
-### CLI Commands
+# Run database seeds
+bin/cake migrations seed
 
-```bash
-# Import Gmail emails and convert to tickets
-bin/cake import_gmail
+# Import Gmail (manual trigger)
+bin/cake import_gmail --max 50 --query "is:unread"
 
 # Test email configuration
 bin/cake test_email
 ```
 
-### Code Generation (Bake)
-
+### Docker Operations
 ```bash
-# Generate model classes
-bin/cake bake model {ModelName}
+# Development mode
+docker-compose up -d --build
 
-# Generate controller
-bin/cake bake controller {ControllerName}
+# Production mode
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
-# Generate template
-bin/cake bake template {ControllerName}
+# View logs
+docker-compose logs -f [service_name]  # web, worker, nginx
+
+# Execute commands in container
+docker-compose exec web php bin/cake.php migrations migrate
+docker-compose exec web php bin/cake.php cache clear_all
+
+# Restart Gmail worker
+docker-compose restart worker
 ```
 
-## Architecture Overview
+Refer to DOCKER.md for comprehensive Docker deployment instructions.
+
+## Architecture
 
 ### Service Layer Pattern
+Business logic is encapsulated in service classes (`src/Service/`), NOT in controllers or models. Services handle:
+- Cross-cutting concerns (notifications, file uploads, external API calls)
+- Complex workflows (ticket creation from email, status changes, approval flows)
+- Integration with external systems (Gmail, WhatsApp, n8n, S3)
 
-Business logic is **not** in controllers. Controllers are thin request handlers that delegate to service classes:
+**Key Services:**
+- `GmailService`: Gmail API OAuth2, email fetching, parsing, attachment downloads
+- `TicketService`: Ticket lifecycle, email-to-ticket conversion, notifications
+- `ComprasService`: Purchase request workflows, approvals
+- `PqrsService`: External PQRS management
+- `WhatsappService`: WhatsApp notifications via Evolution API
+- `N8nService`: Webhook integration for AI-powered tag assignment
+- `EmailService`: Transactional email sending
+- `S3Service`: AWS S3 file uploads and downloads
+- `SlaManagementService`: SLA tracking and enforcement
+- `StatisticsService`: Dashboard metrics and reporting
 
-- **TicketService** - Ticket lifecycle, creation, assignment, status changes
-- **ComprasService** - Purchase request processing and workflow
-- **PqrsService** - External customer request handling
-- **SlaManagementService** - SLA calculation and management for all modules
-- **GmailService** - Email-to-ticket conversion, Gmail API integration
-- **WhatsappService** - WhatsApp notifications via Evolution API
-- **N8nService** - n8n webhook integration, AI-powered tag classification
-- **EmailService** - Email template rendering and sending
-- **StatisticsService** - Analytics and reporting
-- **ResponseService** - Standardized JSON response formatting
+### Service Traits for Code Reuse
+Located in `src/Service/Traits/`, these traits eliminate code duplication:
+- `TicketSystemTrait`: Shared ticket/PQRS/compras logic (status changes, assignments)
+- `NotificationDispatcherTrait`: Unified WhatsApp and email notification dispatching
+- `GenericAttachmentTrait`: File upload handling for all modules
+- `StatisticsServiceTrait`: Common statistical calculations
+- `EntityConversionTrait`: Entity-to-array conversions with computed properties
 
-**Critical Rule**: When adding new features, create or extend services rather than putting logic in controllers.
-
-### Controller Architecture
-
-Controllers use traits for reusable logic:
-
-- **ServiceInitializerTrait** - Lazy service injection pattern
-- **StatisticsControllerTrait** - Statistics rendering logic
-- **TicketSystemControllerTrait** - Common ticket operations
-- **ViewDataNormalizerTrait** - View data preparation
-
-Each controller action should:
-1. Validate request
-2. Call appropriate service method(s)
-3. Handle response (redirect or render view)
-
-### Model Relationships
-
-The three main modules (Tickets, Compras, PQRS) follow parallel structures:
-
-**Ticket Module:**
-- Ticket (main entity)
-- TicketComment
-- TicketHistory (audit trail)
-- TicketFollower
-- TicketTag
-- Attachment (polymorphic)
-
-**Compras Module:**
-- Compra (main entity)
-- ComprasComment
-- ComprasHistory
-- ComprasAttachment
-
-**PQRS Module:**
-- Pqr (main entity)
-- PqrsComment
-- PqrsHistory
-- PqrsAttachment
-
-**Shared Entities:**
-- User (with roles: Admin, Agent, Compras, Requester, Servicio Cliente)
-- Organization (multi-tenancy)
-- Tag (categorization)
-- SystemSetting (configuration with encryption support)
-- EmailTemplate (dynamic email content)
-
-### Gmail Integration Architecture
-
-The Gmail integration uses OAuth2 and implements intelligent email threading to prevent duplicate tickets:
-
-**Core Components:**
-1. **GmailService** - API authentication, email parsing, and filtering
-2. **TicketService** - Email-to-ticket/comment conversion with threading logic
-3. **ImportGmailCommand** - Automated email processing pipeline
-
-**Email Threading (Added Jan 2026):**
-
-The system automatically converts email replies to existing tickets into comments instead of creating duplicate tickets.
-
-**Threading Logic (4-filter process):**
-1. **Auto-reply detection** - Skips out-of-office and automated responses
-2. **Notification detection** - Ignores responses to system notifications (prevents email loops)
-3. **Duplicate check** - Prevents reprocessing same `gmail_message_id`
-4. **Thread matching** - Checks `gmail_thread_id`:
-   - If thread exists → Creates comment via `createCommentFromEmail()`
-   - If new thread → Creates ticket via `createFromEmail()`
-
-**Security & Authorization:**
-- Only recipients in original To/CC can comment via email (recipient validation)
-- Unauthorized senders are rejected but email is marked read
-- All email headers sanitized to prevent CRLF injection attacks
-- Attachments validated against allowed file types before processing
-
-**Auto-Reply Detection:**
-Detects and filters automated responses using standard email headers:
-- `Auto-Submitted: auto-replied`
-- `X-Autoreply: yes`
-- `X-Autorespond: yes`
-- `Precedence: auto_reply` / `bulk` / `junk`
-
-**Notification Detection (Enhanced Jan 2026):**
-Multi-layered detection to prevent email loops from replies to system notifications:
-1. **Custom header check** - `X-Mesa-Ayuda-Notification: true` (added to all outgoing notifications)
-2. **Sender verification** - Detects if email is FROM system address (`gmail_user_email`)
-3. **Subject pattern matching** - Identifies replies to notification subjects (`Re: [Ticket #`, `Re: [PQRS #`, `Re: [Compra #`)
-
-Note: Custom headers don't propagate when users reply, so layers 2-3 are critical for reliability.
-
-**Key Features:**
-- Email attachments properly associated with comments
-- Comments created via email do NOT trigger notifications (prevents infinite loops)
-- Closed tickets can receive comments without reopening
-- New users auto-created if sender is in original To/CC
-- Console output shows: Created tickets, Comments added, Skipped, Errors
-
-**Important Database Fields:**
-- `tickets.gmail_thread_id` - Groups related emails (threading key)
-- `tickets.gmail_message_id` - Unique message identifier (duplicate prevention)
-- `tickets.email_to` - Original To recipients (JSON array, used for authorization)
-- `tickets.email_cc` - Original CC recipients (JSON array, used for authorization)
-
-**Important**: When modifying Gmail integration, test with `bin/cake import_gmail` command first.
-
-### n8n Automation Integration
-
-The system sends webhooks to n8n workflows for:
-- **AI-powered tag classification** (automatic ticket categorization)
-- **Custom workflow triggers** (status changes, assignments)
-- **Notification routing**
-
-Configuration is in SystemSettings table with keys prefixed `n8n_`.
-
-**Note**: n8n settings are cached for 1 hour. Clear cache after config changes.
-
-### WhatsApp Notifications
-
-WhatsApp messages are sent through Evolution API integration:
-- Real-time notifications for ticket/compras status changes
-- Transaction messages (confirmations, updates)
-- Configurable per user via SystemSettings
-
-**Configuration keys**: `whatsapp_enabled`, `whatsapp_api_url`, `whatsapp_instance`
+### Configuration Management
+- **System Settings**: Stored in `system_settings` database table, cached for 1 hour
+- **Encryption**: Sensitive settings (Gmail tokens, API keys) encrypted using `SettingsEncryptionTrait`
+- **Access**: Settings loaded in `AppController::beforeFilter()` and passed to services to avoid redundant DB queries
+- **Cache Key**: `system_settings` (uses `_cake_core_` cache config)
 
 ### Authentication & Authorization
+- **Authentication**: CakePHP Authentication plugin with session-based auth
+- **Roles**: `admin`, `agent`, `requester`, `compras`, `servicio_cliente`
+- **Layout Routing**: `AppController::beforeFilter()` assigns layouts based on role
+- **Access Control**: `AppController::redirectByRole()` enforces module-level permissions
+- **Public Routes**: PQRS form (`/pqrs/formulario`) allows unauthenticated access
 
-- **Authentication**: CakePHP Authentication 3.0 with Session/Form authenticators
-- **Credentials**: Email address (NOT username) + password
-- **Authorization**: Role-based access control implemented per controller action
-- **Roles**: Admin, Agent, Compras, Requester, Servicio Cliente
+### Background Workers
+The `GmailWorkerCommand` runs as a Docker container (`worker` service) executing scheduled Gmail imports:
+- Reads interval from `system_settings.gmail_check_interval` (default: 5 minutes)
+- Executes `ImportGmailCommand` to fetch unread emails and create tickets
+- Uses Supervisor for process management and auto-restart
+- Logs to `logs/` directory
 
-**Important**: The system uses `email` field for login, not `username`.
-
-## Database Schema & Migrations
-
-41 migrations define the complete schema. Key points:
-
-- **All tables use AUTO_INCREMENT primary keys** (`id`)
-- **Foreign keys** use CASCADE/SET_NULL appropriately
-- **Unique constraints** on business identifiers (ticket_number, gmail_message_id)
-- **Performance indexes** on frequently queried columns (status, priority, assignee_id, created)
-- **Enum types** for constrained values (status, priority, role)
-- **Timestamps** (created, modified) on all entities
-- **SLA tracking** fields (first_response_at, resolved_at, first_response_sla_due, resolution_sla_due)
-
-### SLA (Service Level Agreement) System
-
-The system includes comprehensive SLA tracking across modules (added Dec 2024):
-
-**PQRS Module SLA Fields:**
-- `closed_at` - Fecha de cierre del PQRS
-- `first_response_sla_due` - Deadline para primera respuesta (indexed)
-- `resolution_sla_due` - Deadline para resolución (indexed)
-
-**Compras Module SLA Fields:**
-- `first_response_sla_due` - Deadline para primera respuesta (indexed)
-- `resolution_sla_due` - Deadline para resolución (indexed)
-- `sla_due_date` - Legacy field (deprecated, kept for backward compatibility)
-
-**SLA Configuration (SystemSettings):**
-
-PQRS has different SLA targets by request type:
-- **Petición**: 2 days first response, 5 days resolution
-- **Queja**: 1 day first response, 3 days resolution
-- **Reclamo**: 1 day first response, 3 days resolution
-- **Sugerencia**: 3 days first response, 7 days resolution
-
-Compras has uniform SLA targets:
-- **First Response**: 1 day
-- **Resolution**: 3 days
-
-**Configuration keys in SystemSettings:**
-```
-sla_pqrs_{tipo}_first_response_days    # Petición, Queja, Reclamo, Sugerencia
-sla_pqrs_{tipo}_resolution_days
-sla_compras_first_response_days
-sla_compras_resolution_days
-```
-
-**Important Notes:**
-- SLA deadlines are calculated automatically when creating new Compras/PQRS
-- Existing Compras records were migrated: `sla_due_date` → `resolution_sla_due`
-- SLA settings are cached for 1 hour (clear cache after modifications)
-- Indexes on `*_sla_due` fields enable efficient breach queries
-
-**Related Migrations:**
-1. `20251227150226_AddSlaFieldsToPqrs.php` - SLA fields for PQRS
-2. `20251227150341_AddSlaFieldsToCompras.php` - SLA fields for Compras
-3. `20251227150434_MigrateComprasSlaData.php` - Data migration for existing records
-4. `20251227150559_SeedSlaSettings.php` - Default SLA configuration
-
-### Creating New Migrations
-
+### Database Migrations
+67 migration files in `config/Migrations/` handle schema versioning. Always create migrations for schema changes:
 ```bash
-# Create migration
-bin/cake bake migration {MigrationName}
-
-# Example: Adding a field
-bin/cake bake migration AddFieldToTable field:type
-
-# Apply migrations
+bin/cake bake migration CreateNewTable field1:string field2:text
 bin/cake migrations migrate
 ```
 
-**Convention**: Use descriptive migration names (e.g., `AddEmailThreadingToTickets`, `CreateComprasModule`)
+### File Structure Conventions
+- `src/Controller/`: Thin controllers - delegate to services
+- `src/Controller/Admin/`: Admin-only controllers (settings, user management)
+- `src/Controller/Traits/`: Shared controller behaviors
+- `src/Model/Table/`: CakePHP ORM table classes with associations and validation
+- `src/Model/Entity/`: Entity classes (typically auto-generated)
+- `src/Service/`: Business logic layer
+- `src/Command/`: CLI commands (import jobs, workers)
+- `src/Utility/`: Shared utilities and traits
+- `templates/`: Server-rendered views (not API responses)
+- `config/`: Application configuration, migrations, routes
+- `tests/TestCase/`: PHPUnit tests mirroring `src/` structure
 
-## Frontend Architecture
+## Critical Development Patterns
 
-### JavaScript Modules
-
-Modern ES6-style modules in `webroot/js/`:
-
-- **bulk-actions-module.js** - Bulk operations (select all, mass actions)
-- **entity-history-lazy.js** - Lazy-loaded audit trail
-- **modern-statistics.js** - Statistics dashboard
-- **statistics-animations.js** - Chart animations
-- **email-recipients.js** - Email recipient management
-- **select2-init.js** - Enhanced dropdown initialization
-- **loading-spinner.js** - Loading state management
-- **flash-messages.js** - Toast notifications
-- **marquee.js** - Scrolling announcements
-
-**Pattern**: Modules are loaded on-demand per page. Do not bundle into single file.
-
-### CSS Structure
-
-- **Bootstrap 5** - Primary framework (do NOT add Bootstrap 4 or other versions)
-- **Custom CSS** in `webroot/css/`:
-  - `styles.css` - Global styles
-  - `modern-statistics.css` - Statistics dashboard
-  - `bulk-actions.css` - Bulk action UI
-
-**Important**: Avoid inline styles. Use utility classes or dedicated CSS files.
-
-### Templates (Twig)
-
-Templates follow CakePHP conventions with Twig syntax:
-
-```
-templates/
-├── layout/           # Layouts (admin, agent, compras, default)
-├── Tickets/          # Ticket module views
-├── Compras/          # Compras module views
-├── Pqrs/             # PQRS module views
-├── Element/          # Reusable partials
-├── cell/             # Cell components (sidebars, widgets)
-└── email/            # Email templates
-```
-
-**Template inheritance**: Most templates extend a layout. Use `{% extends 'layout/name.twig' %}`.
-
-## Routing Conventions
-
-### Public Routes (No Authentication)
-
-```
-GET  /                           - Home (redirects to tickets)
-GET  /health                     - Docker health check
-GET  /pqrs/formulario            - Public PQRS submission form
-GET  /pqrs/success/{pqrsNumber}  - PQRS confirmation page
-```
-
-### Authenticated Routes
-
-```
-# Tickets
-GET    /tickets                    - Ticket list
-GET    /tickets/view/{id}          - Ticket details
-POST   /tickets/add                - Create ticket
-POST   /tickets/add-comment/{id}   - Add comment
-POST   /tickets/assign/{id}        - Assign ticket
-POST   /tickets/change-status/{id} - Update status
-GET    /tickets/convert-to-compra/{id} - Convert to purchase request
-
-# Compras
-GET    /compras                    - Purchase list
-GET    /compras/view/{id}          - Purchase details
-POST   /compras/add-comment/{id}   - Add comment
-POST   /compras/assign/{id}        - Assign purchase
-POST   /compras/change-status/{id} - Update status
-POST   /compras/change-priority/{id} - Update priority
-GET    /compras/download/{id}      - Download attachment
-
-# Admin
-GET    /admin/settings             - System configuration
-```
-
-**Pattern**: Use named routes in templates. Avoid hardcoded URLs.
-
-## Configuration Files
-
-### Environment-Specific Configuration
-
-- **config/app.php** - Base configuration (committed to git)
-- **config/app_local.php** - Local overrides (NOT in git, contains secrets)
-- **config/app_local.example.php** - Template for local config
-
-**Critical**: NEVER commit `app_local.php`. It contains database credentials and API keys.
-
-### API Credentials
-
-Store in SystemSettings table or config/app_local.php:
+### Services MUST Accept Optional Configuration
+All services accept `?array $systemConfig = null` to avoid N+1 database queries:
 
 ```php
-// Gmail OAuth2
-'google_client_id' => env('GOOGLE_CLIENT_ID'),
-'google_client_secret' => env('GOOGLE_CLIENT_SECRET'),
+// GOOD: Pass system config once to all services
+$systemConfig = Cache::remember('system_settings', ...);
+$ticketService = new TicketService($systemConfig);
+$emailService = new EmailService($systemConfig);
 
-// WhatsApp Evolution API
-'whatsapp_api_url' => env('WHATSAPP_API_URL'),
-'whatsapp_instance' => env('WHATSAPP_INSTANCE'),
-
-// n8n Webhooks
-'n8n_webhook_url' => env('N8N_WEBHOOK_URL'),
+// BAD: Each service queries database separately
+$ticketService = new TicketService();  // Queries DB
+$emailService = new EmailService();    // Queries DB again
 ```
+
+### Notification Dispatching Pattern
+Use `NotificationDispatcherTrait` for consistent notification behavior:
+
+```php
+use App\Service\Traits\NotificationDispatcherTrait;
+
+// In service class
+$this->dispatchNotifications(
+    $entity,           // Ticket, PQRS, or Compra entity
+    'nuevo_ticket',    // Email template key
+    $extraData,        // Additional template variables
+    $moduleName        // 'tickets', 'pqrs', or 'compras'
+);
+```
+
+This trait handles:
+- Loading email templates from database
+- Sending email via EmailService
+- Sending WhatsApp notification via WhatsappService
+- Graceful degradation if services are unavailable
+
+### Settings Encryption
+Use `SettingsEncryptionTrait` when handling sensitive settings:
+
+```php
+use App\Utility\SettingsEncryptionTrait;
+
+// Automatically encrypts values containing sensitive keywords
+$encrypted = $this->encryptIfNeeded('gmail_refresh_token', $value);
+
+// Automatically decrypts when loading
+$config = $this->processSettings($rawSettingsArray);
+```
+
+Sensitive keywords: `token`, `secret`, `password`, `key`, `api_key`
+
+### Attachment Handling
+Use `GenericAttachmentTrait` for all file uploads:
+
+```php
+use App\Service\Traits\GenericAttachmentTrait;
+
+// In service
+$this->saveAttachments($request, $entityId, 'tickets');  // or 'pqrs', 'compras'
+```
+
+This trait:
+- Handles S3 uploads when configured
+- Falls back to local storage
+- Creates database records in appropriate `*_attachments` table
+- Generates secure download URLs
+
+### Gmail Import Flow
+1. `GmailWorkerCommand` runs on schedule (Docker container)
+2. Calls `ImportGmailCommand::execute()`
+3. `GmailService::getMessages()` fetches unread emails
+4. `TicketService::createFromEmail()` processes each email:
+   - Parses sender, subject, body
+   - Sanitizes HTML with HTMLPurifier
+   - Downloads attachments to S3/local
+   - Creates ticket entity
+   - Dispatches notifications (WhatsApp + Email)
+   - Marks email as read
+
+### n8n Integration
+When enabled, the system sends webhook payloads to n8n for AI-powered operations:
+- **Tag Assignment**: Analyzes ticket content and suggests tags
+- **Priority Detection**: Determines urgency based on keywords
+- **Auto-Classification**: Routes tickets to correct team
+
+Configuration in `system_settings`: `n8n_enabled`, `n8n_webhook_url`, `n8n_webhook_secret`
+
+## Environment Configuration
+
+### Required Environment Variables
+```env
+# Database
+DB_HOST=localhost
+DB_PORT=3306
+DB_DATABASE=mesadeayuda
+DB_USERNAME=root
+DB_PASSWORD=secret
+
+# Security
+SECURITY_SALT=your-64-char-random-salt-here
+
+# Optional
+DEBUG=false
+APP_ENV=production
+WORKER_ENABLED=true
+```
+
+### Configuration Files
+- `config/app_local.php`: Local environment config (gitignored)
+- `config/app_local.example.php`: Template for local configuration
+- `.env`: Environment variables (Docker)
+- `.env.docker.example`: Template for Docker environment
+
+## External Integrations Setup
+
+### Gmail OAuth2
+1. Create Google Cloud project and OAuth2 credentials
+2. Download `credentials.json` to `config/google/`
+3. Access `/admin/settings` and configure Gmail section
+4. Authorize access (generates refresh token, encrypted in database)
+5. Configure `gmail_check_interval` (minutes)
+
+### WhatsApp (Evolution API)
+Configure in Admin Settings (`/admin/settings`):
+- `whatsapp_enabled`: Enable/disable notifications
+- `whatsapp_instance`: Evolution API instance name
+- `whatsapp_api_url`: Evolution API base URL
+- `whatsapp_api_key`: API authentication key
+
+### n8n Automation
+Configure in Admin Settings:
+- `n8n_enabled`: Enable/disable webhooks
+- `n8n_webhook_url`: n8n webhook endpoint
+- `n8n_webhook_secret`: Webhook authentication secret
+
+### AWS S3 File Storage
+Configure in `config/app_local.php`:
+```php
+'S3' => [
+    'enabled' => true,
+    'bucket' => 'your-bucket-name',
+    'region' => 'us-east-1',
+    'credentials' => [
+        'key' => 'YOUR_ACCESS_KEY',
+        'secret' => 'YOUR_SECRET_KEY',
+    ],
+],
+```
+
+## Common Pitfalls
+
+1. **Don't query `system_settings` directly in loops**: Use cached config or pass to services
+2. **Don't put business logic in controllers**: Create/extend service classes
+3. **Don't forget to encrypt sensitive settings**: Use `SettingsEncryptionTrait`
+4. **Don't create manual SQL queries**: Use CakePHP ORM query builder
+5. **Don't modify core files in vendor/**: Extend via inheritance or plugins
+6. **Always run migrations after pulling**: Schema changes are frequent
+7. **Clear cache after settings changes**: `bin/cake cache clear_all`
+8. **Use strict types**: All files MUST have `declare(strict_types=1);`
 
 ## Testing
 
-### Running Tests
+Tests are located in `tests/TestCase/` mirroring `src/` structure:
+- Service tests verify business logic without database dependencies
+- Controller tests use fixtures for integration testing
+- Run full test suite with `composer test`
 
-```bash
-# All tests
-composer test
-
-# Specific test file
-vendor/bin/phpunit tests/TestCase/Controller/TicketsControllerTest.php
-
-# Single test method
-vendor/bin/phpunit --filter testIndex tests/TestCase/Controller/TicketsControllerTest.php
-```
-
-### Test Structure
-
-```
-tests/
-├── TestCase/
-│   ├── Controller/    # Controller integration tests
-│   ├── Model/         # Entity and Table unit tests
-│   └── Service/       # Service layer tests
-└── Fixture/           # Test data fixtures
-```
-
-**Convention**: Test files mirror source structure (e.g., `TicketService.php` → `TicketServiceTest.php`)
-
-## Code Quality Standards
-
-- **PHPStan Level**: 5 (strict type checking enabled)
-- **CakePHP CodeSniffer**: CakePHP coding standards enforced
-- **Type Hints**: Required on all public methods (params and return types)
-- **Docblocks**: Required for all classes and public methods
-
-### Before Committing
-
-```bash
-# Always run before committing
-composer check
-
-# This runs:
-# 1. composer test      - PHPUnit tests
-# 2. composer cs-check  - Code style validation
-# 3. composer stan      - Static analysis
-```
-
-**Rule**: All checks must pass before creating a pull request.
-
-## Common Patterns & Conventions
-
-### Adding a New Service
-
-1. Create service class in `src/Service/`
-2. Add service initialization to relevant controller using `ServiceInitializerTrait`
-3. Add type hints and docblocks
-4. Write tests in `tests/TestCase/Service/`
-
-Example:
-
-```php
-namespace App\Service;
-
-class MyNewService
-{
-    /**
-     * @param \App\Model\Entity\Ticket $ticket The ticket entity
-     * @return bool Success status
-     */
-    public function processTicket(\App\Model\Entity\Ticket $ticket): bool
-    {
-        // Business logic here
-        return true;
-    }
-}
-```
-
-### Adding New Migrations
-
-When adding fields or tables:
-
-1. Create migration: `bin/cake bake migration DescriptiveName`
-2. Edit migration file in `config/Migrations/`
-3. Test locally: `bin/cake migrations migrate`
-4. **Always add rollback logic** (down() method)
-
-### Working with System Settings
-
-Settings are stored in the database with optional encryption:
-
-```php
-// In controller/service
-$this->loadModel('SystemSettings');
-$value = $this->SystemSettings->getSetting('setting_key', 'default_value');
-
-// Encrypted settings (for sensitive data)
-$apiKey = $this->SystemSettings->getSetting('api_key'); // Auto-decrypted
-```
-
-**Important**: Settings are cached for 1 hour. Clear cache after changes.
-
-### Working with SLA Management
-
-The system includes a centralized SLA Management service that handles Service Level Agreement calculations for PQRS and Compras modules.
-
-**Admin Interface:**
-Navigate to Admin → Settings → Gestión SLA (`/admin/sla-management`) to configure SLA targets.
-
-**SLA Configuration:**
-
-PQRS has type-specific SLA targets:
-```php
-// Get SLA settings for specific PQRS type
-$slaService = new SlaManagementService();
-$settings = $slaService->getPqrsSlaSettings('queja');
-// Returns: ['first_response_days' => 1, 'resolution_days' => 3]
-```
-
-Compras has uniform SLA targets:
-```php
-$settings = $slaService->getComprasSlaSettings();
-// Returns: ['first_response_days' => 1, 'resolution_days' => 3]
-```
-
-**Automatic SLA Calculation:**
-
-SLA deadlines are calculated automatically when creating PQRS or Compras:
-
-```php
-// PQRS - SLA calculated based on type
-$pqrsService = new PqrsService();
-$pqrs = $pqrsService->createFromForm($formData, $files);
-// $pqrs->first_response_sla_due and $pqrs->resolution_sla_due are auto-set
-
-// Compras - SLA calculated from settings
-$comprasService = new ComprasService();
-$compra = $comprasService->createFromTicket($ticket, $data);
-// $compra->first_response_sla_due and $compra->resolution_sla_due are auto-set
-```
-
-**Checking SLA Status:**
-
-```php
-// For PQRS
-$slaStatus = $pqrsService->getSlaStatus($pqrs);
-// Returns: [
-//   'first_response' => ['status' => 'met|breached|on_track|approaching', 'class' => 'success|danger|info|warning', 'label' => '...'],
-//   'resolution' => [...]
-// ]
-
-// For Compras
-$slaStatus = $comprasService->getSlaStatus($compra);
-
-// Check if SLA is breached
-$isBreached = $comprasService->isResolutionSLABreached($compra);
-$isFirstResponseBreached = $comprasService->isFirstResponseSLABreached($compra);
-```
-
-**Finding Breached SLAs:**
-
-```php
-// Get all Compras with breached SLA
-$breachedCompras = $comprasService->getBreachedSLACompras();
-
-// Get all PQRS with breached SLA
-$breachedPqrs = $pqrsService->getBreachedSLAPqrs();
-```
-
-**Important Notes:**
-- SLA settings are cached for 1 hour
-- After updating SLA configuration in admin, cache is automatically cleared
-- SLA deadlines are calculated based on creation date
-- Closed/completed entities do not trigger SLA breach status
-- For PQRS: Each type (petición, queja, reclamo, sugerencia) has different SLA targets
-- For Compras: All purchase requests use the same SLA targets
-
-### File Uploads
-
-Attachments are stored in `webroot/uploads/`:
-
-```
-webroot/uploads/
-├── tickets/        # Ticket attachments
-├── compras/        # Purchase attachments
-└── pqrs/          # PQRS attachments
-```
-
-Use `GenericAttachmentTrait` for common file handling operations.
-
-## Troubleshooting
-
-### Gmail Integration Issues
-
-1. Check OAuth2 credentials in SystemSettings
-2. Verify token refresh: `bin/cake import_gmail`
-3. Check logs in `logs/` directory
-4. Test email sending: `bin/cake test_email`
-
-### WhatsApp Notifications Not Sending
-
-1. Verify Evolution API is running
-2. Check `whatsapp_enabled` setting
-3. Verify instance is connected in Evolution API dashboard
-4. Check logs for webhook errors
-
-### n8n Webhooks Not Firing
-
-1. Verify `n8n_webhook_url` in SystemSettings
-2. Check n8n workflow is active
-3. Test webhook manually with curl
-4. Check timeout settings (default: 10 seconds)
-
-### Database Connection Errors
-
-1. Verify `config/app_local.php` credentials
-2. Check database server is running
-3. Verify migrations are up to date: `bin/cake migrations status`
-
-## Development Workflow
-
-1. **Create feature branch**: `git checkout -b feature/description`
-2. **Make changes** following code standards
-3. **Run quality checks**: `composer check`
-4. **Test manually** using development server
-5. **Commit with descriptive message**
-6. **Push and create pull request**
-
-**Commit Message Convention**: Use descriptive commits that explain the "why", not just the "what".
-
-## Important Notes
-
-- **Multi-tenancy**: The system supports multiple organizations. Always filter by `organization_id` where applicable.
-- **Soft Deletes**: Use history tables for audit trails. Avoid hard deletes on core entities.
-- **Email Threading**: When working with Gmail integration, preserve `gmail_thread_id` and `gmail_message_id` relationships.
-- **Role-Based Access**: Always check user role before authorizing actions (implemented in AppController).
-- **File Security**: Uploaded files should be validated and sanitized (HTMLPurifier is included).
-- **Caching**: System settings and n8n configuration are cached. Clear cache when updating settings.
+PHPStan is configured at level 5 with CakePHP-specific ignores (see `phpstan.neon`).

@@ -217,7 +217,7 @@ trait EntityCrudTrait
 
         $attachmentsTable = $this->fetchTable($attachmentsTableName);
         $attachment = $attachmentsTable->get($attachmentId);
-        $filePath = $this->getFullPath($attachment);
+        $filePath = $this->getFileStorageService()->getFullPath($attachment);
 
         if (!file_exists($filePath)) {
             throw new \Cake\Http\Exception\NotFoundException('Archivo no encontrado.');

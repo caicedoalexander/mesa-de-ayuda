@@ -174,7 +174,19 @@ trait EntityAssignmentTrait
     }
 
     /**
-     * NOTE: getEntityNumber() method is provided by GenericAttachmentTrait
-     * to avoid duplication. It must be available in the using class.
+     * Get entity number based on type
+     *
+     * @param string $entityType Entity type (ticket, pqrs, compra)
+     * @param EntityInterface $entity Entity instance
+     * @return string Entity number
      */
+    private function getEntityNumber(string $entityType, EntityInterface $entity): string
+    {
+        return match ($entityType) {
+            'ticket' => $entity->ticket_number,
+            'pqrs' => $entity->pqrs_number,
+            'compra' => $entity->compra_number,
+            default => throw new \InvalidArgumentException("Unknown entity type: {$entityType}"),
+        };
+    }
 }
