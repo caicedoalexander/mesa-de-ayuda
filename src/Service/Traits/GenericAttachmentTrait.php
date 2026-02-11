@@ -533,6 +533,10 @@ trait GenericAttachmentTrait
     /**
      * Delete attachment file and database record
      *
+     * Detects file origin from file_path convention:
+     * - Paths starting with 'uploads/' are local files
+     * - All other paths are S3 keys
+     *
      * @param string $entityType Entity type
      * @param int $attachmentId Attachment ID
      * @return bool Success status
@@ -545,16 +549,18 @@ trait GenericAttachmentTrait
 
             $attachment = $attachmentsTable->get($attachmentId);
 
-            // Delete physical file (S3 or local based on current config)
-            $s3Service = $this->getS3Service();
-            if ($s3Service->isEnabled()) {
-                // Delete from S3
-                $s3Service->deleteFile($attachment->file_path);
-            } else {
-                // Delete from local storage
+            // Detect origin from file_path (not current config)
+            $isLocal = str_starts_with($attachment->file_path, 'uploads/');
+
+            if ($isLocal) {
                 $fullPath = WWW_ROOT . $attachment->file_path;
                 if (file_exists($fullPath)) {
                     @unlink($fullPath);
+                }
+            } else {
+                $s3Service = $this->getS3Service();
+                if ($s3Service->isEnabled()) {
+                    $s3Service->deleteFile($attachment->file_path);
                 }
             }
 
@@ -735,66 +741,79 @@ trait GenericAttachmentTrait
     /**
      * Get full filesystem path for an attachment
      *
-     * For local files: returns absolute path
-     * For S3 files: downloads to temp and returns temp path
+     * Detects origin from file_path convention:
+     * - 'uploads/' prefix → local file
+     * - No prefix → S3 file (downloads to temp)
      *
      * @param EntityInterface $attachment Attachment entity
      * @return string|null Full file path or null on failure
      */
     public function getFullPath(EntityInterface $attachment): ?string
     {
-        $s3Service = $this->getS3Service();
-        if ($s3Service->isEnabled()) {
-            // S3 file - download to temp
-            $tempPath = sys_get_temp_dir() . DS . $attachment->filename;
+        $isLocal = str_starts_with($attachment->file_path, 'uploads/');
 
-            if ($s3Service->downloadFile($attachment->file_path, $tempPath)) {
-                return $tempPath;
+        if (!$isLocal) {
+            $s3Service = $this->getS3Service();
+            if ($s3Service->isEnabled()) {
+                $tempPath = sys_get_temp_dir() . DS . $attachment->filename;
+                if ($s3Service->downloadFile($attachment->file_path, $tempPath)) {
+                    return $tempPath;
+                }
             }
 
             return null;
         }
 
-        // Local file
         return WWW_ROOT . $attachment->file_path;
     }
 
     /**
      * Get web URL for an attachment
      *
-     * For local files: returns relative URL
-     * For S3 files: returns presigned URL (valid for 1 hour)
+     * Detects origin from file_path convention:
+     * - 'uploads/' prefix → local relative URL
+     * - No prefix → S3 presigned URL (valid for 1 hour)
      *
      * @param EntityInterface $attachment Attachment entity
      * @return string|null Web URL or null on failure
      */
     public function getWebUrl(EntityInterface $attachment): ?string
     {
-        $s3Service = $this->getS3Service();
-        if ($s3Service->isEnabled()) {
-            // S3 file - generate presigned URL
-            return $s3Service->getPresignedUrl($attachment->file_path, 60);
+        $isLocal = str_starts_with($attachment->file_path, 'uploads/');
+
+        if (!$isLocal) {
+            $s3Service = $this->getS3Service();
+            if ($s3Service->isEnabled()) {
+                return $s3Service->getPresignedUrl($attachment->file_path, 60);
+            }
+
+            return null;
         }
 
-        // Local file
         return '/' . str_replace(DS, '/', $attachment->file_path);
     }
 
     /**
      * Stream file content directly (for downloads)
      *
+     * Detects origin from file_path convention.
+     *
      * @param EntityInterface $attachment Attachment entity
      * @return resource|null Stream resource or null on failure
      */
     public function getFileStream(EntityInterface $attachment)
     {
-        $s3Service = $this->getS3Service();
-        if ($s3Service->isEnabled()) {
-            // S3 file - get stream from S3
-            return $s3Service->getFileStream($attachment->file_path);
+        $isLocal = str_starts_with($attachment->file_path, 'uploads/');
+
+        if (!$isLocal) {
+            $s3Service = $this->getS3Service();
+            if ($s3Service->isEnabled()) {
+                return $s3Service->getFileStream($attachment->file_path);
+            }
+
+            return null;
         }
 
-        // Local file - open file stream
         $fullPath = WWW_ROOT . $attachment->file_path;
         if (file_exists($fullPath)) {
             return fopen($fullPath, 'rb');
