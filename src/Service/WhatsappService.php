@@ -5,7 +5,6 @@ namespace App\Service;
 
 use Cake\ORM\Locator\LocatorAwareTrait;
 use Cake\Log\Log;
-use Cake\Core\Configure;
 
 /**
  * WhatsApp Service
@@ -160,11 +159,11 @@ class WhatsappService
                 'text' => $text,
             ];
 
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
+            $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Content-Type: application/json',
                 'apikey: ' . $config['whatsapp_api_key'],
@@ -174,7 +173,6 @@ class WhatsappService
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $error = curl_error($ch);
-            curl_close($ch);
 
             if ($error) {
                 Log::error('WhatsApp API cURL error', [
@@ -215,27 +213,10 @@ class WhatsappService
      */
     public function sendNewTicketNotification($ticket): bool
     {
-        try {
-            // Load ticket with requester
-            $ticketsTable = $this->fetchTable('Tickets');
-            $ticket = $ticketsTable->get($ticket->id, contain: ['Requesters']);
+        $ticketsTable = $this->fetchTable('Tickets');
+        $ticket = $ticketsTable->get($ticket->id, contain: ['Requesters']);
 
-            $config = $this->getConfig();
-            if (!$config || empty($config['whatsapp_tickets_number'])) {
-                Log::info('WhatsApp tickets number not configured, skipping notification');
-                return false;
-            }
-
-            $message = $this->renderer->renderWhatsappNewTicket($ticket);
-
-            return $this->sendMessage($config['whatsapp_tickets_number'], $message);
-        } catch (\Exception $e) {
-            Log::error('Failed to send WhatsApp new ticket notification', [
-                'ticket_id' => $ticket->id,
-                'error' => $e->getMessage(),
-            ]);
-            return false;
-        }
+        return $this->sendNewEntityNotification('ticket', $ticket);
     }
 
     /**
@@ -246,23 +227,7 @@ class WhatsappService
      */
     public function sendNewPqrsNotification($pqrs): bool
     {
-        try {
-            $config = $this->getConfig();
-            if (!$config || empty($config['whatsapp_pqrs_number'])) {
-                Log::info('WhatsApp PQRS number not configured, skipping notification');
-                return false;
-            }
-
-            $message = $this->renderer->renderWhatsappNewPqrs($pqrs);
-
-            return $this->sendMessage($config['whatsapp_pqrs_number'], $message);
-        } catch (\Exception $e) {
-            Log::error('Failed to send WhatsApp PQRS notification', [
-                'pqrs_id' => $pqrs->id,
-                'error' => $e->getMessage(),
-            ]);
-            return false;
-        }
+        return $this->sendNewEntityNotification('pqrs', $pqrs);
     }
 
     /**
@@ -273,23 +238,42 @@ class WhatsappService
      */
     public function sendNewCompraNotification($compra): bool
     {
-        try {
-            // Load compra with requester and assignee
-            $comprasTable = $this->fetchTable('Compras');
-            $compra = $comprasTable->get($compra->id, contain: ['Requesters', 'Assignees']);
+        $comprasTable = $this->fetchTable('Compras');
+        $compra = $comprasTable->get($compra->id, contain: ['Requesters', 'Assignees']);
 
+        return $this->sendNewEntityNotification('compra', $compra);
+    }
+
+    /**
+     * Send new entity notification via WhatsApp (generic)
+     *
+     * @param string $entityType 'ticket', 'pqrs', 'compra'
+     * @param \Cake\Datasource\EntityInterface $entity Entity instance
+     * @return bool Success status
+     */
+    private function sendNewEntityNotification(string $entityType, \Cake\Datasource\EntityInterface $entity): bool
+    {
+        try {
+            $configMap = [
+                'ticket' => ['numberKey' => 'whatsapp_tickets_number', 'renderer' => 'renderWhatsappNewTicket'],
+                'pqrs' => ['numberKey' => 'whatsapp_pqrs_number', 'renderer' => 'renderWhatsappNewPqrs'],
+                'compra' => ['numberKey' => 'whatsapp_compras_number', 'renderer' => 'renderWhatsappNewCompra'],
+            ];
+
+            $map = $configMap[$entityType];
             $config = $this->getConfig();
-            if (!$config || empty($config['whatsapp_compras_number'])) {
-                Log::info('WhatsApp compras number not configured, skipping notification');
+
+            if (!$config || empty($config[$map['numberKey']])) {
+                Log::info("WhatsApp {$entityType} number not configured, skipping notification");
                 return false;
             }
 
-            $message = $this->renderer->renderWhatsappNewCompra($compra);
+            $message = $this->renderer->{$map['renderer']}($entity);
 
-            return $this->sendMessage($config['whatsapp_compras_number'], $message);
+            return $this->sendMessage($config[$map['numberKey']], $message);
         } catch (\Exception $e) {
-            Log::error('Failed to send WhatsApp compra notification', [
-                'compra_id' => $compra->id,
+            Log::error("Failed to send WhatsApp {$entityType} notification", [
+                'entity_id' => $entity->id,
                 'error' => $e->getMessage(),
             ]);
             return false;

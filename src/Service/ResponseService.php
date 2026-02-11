@@ -19,24 +19,63 @@ class ResponseService
     use LocatorAwareTrait;
     use \App\Service\Traits\NotificationDispatcherTrait;
 
-    private TicketService $ticketService;
-    private PqrsService $pqrsService;
-    private ComprasService $comprasService;
-    private EmailService $emailService;
-    private WhatsappService $whatsappService;
+    private ?TicketService $ticketService = null;
+    private ?PqrsService $pqrsService = null;
+    private ?ComprasService $comprasService = null;
+    private ?EmailService $emailService = null;
+    private ?WhatsappService $whatsappService = null;
+    private ?array $systemConfig;
 
     /**
      * Constructor
+     *
+     * Services are lazy-loaded on first use to avoid creating unnecessary instances.
      *
      * @param array|null $systemConfig Optional system configuration to avoid redundant DB queries
      */
     public function __construct(?array $systemConfig = null)
     {
-        $this->ticketService = new TicketService($systemConfig);
-        $this->pqrsService = new PqrsService($systemConfig);
-        $this->comprasService = new ComprasService($systemConfig);
-        $this->emailService = new EmailService($systemConfig);
-        $this->whatsappService = new WhatsappService($systemConfig);
+        $this->systemConfig = $systemConfig;
+    }
+
+    private function getTicketService(): TicketService
+    {
+        return $this->ticketService ??= new TicketService($this->systemConfig);
+    }
+
+    private function getPqrsService(): PqrsService
+    {
+        return $this->pqrsService ??= new PqrsService($this->systemConfig);
+    }
+
+    private function getComprasService(): ComprasService
+    {
+        return $this->comprasService ??= new ComprasService($this->systemConfig);
+    }
+
+    private function getEmailService(): EmailService
+    {
+        return $this->emailService ??= new EmailService($this->systemConfig);
+    }
+
+    private function getWhatsappService(): WhatsappService
+    {
+        return $this->whatsappService ??= new WhatsappService($this->systemConfig);
+    }
+
+    /**
+     * Get the appropriate entity service for the given type
+     *
+     * @param string $type 'ticket', 'pqrs', 'compra'
+     * @return TicketService|PqrsService|ComprasService
+     */
+    private function getServiceForType(string $type): TicketService|PqrsService|ComprasService
+    {
+        return match ($type) {
+            'ticket' => $this->getTicketService(),
+            'pqrs' => $this->getPqrsService(),
+            'compra' => $this->getComprasService(),
+        };
     }
 
     /**
@@ -98,40 +137,17 @@ class ResponseService
 
         // 1. Add Comment
         if ($hasComment) {
-            if ($type === 'ticket') {
-                $comment = $this->ticketService->addComment(
-                    $entityId,
-                    $userId,
-                    $commentBody,
-                    'ticket',  // entityType
-                    $commentType,
-                    false,     // isSystem
-                    $emailTo,  // email_to
-                    $emailCc   // email_cc
-                );
-            } elseif ($type === 'compra') {
-                $comment = $this->comprasService->addComment(
-                    $entityId,
-                    $userId,
-                    $commentBody,
-                    'compra',  // entityType
-                    $commentType,
-                    false,     // isSystem
-                    $emailTo,  // email_to
-                    $emailCc   // email_cc
-                );
-            } else {
-                $comment = $this->pqrsService->addComment(
-                    $entityId,
-                    $userId,
-                    $commentBody,
-                    'pqrs',    // entityType
-                    $commentType,
-                    false,     // isSystem
-                    $emailTo,  // email_to
-                    $emailCc   // email_cc
-                );
-            }
+            $service = $this->getServiceForType($type);
+            $comment = $service->addComment(
+                $entityId,
+                $userId,
+                $commentBody,
+                $type,         // entityType
+                $commentType,
+                false,         // isSystem
+                $emailTo,      // email_to
+                $emailCc       // email_cc
+            );
 
             if (!$comment) {
                 return [
@@ -145,30 +161,10 @@ class ResponseService
             if (!empty($files['attachments'])) {
                 foreach ($files['attachments'] as $file) {
                     if ($file->getError() === UPLOAD_ERR_OK) {
-                        $result = false;
                         if ($type === 'ticket') {
-                            $result = $this->ticketService->saveUploadedFile(
-                                $entityId,
-                                $comment->id,
-                                $file,
-                                $userId
-                            );
-                        } elseif ($type === 'compra') {
-                            assert($entity instanceof \App\Model\Entity\Compra);
-                            $result = $this->comprasService->saveUploadedFile(
-                                $entity,
-                                $file,
-                                $comment->id,
-                                $userId
-                            );
+                            $result = $service->saveUploadedFile($entityId, $comment->id, $file, $userId);
                         } else {
-                            assert($entity instanceof Pqr);
-                            $result = $this->pqrsService->saveUploadedFile(
-                                $entity,
-                                $file,
-                                $comment->id,
-                                $userId
-                            );
+                            $result = $service->saveUploadedFile($entity, $file, $comment->id, $userId);
                         }
 
                         if ($result) {
@@ -181,13 +177,7 @@ class ResponseService
 
         // 3. Change Status
         if ($hasStatusChange) {
-            if ($type === 'ticket') {
-                $this->ticketService->changeStatus($entity, $newStatus, $userId, null, false);
-            } elseif ($type === 'compra') {
-                $this->comprasService->changeStatus($entity, $newStatus, $userId, null, false);
-            } else {
-                $this->pqrsService->changeStatus($entity, $newStatus, $userId, null, false);
-            }
+            $this->getServiceForType($type)->changeStatus($entity, $newStatus, $userId, null, false);
             // Refresh entity to get new status
             $entity->status = $newStatus;
         }
@@ -239,6 +229,10 @@ class ResponseService
         array $emailTo = [],
         array $emailCc = []
     ): void {
+        // Ensure notification services are loaded (required by NotificationDispatcherTrait)
+        $this->emailService = $this->getEmailService();
+        $this->whatsappService = $this->getWhatsappService();
+
         $hasPublicComment = $hasComment && $commentType === 'public';
 
         // Case 1: Comment + Status Change → Unified 'response' notification

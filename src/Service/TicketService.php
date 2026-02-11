@@ -6,9 +6,6 @@ namespace App\Service;
 use App\Utility\SettingsEncryptionTrait;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use Cake\Log\Log;
-use Cake\I18n\FrozenTime;
-use HTMLPurifier;
-use HTMLPurifier_Config;
 use App\Service\Traits\EntityConversionTrait;
 
 /**
@@ -83,10 +80,10 @@ class TicketService
             }
         }
 
-        // Extract email address from From header
-        $gmailService = new GmailService();
-        $fromEmail = $gmailService->extractEmailAddress($emailData['from']);
-        $fromName = $gmailService->extractName($emailData['from']);
+        // Extract email address from From header (no config needed for parsing)
+        $parser = new GmailService();
+        $fromEmail = $parser->extractEmailAddress($emailData['from']);
+        $fromName = $parser->extractName($emailData['from']);
 
         // Find or create user
         $user = $this->findOrCreateUser($fromEmail, $fromName);
@@ -175,10 +172,10 @@ class TicketService
     {
         $ticketCommentsTable = $this->fetchTable('TicketComments');
 
-        // Extract sender email and name from emailData
-        $gmailService = new GmailService();
-        $fromEmail = $gmailService->extractEmailAddress($emailData['from']);
-        $fromName = $gmailService->extractName($emailData['from']);
+        // Extract sender email and name from emailData (no config needed for parsing)
+        $parser = new GmailService();
+        $fromEmail = $parser->extractEmailAddress($emailData['from']);
+        $fromName = $parser->extractName($emailData['from']);
 
         // Validate sender using isEmailInTicketRecipients() - return null if unauthorized
         if (!$this->isEmailInTicketRecipients($ticket, $fromEmail)) {
@@ -298,32 +295,6 @@ class TicketService
 
         Log::error('Failed to create user', ['email' => $email, 'errors' => $user->getErrors()]);
         return null;
-    }
-
-    /**
-     * Get system email address from settings
-     *
-     * @return string System email or empty string
-     */
-    private function getSystemEmail(): string
-    {
-        try {
-            // Try to get from systemConfig first (if passed in constructor)
-            if ($this->systemConfig !== null && !empty($this->systemConfig['gmail_user_email'])) {
-                return $this->systemConfig['gmail_user_email'];
-            }
-
-            // Otherwise load from database
-            $settingsTable = $this->fetchTable('SystemSettings');
-            $setting = $settingsTable->find()
-                ->where(['setting_key' => 'gmail_user_email'])
-                ->first();
-
-            return $setting ? $setting->setting_value : '';
-        } catch (\Exception $e) {
-            Log::error('Failed to load system email: ' . $e->getMessage());
-            return '';
-        }
     }
 
     /**

@@ -39,35 +39,54 @@ class EmailService
     }
 
     /**
+     * Get a single setting value with cascading resolution:
+     * 1. Constructor-provided systemConfig (fastest, no I/O)
+     * 2. Main 'system_settings' cache (populated by AppController)
+     * 3. Direct DB query (slowest, last resort)
+     *
+     * @param string $key Setting key
+     * @param string $default Default value
+     * @return string Setting value
+     */
+    private function getSettingValue(string $key, string $default = ''): string
+    {
+        // 1. From constructor config
+        if ($this->systemConfig !== null && isset($this->systemConfig[$key])) {
+            return $this->systemConfig[$key];
+        }
+
+        // 2. From main settings cache (populated by AppController::beforeFilter)
+        try {
+            $cachedConfig = \Cake\Cache\Cache::read('system_settings', '_cake_core_');
+            if ($cachedConfig && isset($cachedConfig[$key])) {
+                return $cachedConfig[$key];
+            }
+        } catch (\Exception $e) {
+            // Cache not available, fall through to DB
+        }
+
+        // 3. Direct DB query
+        try {
+            $settingsTable = $this->fetchTable('SystemSettings');
+            $setting = $settingsTable->find()
+                ->where(['setting_key' => $key])
+                ->first();
+            return $setting ? $setting->setting_value : $default;
+        } catch (\Exception $e) {
+            Log::error("Failed to load setting '{$key}': " . $e->getMessage());
+            return $default;
+        }
+    }
+
+    /**
      * Get system-wide variables for email templates
      *
      * @return array System variables
      */
     private function getSystemVariables(): array
     {
-        $systemTitle = 'Sistema de Soporte'; // Default
-
-        // Use cached config if available
-        if ($this->systemConfig !== null) {
-            $systemTitle = $this->systemConfig['system_title'] ?? $systemTitle;
-        } else {
-            // Fallback to DB query with cache
-            try {
-                
-                $systemTitle = \Cake\Cache\Cache::remember('system_title', function () {
-                    $settingsTable = $this->fetchTable('SystemSettings');
-                    $setting = $settingsTable->find()
-                        ->where(['setting_key' => 'system_title'])
-                        ->first();
-                    return $setting ? $setting->setting_value : 'Sistema de Soporte';
-                }, '_cake_core_');
-            } catch (\Exception $e) {
-                Log::error('Failed to load system_title: ' . $e->getMessage());
-            }
-        }
-
         return [
-            'system_title' => $systemTitle,
+            'system_title' => $this->getSettingValue('system_title', 'Sistema de Soporte'),
             'current_year' => date('Y'),
         ];
     }
@@ -88,18 +107,7 @@ class EmailService
         $ticket = $ticketsTable->get($ticket->id, contain: ['Requesters']);
 
         // Get system email to exclude from notifications
-        $systemEmail = '';
-        if ($this->systemConfig !== null && !empty($this->systemConfig['gmail_user_email'])) {
-            $systemEmail = strtolower($this->systemConfig['gmail_user_email']);
-        } else {
-            $settingsTable = $this->fetchTable('SystemSettings');
-            $setting = $settingsTable->find()
-                ->where(['setting_key' => 'gmail_user_email'])
-                ->first();
-            if ($setting) {
-                $systemEmail = strtolower($setting->setting_value);
-            }
-        }
+        $systemEmail = strtolower($this->getSettingValue('gmail_user_email'));
 
         // Extract additional recipients from ticket's email_to and email_cc (if created from email)
         $additionalTo = [];
@@ -174,155 +182,23 @@ class EmailService
      */
     public function sendNewCommentNotification($ticket, $comment, array $additionalTo = [], array $additionalCc = []): bool
     {
-        try {
-            // Load entities with associations
-            $ticketsTable = $this->fetchTable('Tickets');
-            $ticket = $ticketsTable->get($ticket->id, contain: ['Requesters', 'Assignees', 'Attachments']);
-
-            $commentsTable = $this->fetchTable('TicketComments');
-            $comment = $commentsTable->get($comment->id, contain: ['Users']);
-
-            // Get comment attachments (non-inline only)
-            $commentAttachments = [];
-            if (!empty($ticket->attachments)) {
-                foreach ($ticket->attachments as $attachment) {
-                    if ($attachment->comment_id === $comment->id && !$attachment->is_inline) {
-                        $commentAttachments[] = $attachment;
-                    }
-                }
-            }
-
-            // Get template from database
-            $template = $this->getTemplate('nuevo_comentario');
-            if (!$template) {
-                Log::error('Email template not found: nuevo_comentario');
-                return false;
-            }
-
-            // Get agent profile image URL
-            $userHelper = new \App\View\Helper\UserHelper($this->getView());
-            $agentProfileImageUrl = $comment->user && $comment->user->profile_image
-                ? $userHelper->profileImage($comment->user->profile_image)
-                : $userHelper->defaultAvatar();
-
-            // Convert relative URL to absolute URL for email
-            $agentProfileImageUrl = $this->getAbsoluteUrl($agentProfileImageUrl);
-
-            // Replace variables in subject and body
-            $variables = array_merge($this->getSystemVariables(), [
-                'ticket_number' => $ticket->ticket_number,
-                'subject' => $ticket->subject,
-                'comment_author' => $comment->user->name,
-                'comment_body' => $comment->body,
-                'attachments_list' => $this->renderer->renderAttachmentsHtml($commentAttachments),
-                'ticket_url' => $this->renderer->getTicketUrl($ticket->id),
-                'agent_profile_image_url' => $agentProfileImageUrl,
-                'agent_name' => $comment->user->name,
-            ]);
-
-            $subject = $this->replaceVariables($template->subject, $variables);
-            $body = $this->replaceVariables($template->body_html, $variables);
-
-            // Send email to requester with attachments and additional recipients
-            return $this->sendEmail($ticket->requester->email, $subject, $body, $commentAttachments, $additionalTo, $additionalCc);
-        } catch (\Exception $e) {
-            Log::error('Failed to send new comment notification', [
-                'ticket_id' => $ticket->id,
-                'comment_id' => $comment->id,
-                'error' => $e->getMessage(),
-            ]);
-            return false;
-        }
+        return $this->sendCommentBasedNotification('ticket', 'nuevo_comentario', $ticket, $comment, null, null, $additionalTo, $additionalCc);
     }
 
     /**
      * Send unified ticket response notification (comment + status change)
      *
-     * This method combines comment and status change into a single email
-     * to avoid sending multiple notifications to the requester.
-     *
      * @param \App\Model\Entity\Ticket $ticket Ticket entity
      * @param \App\Model\Entity\TicketComment $comment Comment entity
      * @param string $oldStatus Old status
      * @param string $newStatus New status
-     * @param array $additionalTo Additional To recipients [['name' => '', 'email' => ''], ...]
-     * @param array $additionalCc Additional CC recipients [['name' => '', 'email' => ''], ...]
+     * @param array $additionalTo Additional To recipients
+     * @param array $additionalCc Additional CC recipients
      * @return bool Success status
      */
     public function sendTicketResponseNotification($ticket, $comment, string $oldStatus, string $newStatus, array $additionalTo = [], array $additionalCc = []): bool
     {
-        try {
-            // Load entities with associations
-            $ticketsTable = $this->fetchTable('Tickets');
-            $ticket = $ticketsTable->get($ticket->id, contain: ['Requesters', 'Assignees', 'Attachments']);
-
-            $commentsTable = $this->fetchTable('TicketComments');
-            $comment = $commentsTable->get($comment->id, contain: ['Users']);
-
-            // Get comment attachments (non-inline only)
-            $commentAttachments = [];
-            if (!empty($ticket->attachments)) {
-                foreach ($ticket->attachments as $attachment) {
-                    if ($attachment->comment_id === $comment->id && !$attachment->is_inline) {
-                        $commentAttachments[] = $attachment;
-                    }
-                }
-            }
-
-            // Get unified response template
-            $template = $this->getTemplate('ticket_respuesta');
-            if (!$template) {
-                Log::error('Email template not found: ticket_respuesta');
-                return false;
-            }
-
-            // Check if status actually changed
-            $hasStatusChange = ($oldStatus !== $newStatus);
-            $assigneeName = $ticket->assignee ? $ticket->assignee->name : 'No asignado';
-
-            // Build status change HTML section (only if status changed)
-            $statusChangeSection = '';
-            if ($hasStatusChange) {
-                $statusChangeSection = $this->renderer->renderStatusChangeHtml($oldStatus, $newStatus, $assigneeName);
-            }
-
-            // Get agent profile image URL
-            $userHelper = new \App\View\Helper\UserHelper($this->getView());
-            $agentProfileImageUrl = $comment->user && $comment->user->profile_image
-                ? $userHelper->profileImage($comment->user->profile_image)
-                : $userHelper->defaultAvatar();
-
-            // Convert relative URL to absolute URL for email
-            $agentProfileImageUrl = $this->getAbsoluteUrl($agentProfileImageUrl);
-
-            // Replace variables
-            $variables = [
-                'ticket_number' => $ticket->ticket_number,
-                'subject' => $ticket->subject,
-                'requester_name' => $ticket->requester->name,
-                'comment_author' => $comment->user->name,
-                'comment_body' => $comment->body,
-                'attachments_list' => $this->renderer->renderAttachmentsHtml($commentAttachments),
-                'status_change_section' => $statusChangeSection,
-                'ticket_url' => $this->renderer->getTicketUrl($ticket->id),
-                'system_title' => 'Sistema de Soporte',
-                'agent_profile_image_url' => $agentProfileImageUrl,
-                'agent_name' => $comment->user->name,
-            ];
-
-            $subject = $this->replaceVariables($template->subject, $variables);
-            $body = $this->replaceVariables($template->body_html, $variables);
-
-            // Send email to requester with attachments and additional recipients
-            return $this->sendEmail($ticket->requester->email, $subject, $body, $commentAttachments, $additionalTo, $additionalCc);
-        } catch (\Exception $e) {
-            Log::error('Failed to send ticket response notification', [
-                'ticket_id' => $ticket->id,
-                'comment_id' => $comment->id,
-                'error' => $e->getMessage(),
-            ]);
-            return false;
-        }
+        return $this->sendCommentBasedNotification('ticket', 'ticket_respuesta', $ticket, $comment, $oldStatus, $newStatus, $additionalTo, $additionalCc);
     }
 
     /**
@@ -367,29 +243,20 @@ class EmailService
     private function getGmailService(): GmailService
     {
         if ($this->gmailService === null) {
-            // Use cached config if available
-            if ($this->systemConfig !== null) {
-                $config = $this->systemConfig;
-            } else {
-                // Load from database
-                $settingsTable = $this->fetchTable('SystemSettings');
-                $config = $settingsTable->find()
-                    ->select(['setting_key', 'setting_value'])
-                    ->where(['setting_key IN' => ['gmail_refresh_token', 'gmail_client_secret_path']])
-                    ->all()
-                    ->combine('setting_key', 'setting_value')
-                    ->toArray();
-            }
-
-            // Decrypt the refresh token if encrypted
-            $refreshToken = $config['gmail_refresh_token'] ?? '';
+            // Resolve Gmail settings using centralized config resolution
+            $refreshToken = $this->getSettingValue('gmail_refresh_token');
             if (!empty($refreshToken)) {
                 $refreshToken = $this->decryptSetting($refreshToken, 'gmail_refresh_token');
             }
 
+            $clientSecretPath = $this->getSettingValue(
+                'gmail_client_secret_path',
+                CONFIG . 'google' . DS . 'client_secret.json'
+            );
+
             $this->gmailService = new GmailService([
                 'refresh_token' => $refreshToken,
-                'client_secret_path' => $config['gmail_client_secret_path'] ?? CONFIG . 'google' . DS . 'client_secret.json',
+                'client_secret_path' => $clientSecretPath,
             ]);
         }
 
@@ -410,33 +277,9 @@ class EmailService
     private function sendEmail(string $to, string $subject, string $body, array $attachments = [], array $additionalTo = [], array $additionalCc = []): bool
     {
         try {
-            // Get system title for From header
-            $systemTitle = 'Sistema de Soporte';
-            if ($this->systemConfig !== null) {
-                $systemTitle = $this->systemConfig['system_title'] ?? $systemTitle;
-            } else {
-                $settingsTable = $this->fetchTable('SystemSettings');
-                $setting = $settingsTable->find()
-                    ->where(['setting_key' => 'system_title'])
-                    ->first();
-                if ($setting) {
-                    $systemTitle = $setting->setting_value;
-                }
-            }
-
-            // Get Gmail username for From email
-            $fromEmail = 'noreply@localhost';
-            if ($this->systemConfig !== null && !empty($this->systemConfig['gmail_user_email'])) {
-                $fromEmail = $this->systemConfig['gmail_user_email'];
-            } else {
-                $settingsTable = $this->fetchTable('SystemSettings');
-                $setting = $settingsTable->find()
-                    ->where(['setting_key' => 'gmail_user_email'])
-                    ->first();
-                if ($setting) {
-                    $fromEmail = $setting->setting_value;
-                }
-            }
+            // Get system title and Gmail email using centralized config resolution
+            $systemTitle = $this->getSettingValue('system_title', 'Sistema de Soporte');
+            $fromEmail = $this->getSettingValue('gmail_user_email', 'noreply@localhost');
 
             // Build recipients array for Gmail API
             $toRecipients = [$to => $to]; // Primary recipient
@@ -551,81 +394,12 @@ class EmailService
      */
     public function sendPqrsNewCommentNotification($pqrs, $comment, array $additionalTo = [], array $additionalCc = []): bool
     {
-        try {
-            // Only send for public comments
-            if ($comment->comment_type !== 'public') {
-                return true;
-            }
-
-            // Load entities with associations
-            $pqrsTable = $this->fetchTable('Pqrs');
-            $pqrs = $pqrsTable->get($pqrs->id, contain: ['PqrsAttachments']);
-
-            $commentsTable = $this->fetchTable('PqrsComments');
-            $comment = $commentsTable->get($comment->id, contain: ['Users']);
-
-            // Get comment attachments (non-inline only)
-            $commentAttachments = [];
-            if (!empty($pqrs->pqrs_attachments)) {
-                foreach ($pqrs->pqrs_attachments as $attachment) {
-                    if ($attachment->pqrs_comment_id === $comment->id && !$attachment->is_inline) {
-                        $commentAttachments[] = $attachment;
-                    }
-                }
-            }
-
-            // Get template from database
-            $template = $this->getTemplate('pqrs_comentario');
-            if (!$template) {
-                Log::error('Email template not found: pqrs_comentario');
-                return false;
-            }
-
-            $author = $comment->user ? $comment->user->name : 'Sistema';
-
-            // Get agent profile image URL
-            $userHelper = new \App\View\Helper\UserHelper($this->getView());
-            $agentProfileImageUrl = $comment->user && $comment->user->profile_image
-                ? $userHelper->profileImage($comment->user->profile_image)
-                : $userHelper->defaultAvatar();
-
-            // Convert relative URL to absolute URL for email
-            $agentProfileImageUrl = $this->getAbsoluteUrl($agentProfileImageUrl);
-
-            // Replace variables in subject
-            $subject = str_replace('{{pqrs_number}}', $pqrs->pqrs_number, $template->subject);
-
-            // Replace variables in body
-            $body = str_replace([
-                '{{pqrs_number}}',
-                '{{subject}}',
-                '{{comment_author}}',
-                '{{comment_body}}',
-                '{{attachments_list}}',
-                '{{system_title}}',
-                '{{agent_profile_image_url}}',
-                '{{agent_name}}',
-            ], [
-                $pqrs->pqrs_number,
-                $pqrs->subject,
-                $author,
-                $comment->body,
-                $this->renderer->renderAttachmentsHtml($commentAttachments),
-                'Sistema de Atención al Cliente',
-                $agentProfileImageUrl,
-                $author,
-            ], $template->body_html);
-
-            // Send email to requester with attachments and additional recipients
-            return $this->sendEmail($pqrs->requester_email, $subject, $body, $commentAttachments, $additionalTo, $additionalCc);
-        } catch (\Exception $e) {
-            Log::error('Failed to send PQRS comment notification', [
-                'pqrs_id' => $pqrs->id,
-                'comment_id' => $comment->id,
-                'error' => $e->getMessage(),
-            ]);
-            return false;
+        // Only send for public comments
+        if ($comment->comment_type !== 'public') {
+            return true;
         }
+
+        return $this->sendCommentBasedNotification('pqrs', 'pqrs_comentario', $pqrs, $comment, null, null, $additionalTo, $additionalCc);
     }
 
     /**
@@ -635,82 +409,13 @@ class EmailService
      * @param object $comment Comment entity
      * @param string $oldStatus Old status
      * @param string $newStatus New status
+     * @param array $additionalTo Additional To recipients
+     * @param array $additionalCc Additional CC recipients
      * @return bool Success status
      */
     public function sendPqrsResponseNotification($pqrs, $comment, string $oldStatus, string $newStatus, array $additionalTo = [], array $additionalCc = []): bool
     {
-        try {
-            // Load entities with associations
-            $pqrsTable = $this->fetchTable('Pqrs');
-            $pqrs = $pqrsTable->get($pqrs->id, contain: ['Assignees', 'PqrsAttachments']);
-
-            $commentsTable = $this->fetchTable('PqrsComments');
-            $comment = $commentsTable->get($comment->id, contain: ['Users']);
-
-            // Get comment attachments (non-inline only)
-            $commentAttachments = [];
-            if (!empty($pqrs->pqrs_attachments)) {
-                foreach ($pqrs->pqrs_attachments as $attachment) {
-                    if ($attachment->pqrs_comment_id === $comment->id && !$attachment->is_inline) {
-                        $commentAttachments[] = $attachment;
-                    }
-                }
-            }
-
-            // Get unified response template
-            $template = $this->getTemplate('pqrs_respuesta');
-            if (!$template) {
-                Log::error('Email template not found: pqrs_respuesta');
-                return false;
-            }
-
-            // Check if status actually changed
-            $hasStatusChange = ($oldStatus !== $newStatus);
-            $assigneeName = $pqrs->assignee ? $pqrs->assignee->name : 'No asignado';
-
-            // Build status change HTML section (only if status changed)
-            $statusChangeSection = '';
-            if ($hasStatusChange) {
-                $statusChangeSection = $this->renderer->renderStatusChangeHtml($oldStatus, $newStatus, $assigneeName);
-            }
-
-            // Get agent profile image URL
-            $userHelper = new \App\View\Helper\UserHelper($this->getView());
-            $agentProfileImageUrl = $comment->user && $comment->user->profile_image
-                ? $userHelper->profileImage($comment->user->profile_image)
-                : $userHelper->defaultAvatar();
-
-            // Convert relative URL to absolute URL for email
-            $agentProfileImageUrl = $this->getAbsoluteUrl($agentProfileImageUrl);
-
-            // Replace variables
-            $variables = [
-                'pqrs_number' => $pqrs->pqrs_number,
-                'pqrs_type' => $this->renderer->getTypeLabel($pqrs->type),
-                'subject' => $pqrs->subject,
-                'requester_name' => $pqrs->requester_name,
-                'comment_author' => $comment->user->name,
-                'comment_body' => $comment->body,
-                'attachments_list' => $this->renderer->renderAttachmentsHtml($commentAttachments),
-                'status_change_section' => $statusChangeSection,
-                'system_title' => 'Sistema de Atención al Cliente',
-                'agent_profile_image_url' => $agentProfileImageUrl,
-                'agent_name' => $comment->user->name,
-            ];
-
-            $subject = $this->replaceVariables($template->subject, $variables);
-            $body = $this->replaceVariables($template->body_html, $variables);
-
-            // Send email to requester with attachments and additional recipients
-            return $this->sendEmail($pqrs->requester_email, $subject, $body, $commentAttachments, $additionalTo, $additionalCc);
-        } catch (\Exception $e) {
-            Log::error('Failed to send PQRS response notification', [
-                'pqrs_id' => $pqrs->id,
-                'comment_id' => $comment->id,
-                'error' => $e->getMessage(),
-            ]);
-            return false;
-        }
+        return $this->sendCommentBasedNotification('pqrs', 'pqrs_respuesta', $pqrs, $comment, $oldStatus, $newStatus, $additionalTo, $additionalCc);
     }
 
     /**
@@ -779,70 +484,117 @@ class EmailService
      */
     public function sendCompraCommentNotification($compra, $comment, array $additionalTo = [], array $additionalCc = []): bool
     {
+        // Only send for public comments
+        if ($comment->comment_type !== 'public') {
+            return true;
+        }
+
+        return $this->sendCommentBasedNotification('compra', 'compra_comentario', $compra, $comment, null, null, $additionalTo, $additionalCc);
+    }
+
+    /**
+     * Send unified Compra response notification (comment + status change)
+     *
+     * @param \App\Model\Entity\Compra $compra Compra entity
+     * @param \App\Model\Entity\ComprasComment $comment Comment entity
+     * @param string $oldStatus Old status
+     * @param string $newStatus New status
+     * @param array $additionalTo Additional To recipients
+     * @param array $additionalCc Additional CC recipients
+     * @return bool Success status
+     */
+    public function sendCompraResponseNotification($compra, $comment, string $oldStatus, string $newStatus, array $additionalTo = [], array $additionalCc = []): bool
+    {
+        return $this->sendCommentBasedNotification('compra', 'compra_respuesta', $compra, $comment, $oldStatus, $newStatus, $additionalTo, $additionalCc);
+    }
+
+    /**
+     * Send comment-based notification (comment or response) for any entity type
+     *
+     * Consolidates the shared logic of all 6 comment/response notification methods:
+     * - Loading entity with attachments and comment with users
+     * - Filtering comment attachments (non-inline)
+     * - Building agent profile image URL
+     * - Building template variables
+     * - Sending email with attachments
+     *
+     * @param string $entityType 'ticket', 'pqrs', 'compra'
+     * @param string $templateKey Template key from database
+     * @param \Cake\Datasource\EntityInterface $entity Entity instance
+     * @param \Cake\Datasource\EntityInterface $comment Comment entity
+     * @param string|null $oldStatus Old status (null for comment-only notifications)
+     * @param string|null $newStatus New status (null for comment-only notifications)
+     * @param array $additionalTo Additional To recipients
+     * @param array $additionalCc Additional CC recipients
+     * @return bool Success status
+     */
+    private function sendCommentBasedNotification(
+        string $entityType,
+        string $templateKey,
+        \Cake\Datasource\EntityInterface $entity,
+        \Cake\Datasource\EntityInterface $comment,
+        ?string $oldStatus,
+        ?string $newStatus,
+        array $additionalTo = [],
+        array $additionalCc = []
+    ): bool {
         try {
-            // Only send for public comments
-            if ($comment->comment_type !== 'public') {
-                return true;
-            }
+            $config = $this->getCommentNotificationConfig($entityType);
 
-            // Load entities with associations
-            $comprasTable = $this->fetchTable('Compras');
-            $compra = $comprasTable->get($compra->id, contain: ['Requesters', 'ComprasAttachments']);
+            // Load entity with associations (including attachments)
+            $entityTable = $this->fetchTable($config['entityTable']);
+            $entity = $entityTable->get($entity->id, contain: $config['entityContain']);
 
-            $commentsTable = $this->fetchTable('ComprasComments');
+            // Load comment with user association
+            $commentsTable = $this->fetchTable($config['commentsTable']);
             $comment = $commentsTable->get($comment->id, contain: ['Users']);
 
-            // Get comment attachments (non-inline only)
+            // Filter comment attachments (non-inline only)
             $commentAttachments = [];
-            if (!empty($compra->compras_attachments)) {
-                foreach ($compra->compras_attachments as $attachment) {
-                    if ($attachment->compras_comment_id === $comment->id && !$attachment->is_inline) {
+            $attachmentsProperty = $config['attachmentsProperty'];
+            if (!empty($entity->{$attachmentsProperty})) {
+                $commentFk = $config['commentForeignKey'];
+                foreach ($entity->{$attachmentsProperty} as $attachment) {
+                    if ($attachment->{$commentFk} === $comment->id && !$attachment->is_inline) {
                         $commentAttachments[] = $attachment;
                     }
                 }
             }
 
-            // Get template from database
-            $template = $this->getTemplate('compra_comentario');
+            // Get template
+            $template = $this->getTemplate($templateKey);
             if (!$template) {
-                Log::error('Email template not found: compra_comentario');
+                Log::error("Email template not found: {$templateKey}");
                 return false;
             }
 
+            // Get agent profile image
             $author = $comment->user ? $comment->user->name : 'Sistema';
+            $agentProfileImageUrl = $this->getAgentProfileImageUrl($comment->user);
 
-            // Get agent profile image URL
-            $userHelper = new \App\View\Helper\UserHelper($this->getView());
-            $agentProfileImageUrl = $comment->user && $comment->user->profile_image
-                ? $userHelper->profileImage($comment->user->profile_image)
-                : $userHelper->defaultAvatar();
+            // Build variables
+            $variables = array_merge($this->getSystemVariables(), $this->buildCommentVariables($entityType, $entity, $comment, $author, $agentProfileImageUrl, $commentAttachments));
 
-            // Convert relative URL to absolute URL for email
-            $agentProfileImageUrl = $this->getAbsoluteUrl($agentProfileImageUrl);
+            // Add status change section if this is a response notification
+            if ($oldStatus !== null && $newStatus !== null) {
+                $hasStatusChange = ($oldStatus !== $newStatus);
+                $assigneeName = (isset($entity->assignee) && $entity->assignee) ? $entity->assignee->name : 'No asignado';
+                $variables['status_change_section'] = $hasStatusChange
+                    ? $this->renderer->renderStatusChangeHtml($oldStatus, $newStatus, $assigneeName)
+                    : '';
+            }
 
-            // Replace variables in subject and body
-            $variables = array_merge($this->getSystemVariables(), [
-                'compra_number' => $compra->compra_number,
-                'subject' => $compra->subject,
-                'requester_name' => $compra->requester->name,
-                'comment_author' => $author,
-                'comment_body' => $comment->body,
-                'attachments_list' => $this->renderer->renderAttachmentsHtml($commentAttachments),
-                'compra_url' => $this->getCompraUrl($compra->id),
-                'system_title' => 'Sistema de Compras',
-                'agent_profile_image_url' => $agentProfileImageUrl,
-                'agent_name' => $author,
-            ]);
-
+            // Replace variables and send
             $subject = $this->replaceVariables($template->subject, $variables);
             $body = $this->replaceVariables($template->body_html, $variables);
+            $recipientEmail = $this->getRecipientEmail($entityType, $entity);
 
-            // Send email to requester with attachments and additional recipients
-            return $this->sendEmail($compra->requester->email, $subject, $body, $commentAttachments, $additionalTo, $additionalCc);
+            return $this->sendEmail($recipientEmail, $subject, $body, $commentAttachments, $additionalTo, $additionalCc);
         } catch (\Exception $e) {
-            Log::error('Failed to send compra comment notification', [
-                'compra_id' => $compra->id,
+            Log::error("Failed to send {$entityType} comment notification", [
+                'entity_id' => $entity->id,
                 'comment_id' => $comment->id,
+                'template' => $templateKey,
                 'error' => $e->getMessage(),
             ]);
             return false;
@@ -850,91 +602,109 @@ class EmailService
     }
 
     /**
-     * Send unified Compra response notification (comment + status change)
+     * Get configuration for comment-based notifications per entity type
      *
-     * This method combines comment and status change into a single email
-     * to avoid sending multiple notifications to the requester.
-     *
-     * @param \App\Model\Entity\Compra $compra Compra entity
-     * @param \App\Model\Entity\ComprasComment $comment Comment entity
-     * @param string $oldStatus Old status
-     * @param string $newStatus New status
-     * @return bool Success status
+     * @param string $entityType 'ticket', 'pqrs', 'compra'
+     * @return array Configuration array
      */
-    public function sendCompraResponseNotification($compra, $comment, string $oldStatus, string $newStatus, array $additionalTo = [], array $additionalCc = []): bool
+    private function getCommentNotificationConfig(string $entityType): array
     {
-        try {
-            // Load entities with associations
-            $comprasTable = $this->fetchTable('Compras');
-            $compra = $comprasTable->get($compra->id, contain: ['Requesters', 'Assignees', 'ComprasAttachments']);
+        return match ($entityType) {
+            'ticket' => [
+                'entityTable' => 'Tickets',
+                'commentsTable' => 'TicketComments',
+                'entityContain' => ['Requesters', 'Assignees', 'Attachments'],
+                'attachmentsProperty' => 'attachments',
+                'commentForeignKey' => 'comment_id',
+                'systemTitle' => 'Sistema de Soporte',
+            ],
+            'pqrs' => [
+                'entityTable' => 'Pqrs',
+                'commentsTable' => 'PqrsComments',
+                'entityContain' => ['Assignees', 'PqrsAttachments'],
+                'attachmentsProperty' => 'pqrs_attachments',
+                'commentForeignKey' => 'pqrs_comment_id',
+                'systemTitle' => 'Sistema de Atención al Cliente',
+            ],
+            'compra' => [
+                'entityTable' => 'Compras',
+                'commentsTable' => 'ComprasComments',
+                'entityContain' => ['Requesters', 'Assignees', 'ComprasAttachments'],
+                'attachmentsProperty' => 'compras_attachments',
+                'commentForeignKey' => 'compras_comment_id',
+                'systemTitle' => 'Sistema de Compras',
+            ],
+        };
+    }
 
-            $commentsTable = $this->fetchTable('ComprasComments');
-            $comment = $commentsTable->get($comment->id, contain: ['Users']);
+    /**
+     * Build comment-specific template variables for entity type
+     *
+     * @param string $entityType 'ticket', 'pqrs', 'compra'
+     * @param \Cake\Datasource\EntityInterface $entity Entity instance
+     * @param \Cake\Datasource\EntityInterface $comment Comment entity
+     * @param string $author Author name
+     * @param string $agentProfileImageUrl Agent profile image URL
+     * @param array $commentAttachments Comment attachments
+     * @return array Template variables
+     */
+    private function buildCommentVariables(
+        string $entityType,
+        \Cake\Datasource\EntityInterface $entity,
+        \Cake\Datasource\EntityInterface $comment,
+        string $author,
+        string $agentProfileImageUrl,
+        array $commentAttachments
+    ): array {
+        $config = $this->getCommentNotificationConfig($entityType);
 
-            // Get comment attachments (non-inline only)
-            $commentAttachments = [];
-            if (!empty($compra->compras_attachments)) {
-                foreach ($compra->compras_attachments as $attachment) {
-                    if ($attachment->compra_comment_id === $comment->id && !$attachment->is_inline) {
-                        $commentAttachments[] = $attachment;
-                    }
-                }
-            }
+        // Common variables for all entity types
+        $common = [
+            'subject' => $entity->subject,
+            'comment_author' => $author,
+            'comment_body' => $comment->body,
+            'attachments_list' => $this->renderer->renderAttachmentsHtml($commentAttachments),
+            'agent_profile_image_url' => $agentProfileImageUrl,
+            'agent_name' => $author,
+            'system_title' => $config['systemTitle'],
+        ];
 
-            // Get unified response template
-            $template = $this->getTemplate('compra_respuesta');
-            if (!$template) {
-                Log::error('Email template not found: compra_respuesta');
-                return false;
-            }
+        // Entity-specific variables
+        $entityVars = match ($entityType) {
+            'ticket' => [
+                'ticket_number' => $entity->ticket_number,
+                'requester_name' => $entity->requester->name ?? 'N/A',
+                'ticket_url' => $this->renderer->getTicketUrl($entity->id),
+            ],
+            'pqrs' => [
+                'pqrs_number' => $entity->pqrs_number,
+                'pqrs_type' => $this->renderer->getTypeLabel($entity->type),
+                'requester_name' => $entity->requester_name ?? 'N/A',
+            ],
+            'compra' => [
+                'compra_number' => $entity->compra_number,
+                'requester_name' => $entity->requester->name ?? 'N/A',
+                'compra_url' => $this->getCompraUrl($entity->id),
+            ],
+        };
 
-            // Check if status actually changed
-            $hasStatusChange = ($oldStatus !== $newStatus);
-            $assigneeName = $compra->assignee ? $compra->assignee->name : 'No asignado';
+        return array_merge($common, $entityVars);
+    }
 
-            // Build status change HTML section (only if status changed)
-            $statusChangeSection = '';
-            if ($hasStatusChange) {
-                $statusChangeSection = $this->renderer->renderStatusChangeHtml($oldStatus, $newStatus, $assigneeName);
-            }
+    /**
+     * Get agent profile image URL from comment user
+     *
+     * @param \App\Model\Entity\User|null $user User entity
+     * @return string Absolute URL for profile image
+     */
+    private function getAgentProfileImageUrl(?\App\Model\Entity\User $user): string
+    {
+        $userHelper = new \App\View\Helper\UserHelper($this->getView());
+        $url = ($user && $user->profile_image)
+            ? $userHelper->profileImage($user->profile_image)
+            : $userHelper->defaultAvatar();
 
-            // Get agent profile image URL
-            $userHelper = new \App\View\Helper\UserHelper($this->getView());
-            $agentProfileImageUrl = $comment->user && $comment->user->profile_image
-                ? $userHelper->profileImage($comment->user->profile_image)
-                : $userHelper->defaultAvatar();
-
-            // Convert relative URL to absolute URL for email
-            $agentProfileImageUrl = $this->getAbsoluteUrl($agentProfileImageUrl);
-
-            // Replace variables
-            $variables = [
-                'compra_number' => $compra->compra_number,
-                'subject' => $compra->subject,
-                'requester_name' => $compra->requester->name,
-                'comment_author' => $comment->user->name,
-                'comment_body' => $comment->body,
-                'attachments_list' => $this->renderer->renderAttachmentsHtml($commentAttachments),
-                'status_change_section' => $statusChangeSection,
-                'compra_url' => $this->getCompraUrl($compra->id),
-                'system_title' => 'Sistema de Compras',
-                'agent_profile_image_url' => $agentProfileImageUrl,
-                'agent_name' => $comment->user->name,
-            ];
-
-            $subject = $this->replaceVariables($template->subject, $variables);
-            $body = $this->replaceVariables($template->body_html, $variables);
-
-            // Send email to requester with attachments and additional recipients
-            return $this->sendEmail($compra->requester->email, $subject, $body, $commentAttachments, $additionalTo, $additionalCc);
-        } catch (\Exception $e) {
-            Log::error('Failed to send compra response notification', [
-                'compra_id' => $compra->id,
-                'comment_id' => $comment->id,
-                'error' => $e->getMessage(),
-            ]);
-            return false;
-        }
+        return $this->getAbsoluteUrl($url);
     }
 
     /**
