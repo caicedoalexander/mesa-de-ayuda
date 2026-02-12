@@ -63,104 +63,106 @@ $userId = $user ? $user->get('id') : null;
         ]) ?>
     </div>
 
-    <div class="mb-3 fs-6 d-flex align-items-center">
-        <small class="me-1"> <?= $tickets->count() ?> Tickets </small>
-        <small class="m-0 text-muted">(<?= $this->Paginator->counter(__('Pagina {{page}} de {{pages}}')) ?>)</small>
-    </div>
+    <div id="entity-list-content">
+        <div class="mb-3 fs-6 d-flex align-items-center">
+            <small class="me-1"> <?= $tickets->count() ?> Tickets </small>
+            <small class="m-0 text-muted">(<?= $this->Paginator->counter(__('Pagina {{page}} de {{pages}}')) ?>)</small>
+        </div>
 
-    <?php if ($tickets->count() > 0): ?>
-        <div class="table-responsive table-scroll mb-auto">
-            <table class="table table-hover">
-                <thead class="bg-white" style="position: sticky; top: 0; z-index: 10;">
-                    <tr>
-                        <th class="w-fit pe-4 align-middle" style="width:36px">
-                            <input type="checkbox" id="checkAll" class="form-check-input border border-dark rounded" />
-                        </th>
-                        <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Estado</th>
-                        <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Asunto</th>
-                        <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Solicitante</th>
-                        <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Asignado a</th>
-                        <?php if ($view === 'resueltos'): ?>
-                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">
-                                <?= $this->Paginator->sort('resolved_at', 'Resuelto') ?>
-                            </th>
-                        <?php endif; ?>
-                        <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">
-                            <?= $this->Paginator->sort('created', 'Solicitado') ?>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="">
-                    <?php foreach ($tickets as $ticket): ?>
+        <?php if ($tickets->count() > 0): ?>
+            <div class="table-responsive table-scroll mb-auto">
+                <table class="table table-hover">
+                    <thead class="bg-white" style="position: sticky; top: 0; z-index: 10;">
                         <tr>
-                            <td class="py-0 align-middle ">
-                                <input type="checkbox" class="form-check-input row-check rounded border border-dark"
-                                    value="<?= (int) $ticket->id ?>" />
-                            </td>
-
-                            <td class="py-0 align-middle " style="width: 100px; font-size: 14px;">
-                                <?= $this->Status->statusBadge($ticket->status, 'ticket') ?>
-                            </td>
-
-                            <td class="py-0 fw-light align-middle text-truncate"
-                                style="min-width: 300px; max-width: 300px;">
-                                <?= $this->Html->link(
-                                    h($ticket->subject),
-                                    $this->Ticket->getViewUrl($ticket),
-                                    ['style' => 'text-decoration: none; color: var(--gray-900); font-size: 14px;']
-                                ) ?>
-                            </td>
-
-                            <td class="py-0 text-truncate align-middle" style="min-width: 150px; max-width: 150px;">
-                                <strong class="" style="font-size: 14px;"><?= h($ticket->requester->name) ?></strong>
-                                <span class="text-muted" style="font-size: 14px;">
-                                    (<?= h($ticket->requester->email) ?>)
-                                </span>
-                            </td>
-
-                            <td class="py-1 align-middle" style="max-width: 150px;">
-                                <?php
-                                $isLocked = in_array($ticket->status, ['resuelto', 'convertido']);
-                                $isDisabled = $this->Ticket->isAssignmentDisabled($user) || $isLocked;
-                                ?>
-                                <?= $this->Form->create(null, ['url' => ['action' => 'assign', $ticket->id], 'class' => 'table-assign-form']) ?>
-                                <?= $this->Form->select('assignee_id', $agents, [
-                                    'value' => $ticket->assignee_id,
-                                    'empty' => 'Sin asignar',
-                                    'class' => 'table-agent-select form-select form-select-sm',
-                                    'disabled' => $isDisabled,
-                                    'data-ticket-id' => $ticket->id
-                                ]) ?>
-                                <?= $this->Form->end() ?>
-                            </td>
-
+                            <th class="w-fit pe-4 align-middle" style="width:36px">
+                                <input type="checkbox" id="checkAll" class="form-check-input border border-dark rounded" />
+                            </th>
+                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Estado</th>
+                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Asunto</th>
+                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Solicitante</th>
+                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Asignado a</th>
                             <?php if ($view === 'resueltos'): ?>
-                                <td class="py-1 align-middle lh-1" style="font-size: 14px;">
-                                    <?= $ticket->resolved_at ? $this->TimeHuman->short($ticket->resolved_at) : '-' ?>
-                                </td>
+                                <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">
+                                    <?= $this->Paginator->sort('resolved_at', 'Resuelto') ?>
+                                </th>
                             <?php endif; ?>
-
-                            <td class="py-1 align-middle lh-1 " style="font-size: 14px;">
-                                <?= $this->TimeHuman->short($ticket->created) ?>
-                            </td>
+                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">
+                                <?= $this->Paginator->sort('created', 'Solicitado') ?>
+                            </th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody class="">
+                        <?php foreach ($tickets as $ticket): ?>
+                            <tr>
+                                <td class="py-0 align-middle ">
+                                    <input type="checkbox" class="form-check-input row-check rounded border border-dark"
+                                        value="<?= (int) $ticket->id ?>" />
+                                </td>
 
-        <!-- Pagination -->
-        <nav aria-label="Paginación">
-            <?= $this->element('pagination') ?>
-        </nav>
+                                <td class="py-0 align-middle " style="width: 100px; font-size: 14px;">
+                                    <?= $this->Status->statusBadge($ticket->status, 'ticket') ?>
+                                </td>
 
-    <?php else: ?>
-        <div class="table-container">
-            <div style="padding: 40px; text-align: center; color: var(--gray-600);">
-                <p style="font-size: 18px;">No hay tickets en esta vista</p>
+                                <td class="py-0 fw-light align-middle text-truncate"
+                                    style="min-width: 300px; max-width: 300px;">
+                                    <?= $this->Html->link(
+                                        h($ticket->subject),
+                                        $this->Ticket->getViewUrl($ticket),
+                                        ['style' => 'text-decoration: none; color: var(--gray-900); font-size: 14px;']
+                                    ) ?>
+                                </td>
+
+                                <td class="py-0 text-truncate align-middle" style="min-width: 150px; max-width: 150px;">
+                                    <strong class="" style="font-size: 14px;"><?= h($ticket->requester->name) ?></strong>
+                                    <span class="text-muted" style="font-size: 14px;">
+                                        (<?= h($ticket->requester->email) ?>)
+                                    </span>
+                                </td>
+
+                                <td class="py-1 align-middle" style="max-width: 150px;">
+                                    <?php
+                                    $isLocked = in_array($ticket->status, ['resuelto', 'convertido']);
+                                    $isDisabled = $this->Ticket->isAssignmentDisabled($user) || $isLocked;
+                                    ?>
+                                    <?= $this->Form->create(null, ['url' => ['action' => 'assign', $ticket->id], 'class' => 'table-assign-form']) ?>
+                                    <?= $this->Form->select('assignee_id', $agents, [
+                                        'value' => $ticket->assignee_id,
+                                        'empty' => 'Sin asignar',
+                                        'class' => 'table-agent-select form-select form-select-sm',
+                                        'disabled' => $isDisabled,
+                                        'data-ticket-id' => $ticket->id
+                                    ]) ?>
+                                    <?= $this->Form->end() ?>
+                                </td>
+
+                                <?php if ($view === 'resueltos'): ?>
+                                    <td class="py-1 align-middle lh-1" style="font-size: 14px;">
+                                        <?= $ticket->resolved_at ? $this->TimeHuman->short($ticket->resolved_at) : '-' ?>
+                                    </td>
+                                <?php endif; ?>
+
+                                <td class="py-1 align-middle lh-1 " style="font-size: 14px;">
+                                    <?= $this->TimeHuman->short($ticket->created) ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             </div>
-        </div>
-    <?php endif; ?>
+
+            <!-- Pagination -->
+            <nav aria-label="Paginación">
+                <?= $this->element('pagination') ?>
+            </nav>
+
+        <?php else: ?>
+            <div class="table-container">
+                <div style="padding: 40px; text-align: center; color: var(--gray-600);">
+                    <p style="font-size: 18px;">No hay tickets en esta vista</p>
+                </div>
+            </div>
+        <?php endif; ?>
+    </div>
 </div>
 
 <!-- Modales para acciones rápidas -->
@@ -171,9 +173,16 @@ $userId = $user ? $user->get('id') : null;
     'showTagModal' => true
 ]) ?>
 
+<?= $this->Html->script('ajax-refresh') ?>
 <script>
     // Inicializar bulk actions module
     initBulkActions('ticket');
+
+    // Inicializar AJAX refresh con auto-refresh cada 30 segundos
+    AjaxRefresh.init({
+        entityType: 'ticket',
+        autoRefreshSeconds: 30
+    });
 
     // Spinner: Mostrar en carga inicial (primera vez en la sesión)
     <?php if ($this->request->getSession()->check('show_loading_spinner')): ?>

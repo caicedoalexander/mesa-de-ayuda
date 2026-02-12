@@ -82,6 +82,26 @@ table, thead, tbody, th, td {
     transform: scale(1.2) rotate(90deg);
 }
 
+/* Refresh button spin animation */
+@keyframes refreshSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.spin-animation {
+    animation: refreshSpin 0.8s linear infinite;
+}
+
+#btn-refresh-list {
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+#btn-refresh-list:hover {
+    border-color: var(--admin-green);
+    color: var(--admin-green);
+}
+
 /* ============================================
    Bulk Actions Bar Animation
    ============================================ */

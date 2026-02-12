@@ -63,116 +63,118 @@ $userId = $user ? $user->get('id') : null;
         ]) ?>
     </div>
 
-    <div class="mb-3 fs-6 d-flex align-items-center">
-        <small class="me-1"> <?= $compras->count() ?> Compras </small>
-        <small class="m-0 text-muted">(<?= $this->Paginator->counter(__('Pagina {{page}} de {{pages}}')) ?>)</small>
-    </div>
+    <div id="entity-list-content">
+        <div class="mb-3 fs-6 d-flex align-items-center">
+            <small class="me-1"> <?= $compras->count() ?> Compras </small>
+            <small class="m-0 text-muted">(<?= $this->Paginator->counter(__('Pagina {{page}} de {{pages}}')) ?>)</small>
+        </div>
 
-    <?php if ($compras->count() > 0): ?>
-        <div class="table-responsive table-scroll mb-auto">
-            <table class="table table-hover">
-                <thead class="bg-white" style="position: sticky; top: 0; z-index: 10;">
-                    <tr>
-                        <th class="w-fit pe-4 align-middle" style="width:36px">
-                            <input type="checkbox" id="checkAll" class="form-check-input border border-dark rounded" />
-                        </th>
-                        <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Estado</th>
-                        <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Asunto</th>
-                        <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Solicitante</th>
-                        <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Asignado a</th>
-                        <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">SLA</th>
-                        <?php if ($view === 'completados'): ?>
-                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">
-                                <?= $this->Paginator->sort('resolved_at', 'Completado') ?>
+        <?php if ($compras->count() > 0): ?>
+            <div class="table-responsive table-scroll mb-auto">
+                <table class="table table-hover">
+                    <thead class="bg-white" style="position: sticky; top: 0; z-index: 10;">
+                        <tr>
+                            <th class="w-fit pe-4 align-middle" style="width:36px">
+                                <input type="checkbox" id="checkAll" class="form-check-input border border-dark rounded" />
                             </th>
-                        <?php endif; ?>
-                        <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">
-                            <?= $this->Paginator->sort('created', 'Solicitado') ?>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($compras as $compra): ?>
-                        <?php
-                        // Get SLA status
-                        $slaStatus = $this->Compras->getSlaStatus($compra);
-                        $rowClass = $slaStatus['status'] === 'breached' ? 'table-danger' : '';
-                        ?>
-                        <tr class="<?= $rowClass ?>">
-                            <td class="py-0 align-middle">
-                                <input type="checkbox" class="form-check-input row-check rounded border border-dark"
-                                       value="<?= (int)$compra->id ?>" />
-                            </td>
-
-                            <td class="py-0 align-middle" style="width: 120px; font-size: 14px;">
-                                <?= $this->Status->statusBadge($compra->status, 'compra') ?>
-                            </td>
-
-                            <td class="py-0 fw-light align-middle text-truncate"
-                                style="min-width: 300px; max-width: 300px;">
-                                <?= $this->Html->link(
-                                    h($compra->subject),
-                                    $this->Compras->getViewUrl($compra),
-                                    ['style' => 'text-decoration: none; color: var(--gray-900); font-size: 14px;']
-                                ) ?>
-                            </td>
-
-                            <td class="py-0 text-truncate align-middle" style="min-width: 150px; max-width: 150px;">
-                                <strong style="font-size: 14px;"><?= h($compra->requester->name ?? 'N/A') ?></strong>
-                                <?php if ($compra->requester): ?>
-                                    <span class="text-muted" style="font-size: 14px;">
-                                        (<?= h($compra->requester->email) ?>)
-                                    </span>
-                                <?php endif; ?>
-                            </td>
-
-                            <td class="py-1 align-middle" style="max-width: 150px;">
-                                <?php
-                                $isLocked = in_array($compra->status, ['completado', 'rechazado', 'convertido']);
-                                $isDisabled = !in_array($userRole, ['admin', 'compras']) || $isLocked;
-                                ?>
-                                <?= $this->Form->create(null, ['url' => ['action' => 'assign', $compra->id], 'class' => 'table-assign-form']) ?>
-                                <?= $this->Form->select('assignee_id', $comprasUsers, [
-                                    'value' => $compra->assignee_id,
-                                    'empty' => 'Sin asignar',
-                                    'class' => 'table-agent-select form-select form-select-sm',
-                                    'disabled' => $isDisabled,
-                                    'data-compra-id' => $compra->id
-                                ]) ?>
-                                <?= $this->Form->end() ?>
-                            </td>
-
-                            <td class="py-0 align-middle text-center">
-                                <?= $this->Compras->slaIcon($compra) ?>
-                            </td>
-
+                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Estado</th>
+                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Asunto</th>
+                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Solicitante</th>
+                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Asignado a</th>
+                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">SLA</th>
                             <?php if ($view === 'completados'): ?>
-                                <td class="py-1 align-middle lh-1" style="font-size: 14px;">
-                                    <?= $compra->resolved_at ? $this->TimeHuman->short($compra->resolved_at) : '-' ?>
-                                </td>
+                                <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">
+                                    <?= $this->Paginator->sort('resolved_at', 'Completado') ?>
+                                </th>
                             <?php endif; ?>
-
-                            <td class="py-1 align-middle lh-1" style="font-size: 14px;">
-                                <?= $this->TimeHuman->short($compra->created) ?>
-                            </td>
+                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">
+                                <?= $this->Paginator->sort('created', 'Solicitado') ?>
+                            </th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($compras as $compra): ?>
+                            <?php
+                            // Get SLA status
+                            $slaStatus = $this->Compras->getSlaStatus($compra);
+                            $rowClass = $slaStatus['status'] === 'breached' ? 'table-danger' : '';
+                            ?>
+                            <tr class="<?= $rowClass ?>">
+                                <td class="py-0 align-middle">
+                                    <input type="checkbox" class="form-check-input row-check rounded border border-dark"
+                                           value="<?= (int)$compra->id ?>" />
+                                </td>
 
-        <!-- Pagination -->
-        <nav aria-label="Paginación">
-            <?= $this->element('pagination') ?>
-        </nav>
+                                <td class="py-0 align-middle" style="width: 120px; font-size: 14px;">
+                                    <?= $this->Status->statusBadge($compra->status, 'compra') ?>
+                                </td>
 
-    <?php else: ?>
-        <div class="table-container">
-            <div style="padding: 40px; text-align: center; color: var(--gray-600);">
-                <p style="font-size: 18px;">No hay compras en esta vista</p>
+                                <td class="py-0 fw-light align-middle text-truncate"
+                                    style="min-width: 300px; max-width: 300px;">
+                                    <?= $this->Html->link(
+                                        h($compra->subject),
+                                        $this->Compras->getViewUrl($compra),
+                                        ['style' => 'text-decoration: none; color: var(--gray-900); font-size: 14px;']
+                                    ) ?>
+                                </td>
+
+                                <td class="py-0 text-truncate align-middle" style="min-width: 150px; max-width: 150px;">
+                                    <strong style="font-size: 14px;"><?= h($compra->requester->name ?? 'N/A') ?></strong>
+                                    <?php if ($compra->requester): ?>
+                                        <span class="text-muted" style="font-size: 14px;">
+                                            (<?= h($compra->requester->email) ?>)
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
+
+                                <td class="py-1 align-middle" style="max-width: 150px;">
+                                    <?php
+                                    $isLocked = in_array($compra->status, ['completado', 'rechazado', 'convertido']);
+                                    $isDisabled = !in_array($userRole, ['admin', 'compras']) || $isLocked;
+                                    ?>
+                                    <?= $this->Form->create(null, ['url' => ['action' => 'assign', $compra->id], 'class' => 'table-assign-form']) ?>
+                                    <?= $this->Form->select('assignee_id', $comprasUsers, [
+                                        'value' => $compra->assignee_id,
+                                        'empty' => 'Sin asignar',
+                                        'class' => 'table-agent-select form-select form-select-sm',
+                                        'disabled' => $isDisabled,
+                                        'data-compra-id' => $compra->id
+                                    ]) ?>
+                                    <?= $this->Form->end() ?>
+                                </td>
+
+                                <td class="py-0 align-middle text-center">
+                                    <?= $this->Compras->slaIcon($compra) ?>
+                                </td>
+
+                                <?php if ($view === 'completados'): ?>
+                                    <td class="py-1 align-middle lh-1" style="font-size: 14px;">
+                                        <?= $compra->resolved_at ? $this->TimeHuman->short($compra->resolved_at) : '-' ?>
+                                    </td>
+                                <?php endif; ?>
+
+                                <td class="py-1 align-middle lh-1" style="font-size: 14px;">
+                                    <?= $this->TimeHuman->short($compra->created) ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             </div>
-        </div>
-    <?php endif; ?>
+
+            <!-- Pagination -->
+            <nav aria-label="Paginación">
+                <?= $this->element('pagination') ?>
+            </nav>
+
+        <?php else: ?>
+            <div class="table-container">
+                <div style="padding: 40px; text-align: center; color: var(--gray-600);">
+                    <p style="font-size: 18px;">No hay compras en esta vista</p>
+                </div>
+            </div>
+        <?php endif; ?>
+    </div>
 
 </div>
 
@@ -183,9 +185,16 @@ $userId = $user ? $user->get('id') : null;
     'showTagModal' => false
 ]) ?>
 
+<?= $this->Html->script('ajax-refresh') ?>
 <script>
     // Inicializar bulk actions module
     initBulkActions('compra');
+
+    // Inicializar AJAX refresh (solo manual, sin auto-refresh)
+    AjaxRefresh.init({
+        entityType: 'compra',
+        autoRefreshSeconds: 0
+    });
 
     // Spinner: Mostrar en carga inicial (primera vez en la sesión)
     <?php if ($this->request->getSession()->check('show_loading_spinner')): ?>

@@ -62,100 +62,102 @@ $userId = $user ? $user->get('id') : null;
         ]) ?>
     </div>
 
-    <div class="mb-3 fs-6 d-flex align-items-center">
-        <small class="me-1"> <?= $pqrs->count() ?> PQRS </small>
-        <small class="m-0 text-muted">(<?= $this->Paginator->counter(__('Pagina {{page}} de {{pages}}')) ?>)</small>
-    </div>
+    <div id="entity-list-content">
+        <div class="mb-3 fs-6 d-flex align-items-center">
+            <small class="me-1"> <?= $pqrs->count() ?> PQRS </small>
+            <small class="m-0 text-muted">(<?= $this->Paginator->counter(__('Pagina {{page}} de {{pages}}')) ?>)</small>
+        </div>
 
-    <?php if ($pqrs->count() > 0): ?>
-        <div class="table-responsive table-scroll mb-auto">
-            <table class="table table-hover">
-                <thead class="bg-white" style="position: sticky; top: 0; z-index: 5;">
-                    <tr>
-                        <th class="w-fit pe-4 align-middle" style="width:36px">
-                            <input type="checkbox" id="checkAll" class="form-check-input border border-dark rounded" />
-                        </th>
-                        <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Tipo</th>
-                        <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Estado</th>
-                        <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Asunto</th>
-                        <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Solicitante</th>
-                        <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Asignado a</th>
-                        <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">SLA</th>
-                        <?php if ($view === 'resueltas'): ?>
-                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">
-                                <?= $this->Paginator->sort('resolved_at', 'Resuelto') ?>
-                            </th>
-                        <?php endif; ?>
-                        <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">
-                            <?= $this->Paginator->sort('created', 'Solicitado') ?>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($pqrs as $item): ?>
+        <?php if ($pqrs->count() > 0): ?>
+            <div class="table-responsive table-scroll mb-auto">
+                <table class="table table-hover">
+                    <thead class="bg-white" style="position: sticky; top: 0; z-index: 5;">
                         <tr>
-                            <td class="py-1 align-middle">
-                                <input type="checkbox" class="form-check-input row-check rounded border border-dark"
-                                    value="<?= $item->id ?>" />
-                            </td>
-
-                            <td class="py-1 align-middle" style="font-size: 14px; width: 100px;">
-                                <?= $this->Status->typeBadge($item->type) ?>
-                            </td>
-                            <td class="py-1 align-middle" style="font-size: 14px; width: 80px;">
-                                <?= $this->Status->statusBadge($item->status, 'pqrs') ?>
-                            </td>
-                            <td class="py-1 align-middle text-truncate" style="min-width: 200px; max-width: 200px;">
-                                <?= $this->Html->link(
-                                    h($item->subject),
-                                    ['action' => 'view', $item->id],
-                                    ['class' => 'text-decoration-none', 'style' => 'color: var(--gray-900); font-size: 14px;']
-                                ) ?>
-                            </td>
-                            <td class="py-1 align-middle small text-truncate" style="min-width: 150px; max-width: 150px;">
-                                <strong class=" " style="font-size: 14px;"><?= h($item->requester_email) ?></strong>
-                            </td>
-                            <td class="py-1 align-middle" style="max-width: 150px;">
-                                <?php $isLocked = in_array($item->status, ['resuelto', 'cerrado']); ?>
-                                <?= $this->Form->create(null, ['url' => ['action' => 'assign', $item->id], 'type' => 'post', 'class' => 'table-assign-form']) ?>
-                                <?= $this->Form->select('assignee_id', $users, [
-                                    'value' => $item->assignee_id,
-                                    'empty' => 'Sin asignar',
-                                    'class' => 'select2 table-agent-select',
-                                    'disabled' => $isLocked,
-                                    'data-pqrs-id' => $item->id
-                                ]) ?>
-                                <?= $this->Form->end() ?>
-                            </td>
-
-                            <td class="py-0 align-middle text-center">
-                                <?= $this->Pqrs->slaIcon($item) ?>
-                            </td>
-
+                            <th class="w-fit pe-4 align-middle" style="width:36px">
+                                <input type="checkbox" id="checkAll" class="form-check-input border border-dark rounded" />
+                            </th>
+                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Tipo</th>
+                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Estado</th>
+                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Asunto</th>
+                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Solicitante</th>
+                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">Asignado a</th>
+                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">SLA</th>
                             <?php if ($view === 'resueltas'): ?>
-                                <td class="py-1 align-middle small lh-1" style="font-size: 14px;">
-                                    <?= $item->resolved_at ? $this->TimeHuman->short($item->resolved_at) : '-' ?>
-                                </td>
+                                <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">
+                                    <?= $this->Paginator->sort('resolved_at', 'Resuelto') ?>
+                                </th>
                             <?php endif; ?>
-                            <td class="py-1 align-middle small lh-1" style="font-size: 14px;">
-                                <?= $this->TimeHuman->short($item->created) ?><br>
-                            </td>
+                            <th class="w-fit fw-semibold align-middle" style="font-size: 14px;">
+                                <?= $this->Paginator->sort('created', 'Solicitado') ?>
+                            </th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($pqrs as $item): ?>
+                            <tr>
+                                <td class="py-1 align-middle">
+                                    <input type="checkbox" class="form-check-input row-check rounded border border-dark"
+                                        value="<?= $item->id ?>" />
+                                </td>
 
-        <!-- Pagination -->
-        <nav aria-label="Paginación">
-            <?= $this->element('pagination') ?>
-        </nav>
-    <?php else: ?>
-        <div class="alert alert-info">
-            <i class="bi bi-info-circle"></i>
-            No se encontraron PQRS con los criterios de búsqueda.
-        </div>
-    <?php endif; ?>
+                                <td class="py-1 align-middle" style="font-size: 14px; width: 100px;">
+                                    <?= $this->Status->typeBadge($item->type) ?>
+                                </td>
+                                <td class="py-1 align-middle" style="font-size: 14px; width: 80px;">
+                                    <?= $this->Status->statusBadge($item->status, 'pqrs') ?>
+                                </td>
+                                <td class="py-1 align-middle text-truncate" style="min-width: 200px; max-width: 200px;">
+                                    <?= $this->Html->link(
+                                        h($item->subject),
+                                        ['action' => 'view', $item->id],
+                                        ['class' => 'text-decoration-none', 'style' => 'color: var(--gray-900); font-size: 14px;']
+                                    ) ?>
+                                </td>
+                                <td class="py-1 align-middle small text-truncate" style="min-width: 150px; max-width: 150px;">
+                                    <strong class=" " style="font-size: 14px;"><?= h($item->requester_email) ?></strong>
+                                </td>
+                                <td class="py-1 align-middle" style="max-width: 150px;">
+                                    <?php $isLocked = in_array($item->status, ['resuelto', 'cerrado']); ?>
+                                    <?= $this->Form->create(null, ['url' => ['action' => 'assign', $item->id], 'type' => 'post', 'class' => 'table-assign-form']) ?>
+                                    <?= $this->Form->select('assignee_id', $users, [
+                                        'value' => $item->assignee_id,
+                                        'empty' => 'Sin asignar',
+                                        'class' => 'select2 table-agent-select',
+                                        'disabled' => $isLocked,
+                                        'data-pqrs-id' => $item->id
+                                    ]) ?>
+                                    <?= $this->Form->end() ?>
+                                </td>
+
+                                <td class="py-0 align-middle text-center">
+                                    <?= $this->Pqrs->slaIcon($item) ?>
+                                </td>
+
+                                <?php if ($view === 'resueltas'): ?>
+                                    <td class="py-1 align-middle small lh-1" style="font-size: 14px;">
+                                        <?= $item->resolved_at ? $this->TimeHuman->short($item->resolved_at) : '-' ?>
+                                    </td>
+                                <?php endif; ?>
+                                <td class="py-1 align-middle small lh-1" style="font-size: 14px;">
+                                    <?= $this->TimeHuman->short($item->created) ?><br>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Paginación">
+                <?= $this->element('pagination') ?>
+            </nav>
+        <?php else: ?>
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                No se encontraron PQRS con los criterios de búsqueda.
+            </div>
+        <?php endif; ?>
+    </div>
 </div>
 
 <!-- Modales para acciones rápidas -->
@@ -165,7 +167,14 @@ $userId = $user ? $user->get('id') : null;
     'showTagModal' => false  // PQRS no tiene tags
 ]) ?>
 
+<?= $this->Html->script('ajax-refresh') ?>
 <script>
     // Inicializar bulk actions module
     initBulkActions('pqrs');
+
+    // Inicializar AJAX refresh (solo manual, sin auto-refresh)
+    AjaxRefresh.init({
+        entityType: 'pqrs',
+        autoRefreshSeconds: 0
+    });
 </script>

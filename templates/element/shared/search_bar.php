@@ -45,5 +45,10 @@ $view = $view ?? '';
             'title' => 'Limpiar búsqueda'
         ]) ?>
     <?php endif; ?>
+
+    <button type="button" id="btn-refresh-list" class="btn border btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; padding: 0; flex-shrink: 0;" title="Recargar lista">
+        <i class="bi bi-arrow-clockwise" style="font-size: 16px;"></i>
+    </button>
+
     <?= $this->Form->end() ?>
 </div>
