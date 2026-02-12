@@ -58,9 +58,10 @@ class TicketsSidebarCell extends Cell
         }
 
         // Calculate counts from grouped results
+        // Must match findWithFilters conditions in TicketsTable
         $counts = [
             'sin_asignar' => (clone $baseQuery)
-                ->where(['assignee_id IS' => null, 'status !=' => 'resuelto'])
+                ->where(['assignee_id IS' => null, 'status NOT IN' => ['resuelto', 'convertido']])
                 ->count(),
             'todos_sin_resolver' => ($statusCounts['nuevo'] ?? 0) + ($statusCounts['abierto'] ?? 0) + ($statusCounts['pendiente'] ?? 0),
             'pendientes' => $isAgent ? ($agentStatusCounts['pendiente'] ?? 0) : ($statusCounts['pendiente'] ?? 0),
@@ -73,7 +74,7 @@ class TicketsSidebarCell extends Cell
         // Add "mis_tickets" count for agents
         if ($isAgent && $userId) {
             $counts['mis_tickets'] = $ticketsTable->find()
-                ->where(['assignee_id' => $userId, 'status !=' => 'resuelto'])
+                ->where(['assignee_id' => $userId, 'status NOT IN' => ['resuelto', 'convertido']])
                 ->count();
         }
 

@@ -63,7 +63,7 @@ $userId = $user ? $user->get('id') : null;
         ]) ?>
     </div>
 
-    <div id="entity-list-content">
+    <div id="entity-list-content" class="d-flex flex-column flex-grow-1" style="min-height: 0;">
         <div class="mb-2 fs-6 d-flex align-items-center">
             <small class="me-1"> <?= $tickets->count() ?> Tickets </small>
             <small class="m-0 text-muted">(<?= $this->Paginator->counter(__('Pagina {{page}} de {{pages}}')) ?>)</small>
