@@ -17,6 +17,8 @@
  * @var float $resolutionRate
  * @var \Cake\ORM\ResultSet $topAgents
  * @var \Cake\ORM\ResultSet $topRequesters
+ * @var int $conversionCount
+ * @var float $conversionRate
  * @var int $totalComments
  * @var int $publicComments
  * @var int $internalComments
@@ -86,6 +88,35 @@ $this->assign('title', 'Estadísticas de Tickets');
             ]) ?>
         </div>
     </div>
+
+    <!-- Conversion Metrics -->
+    <?php if ($conversionCount > 0): ?>
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <h3 style="font-size: 0.875rem; font-weight: 600; color: var(--gray-700); margin-bottom: 0.75rem;">
+                Conversión a Compras
+            </h3>
+        </div>
+        <div class="col-md-6">
+            <div class="modern-card kpi-card" style="border-left: 4px solid var(--info);" data-animate="fade-up" data-delay="400">
+                <div class="kpi-icon-wrapper" style="background: rgba(59, 130, 246, 0.1);">
+                    <i class="bi bi-arrow-left-right kpi-icon text-blue"></i>
+                </div>
+                <h3 class="kpi-number" data-counter data-target="<?= $conversionCount ?>" aria-live="polite">0</h3>
+                <p class="kpi-label mb-0">Tickets Convertidos</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="modern-card kpi-card" style="border-left: 4px solid var(--info);" data-animate="fade-up" data-delay="500">
+                <div class="kpi-icon-wrapper" style="background: rgba(59, 130, 246, 0.1);">
+                    <i class="bi bi-percent kpi-icon text-blue"></i>
+                </div>
+                <h3 class="kpi-number mb-2"><?= $conversionRate ?>%</h3>
+                <p class="kpi-label mb-0">Tasa de Conversión</p>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <!-- Trend Chart -->
     <?= $this->element('shared/statistics/trend_chart', [

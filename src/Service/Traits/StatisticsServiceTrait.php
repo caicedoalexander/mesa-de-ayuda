@@ -197,9 +197,10 @@ trait StatisticsServiceTrait
      * @param array $resolvedStatuses Status values that count as "resolved"
      * @param int $limit Number of top agents to return
      * @param array $agentRoles Roles that count as agents (defaults based on table)
+     * @param \Cake\ORM\Query|null $baseQuery Optional pre-filtered query
      * @return array ['top_agents' => [...], 'active_agents_count' => int]
      */
-    protected function getAgentPerformance(string $tableName, array $resolvedStatuses = [], int $limit = 5, array $agentRoles = []): array
+    protected function getAgentPerformance(string $tableName, array $resolvedStatuses = [], int $limit = 5, array $agentRoles = [], $baseQuery = null): array
     {
         $table = $this->fetchTable($tableName);
         $usersTable = $this->fetchTable('Users');
@@ -225,16 +226,16 @@ trait StatisticsServiceTrait
         // Define resolved statuses - use parameter if provided, otherwise use defaults
         if (empty($resolvedStatuses)) {
             $resolvedStatuses = match($tableName) {
-                'Tickets' => ['cerrado', 'resuelto'],
+                'Tickets' => ['resuelto', 'convertido'],
                 'Pqrs' => ['resuelto', 'cerrado'],
                 'Compras' => ['completado'],  // Only successfully completed purchases
-                default => ['cerrado', 'resuelto']
+                default => ['resuelto']
             };
         }
 
         // Build query for top agents with detailed performance metrics
-        $query = $table->find()
-            ->where(['assignee_id IS NOT' => null]);
+        $query = $baseQuery !== null ? (clone $baseQuery) : $table->find();
+        $query->where(['assignee_id IS NOT' => null]);
 
         // Add select fields with CASE expression for resolved count
         $caseExpression = $query->newExpr()

@@ -38,6 +38,8 @@ trait StatisticsControllerTrait
 
             case 'pqrs':
                 $stats = $this->statisticsService->getPqrsStats($filters);
+                $pqrsSlaMetrics = $this->statisticsService->getPqrsSlaMetrics($filters);
+                $stats['pqrs_sla_metrics'] = $pqrsSlaMetrics;
                 $trends = $this->statisticsService->getPqrsTrendData(30);
                 $viewFile = 'statistics';
                 break;
@@ -118,6 +120,10 @@ trait StatisticsControllerTrait
                     'responseRate' => $stats['response_rate'] ?? 0,
                     'resolutionRate' => $stats['resolution_rate'] ?? 0,
 
+                    // Conversion metrics
+                    'conversionCount' => $stats['conversion_count'] ?? 0,
+                    'conversionRate' => $stats['conversion_rate'] ?? 0,
+
                     // Tables
                     'topAgents' => $stats['tickets_by_agent'] ?? [],
                     'topRequesters' => $stats['top_requesters'] ?? [],
@@ -153,6 +159,9 @@ trait StatisticsControllerTrait
                     'avgResolutionHours' => $stats['avg_resolution_hours'] ?? 0,
                     'topAgents' => $stats['top_agents'] ?? [],
 
+                    // SLA Metrics
+                    'pqrsSlaMetrics' => $stats['pqrs_sla_metrics'] ?? null,
+
                     // Filters display
                     'dateFrom' => $stats['date_from'] ?? null,
                     'dateTo' => $stats['date_to'] ?? null,
@@ -181,6 +190,8 @@ trait StatisticsControllerTrait
                     'approvalMetrics' => $stats['approval_metrics'] ?? null,
 
                     // Performance
+                    'avgResponseHours' => $stats['avg_response_hours'] ?? 0,
+                    'responseRate' => $stats['response_rate'] ?? 0,
                     'avgResolutionDays' => $stats['avg_resolution_days'] ?? 0,
                     'avgResolutionHours' => $stats['avg_resolution_hours'] ?? 0,
                     'topAgents' => $stats['top_agents'] ?? [],

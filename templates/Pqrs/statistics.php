@@ -19,6 +19,7 @@
  * @var float $avgResolutionDays
  * @var float $avgResolutionHours
  * @var array $topAgents
+ * @var array|null $pqrsSlaMetrics
  * @var array $filters
  * @var string|null $dateFrom
  * @var string|null $dateTo
@@ -59,6 +60,13 @@ $this->assign('title', 'Estadísticas de PQRS');
         'entityType' => 'pqrs',
         'slaMetrics' => null
     ]) ?>
+
+    <!-- PQRS SLA Metrics -->
+    <?php if (!empty($pqrsSlaMetrics)): ?>
+        <?= $this->element('shared/statistics/pqrs_sla_metrics', [
+            'pqrsSlaMetrics' => $pqrsSlaMetrics
+        ]) ?>
+    <?php endif; ?>
 
     <!-- Secondary KPIs -->
     <div class="row g-3 mb-4">

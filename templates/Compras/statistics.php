@@ -12,6 +12,8 @@
  * @var array $channelDistribution
  * @var array $chartLabels
  * @var array $chartData
+ * @var float $avgResponseHours
+ * @var float $responseRate
  * @var float $avgResolutionDays
  * @var float $avgResolutionHours
  * @var array $topAgents
@@ -49,14 +51,13 @@ $this->assign('title', 'Estadísticas de Compras');
         'action' => 'statistics'
     ]) ?>
 
-    <!-- KPI Cards (includes SLA compliance in 4th card) -->
+    <!-- KPI Cards -->
     <?= $this->element('shared/statistics/kpi_cards', [
         'total' => $total,
         'recentCount' => $recentCount,
         'unassignedCount' => $unassignedCount,
         'activeAgentsCount' => $activeAgentsCount,
-        'entityType' => 'compra',
-        'slaMetrics' => $slaMetrics
+        'entityType' => 'compra'
     ]) ?>
 
     <!-- SLA Metrics - PROMINENT DISPLAY (per user request) -->
@@ -69,16 +70,34 @@ $this->assign('title', 'Estadísticas de Compras');
         'approvalMetrics' => $approvalMetrics
     ]) ?>
 
-    <!-- Performance Metric -->
-    <div class="row mb-4">
-        <div class="col-md-12">
+    <!-- Performance Metrics -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
             <div class="modern-card accent-gradient kpi-card" data-animate="fade-up" data-delay="700">
+                <div class="kpi-icon-wrapper">
+                    <i class="bi bi-reply-fill kpi-icon text-blue"></i>
+                </div>
+                <h3 class="kpi-number mb-2"><?= $avgResponseHours ?> h</h3>
+                <p class="kpi-label mb-1">T. Prom. Primera Respuesta</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="modern-card accent-gradient kpi-card" data-animate="fade-up" data-delay="800">
                 <div class="kpi-icon-wrapper">
                     <i class="bi bi-speedometer kpi-icon text-blue"></i>
                 </div>
                 <h3 class="kpi-number mb-2"><?= $avgResolutionDays ?> días</h3>
-                <p class="kpi-label mb-1">Tiempo Promedio de Resolución</p>
+                <p class="kpi-label mb-1">T. Prom. Resolución</p>
                 <small style="color: var(--gray-500); font-size: 0.75rem;">(<?= $avgResolutionHours ?> horas)</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="modern-card kpi-card" style="border-left: 4px solid var(--success);" data-animate="fade-up" data-delay="900">
+                <div class="kpi-icon-wrapper">
+                    <i class="bi bi-check2-all kpi-icon text-green"></i>
+                </div>
+                <h3 class="kpi-number mb-2"><?= $responseRate ?>%</h3>
+                <p class="kpi-label mb-1">Tasa de Respuesta</p>
             </div>
         </div>
     </div>

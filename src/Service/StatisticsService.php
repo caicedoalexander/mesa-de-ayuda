@@ -76,21 +76,17 @@ class StatisticsService
         $resolutionRate = $this->calculateResolutionRate('Tickets', $baseQuery);
 
         $totalTickets = (clone $baseQuery)->count();
-        $resolvedCount = $statusDistribution['resuelto'] ?? 0;
 
         // Recent tickets (last 7 days) - independent query
         $recentTickets = $this->getRecentActivityCount('Tickets');
 
-        // Resolved tickets (last 7 days)
-        $ticketsTable = $this->fetchTable('Tickets');
-        $recentResolved = $ticketsTable->find()
-            ->where([
-                'status' => 'resuelto',
-                'resolved_at >=' => new \Cake\I18n\DateTime('-7 days')
-            ])
-            ->count();
-
         $unassignedTickets = $this->getUnassignedCount('Tickets');
+
+        // Conversion metrics (tickets converted to Compras)
+        $conversionCount = $statusDistribution['convertido'] ?? 0;
+        $conversionRate = $totalTickets > 0
+            ? round(($conversionCount / $totalTickets) * 100, 1)
+            : 0.0;
 
         return [
             'total_tickets' => $totalTickets,
@@ -98,13 +94,13 @@ class StatisticsService
             'tickets_by_priority' => $priorityDistribution,
             'channel_counts' => $channelDistribution,
             'recent_tickets' => $recentTickets,
-            'recent_resolved' => $recentResolved,
             'unassigned_tickets' => $unassignedTickets,
             'avg_response_time' => $avgResponseTime,
             'avg_resolution_time' => $avgResolutionTime,
             'response_rate' => $responseRate,
             'resolution_rate' => $resolutionRate,
-            'resolved_count' => $resolvedCount,
+            'conversion_count' => $conversionCount,
+            'conversion_rate' => $conversionRate,
         ];
     }
 
@@ -116,8 +112,10 @@ class StatisticsService
      */
     public function getTicketAgentPerformance(array $filters = []): array
     {
-        // Call trait method (no longer conflicts since this method has different name)
-        $performanceData = $this->getAgentPerformance('Tickets', [], 5);
+        $parsedFilters = $this->parseDateFilters($filters);
+        $baseQuery = $this->buildBaseQuery('Tickets', $parsedFilters);
+
+        $performanceData = $this->getAgentPerformance('Tickets', [], 5, [], $baseQuery);
 
         return [
             'active_agents' => $performanceData['active_agents_count'],
@@ -148,8 +146,8 @@ class StatisticsService
         $commentsTable = $this->fetchTable('TicketComments');
 
         // Most active requesters (top 5) with detailed metrics
-        $resolvedStatuses = ['cerrado', 'resuelto'];
-        $activeStatuses = ['abierto', 'en_progreso', 'pendiente'];
+        $resolvedStatuses = ['resuelto', 'convertido'];
+        $activeStatuses = ['nuevo', 'abierto', 'pendiente'];
 
         $query = $ticketsTable->find()
             ->contain(['Requesters']);
@@ -289,7 +287,7 @@ class StatisticsService
         $priorityCounts = $this->getPriorityDistribution('Pqrs', $baseQuery);
 
         // Get type distribution (PQRS-specific)
-        $typeCounts = $this->getTypeDistribution();
+        $typeCounts = $this->getTypeDistribution($baseQuery);
 
         // Get channel distribution (now implemented in trait)
         $channelCounts = $this->getChannelDistribution('Pqrs', $baseQuery);
@@ -339,6 +337,92 @@ class StatisticsService
             'active_agents_count' => $agentPerformance['active_agents_count'],
             'date_from' => $parsedFilters['start_date'],
             'date_to' => $parsedFilters['end_date'],
+        ];
+    }
+
+    /**
+     * Get PQRS SLA metrics
+     *
+     * @param array $filters Optional filters
+     * @return array SLA metrics for PQRS
+     */
+    public function getPqrsSlaMetrics(array $filters = []): array
+    {
+        $parsedFilters = $this->parseDateFilters($filters);
+
+        if ($parsedFilters['date_range'] === 'all' || $parsedFilters['date_range'] === '30days') {
+            $parsedFilters['start_date'] = date('Y-m-d', strtotime('-30 days'));
+            $parsedFilters['end_date'] = date('Y-m-d');
+        }
+
+        $baseQuery = $this->buildBaseQuery('Pqrs', $parsedFilters);
+        $now = new \Cake\I18n\DateTime();
+        $openStatuses = ['nuevo', 'en_revision', 'en_proceso'];
+
+        // First response SLA breached (due date passed, no response yet)
+        $responseBreachedQuery = clone $baseQuery;
+        $responseBreached = $responseBreachedQuery
+            ->where([
+                'first_response_sla_due <' => $now,
+                'first_response_at IS' => null,
+                'status IN' => $openStatuses,
+            ])
+            ->count();
+
+        // Resolution SLA breached (due date passed, not resolved/closed)
+        $resolutionBreachedQuery = clone $baseQuery;
+        $resolutionBreached = $resolutionBreachedQuery
+            ->where([
+                'resolution_sla_due <' => $now,
+                'status IN' => $openStatuses,
+            ])
+            ->count();
+
+        // Total with first_response_sla_due set (for compliance calculation)
+        $totalWithResponseSlaQuery = clone $baseQuery;
+        $totalWithResponseSla = $totalWithResponseSlaQuery
+            ->where(['first_response_sla_due IS NOT' => null])
+            ->count();
+
+        // Responded on time
+        $respondedOnTimeQuery = clone $baseQuery;
+        $respondedOnTime = $respondedOnTimeQuery
+            ->where([
+                'first_response_sla_due IS NOT' => null,
+                'first_response_at IS NOT' => null,
+                'first_response_at <= first_response_sla_due',
+            ])
+            ->count();
+
+        // Total with resolution_sla_due set
+        $totalWithResolutionSlaQuery = clone $baseQuery;
+        $totalWithResolutionSla = $totalWithResolutionSlaQuery
+            ->where(['resolution_sla_due IS NOT' => null])
+            ->count();
+
+        // Resolved on time
+        $resolvedOnTimeQuery = clone $baseQuery;
+        $resolvedOnTime = $resolvedOnTimeQuery
+            ->where([
+                'resolution_sla_due IS NOT' => null,
+                'resolved_at IS NOT' => null,
+                'resolved_at <= resolution_sla_due',
+            ])
+            ->count();
+
+        $responseComplianceRate = $totalWithResponseSla > 0
+            ? round(($respondedOnTime / $totalWithResponseSla) * 100, 1)
+            : 100.0;
+
+        $resolutionComplianceRate = $totalWithResolutionSla > 0
+            ? round(($resolvedOnTime / $totalWithResolutionSla) * 100, 1)
+            : 100.0;
+
+        return [
+            'response_breached' => $responseBreached,
+            'resolution_breached' => $resolutionBreached,
+            'response_compliance_rate' => $responseComplianceRate,
+            'resolution_compliance_rate' => $resolutionComplianceRate,
         ];
     }
 
@@ -400,6 +484,14 @@ class StatisticsService
         $unassignedCompras = $this->getUnassignedCount('Compras');
         $recentCompras = $this->getRecentActivityCount('Compras');
 
+        // Average response time
+        $avgResponseTime = $this->getAvgResponseTime('Compras', $baseQuery);
+        $avgResponseHours = ($avgResponseTime && $avgResponseTime->avg_hours !== null)
+            ? round((float) $avgResponseTime->avg_hours, 1)
+            : 0;
+
+        $responseRate = $this->calculateResponseRate('Compras', $baseQuery);
+
         // Average resolution time
         $avgResolutionTime = $this->getAvgResolutionTime('Compras', $baseQuery);
         $avgResolutionHours = ($avgResolutionTime && $avgResolutionTime->avg_hours !== null)
@@ -424,6 +516,8 @@ class StatisticsService
             'channel_counts' => $channelCounts,
             'unassigned_compras' => $unassignedCompras,
             'recent_compras' => $recentCompras,
+            'avg_response_hours' => $avgResponseHours,
+            'response_rate' => $responseRate,
             'avg_resolution_hours' => $avgResolutionHours,
             'avg_resolution_days' => $avgResolutionDays,
             'top_agents' => $agentPerformance['top_agents'],
@@ -452,14 +546,18 @@ class StatisticsService
     /**
      * Get type distribution (PQRS-specific)
      *
+     * @param \Cake\ORM\Query|null $baseQuery Optional pre-filtered query
      * @return array Type => count mapping
      */
-    private function getTypeDistribution(): array
+    private function getTypeDistribution($baseQuery = null): array
     {
-        $pqrsTable = $this->fetchTable('Pqrs');
+        if ($baseQuery === null) {
+            $pqrsTable = $this->fetchTable('Pqrs');
+            $baseQuery = $pqrsTable->find();
+        }
 
-        $typeCountsRaw = $pqrsTable->find()
-            ->select(['type', 'count' => $pqrsTable->find()->func()->count('*')])
+        $typeCountsRaw = (clone $baseQuery)
+            ->select(['type', 'count' => $baseQuery->func()->count('*')])
             ->group(['type'])
             ->all()
             ->combine('type', 'count')
@@ -487,7 +585,7 @@ class StatisticsService
         $breachedQuery = clone $baseQuery;
         $breachedCount = $breachedQuery
             ->where([
-                'sla_due_date <' => $now,
+                'resolution_sla_due <' => $now,
                 'status NOT IN' => ['completado', 'rechazado', 'convertido']
             ])
             ->count();
@@ -497,8 +595,8 @@ class StatisticsService
         $tomorrow = (new \Cake\I18n\DateTime())->modify('+24 hours');
         $atRiskCount = $atRiskQuery
             ->where([
-                'sla_due_date >=' => $now,
-                'sla_due_date <' => $tomorrow,
+                'resolution_sla_due >=' => $now,
+                'resolution_sla_due <' => $tomorrow,
                 'status NOT IN' => ['completado', 'rechazado', 'convertido']
             ])
             ->count();

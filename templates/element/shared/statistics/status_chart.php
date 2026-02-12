@@ -21,7 +21,7 @@ $statusConfig = [
     'compra' => [
         'labels' => ['Nuevo', 'En Revisión', 'Aprobado', 'En Proceso', 'Completado', 'Rechazado', 'Convertido'],
         'keys' => ['nuevo', 'en_revision', 'aprobado', 'en_proceso', 'completado', 'rechazado', 'convertido'],
-        'colors' => ['#ffc107', '#0dcaf0', '#198754', '#0d6efd', '#28a745', '#dc3545', '#6c757d'],
+        'colors' => ['#ffc107', '#0dcaf0', '#17a2b8', '#0d6efd', '#198754', '#dc3545', '#6c757d'],
     ],
 ];
 
