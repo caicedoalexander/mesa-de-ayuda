@@ -22,7 +22,7 @@ $userId = $user ? $user->get('id') : null;
     <?= $this->cell('TicketsSidebar::display', [$view, $userRole, $userId]) ?>
 </div>
 
-<div class="pt-4 pb-2 px-5 w-100 d-flex flex-column">
+<div class="pt-3 pb-1 ps-5 pe-4 w-100 d-flex flex-column">
     <!-- Page Header -->
     <div class="page-header">
         <div class="header-icon">
@@ -47,7 +47,7 @@ $userId = $user ? $user->get('id') : null;
         </div>
     </div>
 
-    <div class="d-flex align-items-center mb-3 gap-2">
+    <div class="d-flex align-items-center mb-1 gap-2">
         <!-- Search Bar -->
         <?= $this->element('shared/search_bar', [
             'searchValue' => $filters['search'] ?? '',
@@ -64,7 +64,7 @@ $userId = $user ? $user->get('id') : null;
     </div>
 
     <div id="entity-list-content">
-        <div class="mb-3 fs-6 d-flex align-items-center">
+        <div class="mb-2 fs-6 d-flex align-items-center">
             <small class="me-1"> <?= $tickets->count() ?> Tickets </small>
             <small class="m-0 text-muted">(<?= $this->Paginator->counter(__('Pagina {{page}} de {{pages}}')) ?>)</small>
         </div>

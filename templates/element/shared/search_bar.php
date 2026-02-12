@@ -18,7 +18,7 @@ $view = $view ?? '';
 ?>
 
 <div class="flex-grow-1">
-    <?= $this->Form->create(null, ['type' => 'get', 'class' => 'd-flex gap-2 align-items-center', 'id' => 'searchForm']) ?>
+    <?= $this->Form->create(null, ['type' => 'get', 'class' => 'd-flex align-items-center justify-content-between w-100', 'id' => 'searchForm']) ?>
     <?= $this->Form->hidden('view', ['value' => $view]) ?>
 
     <div class="search-container">
@@ -46,9 +46,9 @@ $view = $view ?? '';
         ]) ?>
     <?php endif; ?>
 
-    <button type="button" id="btn-refresh-list" class="btn border btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; padding: 0; flex-shrink: 0;" title="Recargar lista">
+    <button type="button" id="btn-refresh-list" class="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; padding: 0; flex-shrink: 0;" title="Recargar lista">
         <i class="bi bi-arrow-clockwise" style="font-size: 16px;"></i>
-    </button>
+    </button>   
 
     <?= $this->Form->end() ?>
 </div>
