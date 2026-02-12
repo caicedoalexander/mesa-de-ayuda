@@ -17,6 +17,7 @@ use Cake\Log\Log;
 class WhatsappService
 {
     use LocatorAwareTrait;
+    use Traits\ConfigResolutionTrait;
 
     private \App\Service\Renderer\NotificationRenderer $renderer;
 
@@ -96,36 +97,15 @@ class WhatsappService
     /**
      * Resolve WhatsApp settings from the best available source
      *
-     * @return array|null Settings array with whatsapp_* keys, or null
+     * @return array Settings array with whatsapp_* keys
      */
-    private function resolveSettings(): ?array
+    private function resolveSettings(): array
     {
-        $requiredKeys = [
+        return $this->resolveSettingsBatch('whatsapp_enabled', 'whatsapp_settings', [
             'whatsapp_enabled', 'whatsapp_api_url', 'whatsapp_api_key',
             'whatsapp_instance_name', 'whatsapp_tickets_number',
             'whatsapp_pqrs_number', 'whatsapp_compras_number',
-        ];
-
-        // 1. From constructor systemConfig
-        if ($this->systemConfig !== null && isset($this->systemConfig['whatsapp_enabled'])) {
-            return $this->systemConfig;
-        }
-
-        // 2. From main settings cache (populated by AppController::beforeFilter)
-        $cachedConfig = \Cake\Cache\Cache::read('system_settings', '_cake_core_');
-        if ($cachedConfig && isset($cachedConfig['whatsapp_enabled'])) {
-            return $cachedConfig;
-        }
-
-        // 3. Service-specific DB query with its own cache
-        return \Cake\Cache\Cache::remember('whatsapp_settings', function () use ($requiredKeys) {
-            $settingsTable = $this->fetchTable('SystemSettings');
-            return $settingsTable->find()
-                ->where(['setting_key IN' => $requiredKeys])
-                ->all()
-                ->combine('setting_key', 'setting_value')
-                ->toArray();
-        }, '_cake_core_');
+        ]);
     }
 
     /**

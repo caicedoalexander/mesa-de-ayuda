@@ -22,6 +22,7 @@ class EmailService
     use LocatorAwareTrait;
     use SettingsEncryptionTrait;
     use GenericAttachmentTrait;
+    use Traits\ConfigResolutionTrait;
 
     private \App\Service\Renderer\NotificationRenderer $renderer;
     private ?array $systemConfig = null;
@@ -39,10 +40,9 @@ class EmailService
     }
 
     /**
-     * Get a single setting value with cascading resolution:
-     * 1. Constructor-provided systemConfig (fastest, no I/O)
-     * 2. Main 'system_settings' cache (populated by AppController)
-     * 3. Direct DB query (slowest, last resort)
+     * Get a single setting value with cascading resolution
+     *
+     * Delegates to ConfigResolutionTrait::resolveSettingValue()
      *
      * @param string $key Setting key
      * @param string $default Default value
@@ -50,32 +50,7 @@ class EmailService
      */
     private function getSettingValue(string $key, string $default = ''): string
     {
-        // 1. From constructor config
-        if ($this->systemConfig !== null && isset($this->systemConfig[$key])) {
-            return $this->systemConfig[$key];
-        }
-
-        // 2. From main settings cache (populated by AppController::beforeFilter)
-        try {
-            $cachedConfig = \Cake\Cache\Cache::read('system_settings', '_cake_core_');
-            if ($cachedConfig && isset($cachedConfig[$key])) {
-                return $cachedConfig[$key];
-            }
-        } catch (\Exception $e) {
-            // Cache not available, fall through to DB
-        }
-
-        // 3. Direct DB query
-        try {
-            $settingsTable = $this->fetchTable('SystemSettings');
-            $setting = $settingsTable->find()
-                ->where(['setting_key' => $key])
-                ->first();
-            return $setting ? $setting->setting_value : $default;
-        } catch (\Exception $e) {
-            Log::error("Failed to load setting '{$key}': " . $e->getMessage());
-            return $default;
-        }
+        return $this->resolveSettingValue($key, $default);
     }
 
     /**
@@ -106,46 +81,15 @@ class EmailService
         $ticketsTable = $this->fetchTable('Tickets');
         $ticket = $ticketsTable->get($ticket->id, contain: ['Requesters']);
 
-        // Get system email to exclude from notifications
-        $systemEmail = strtolower($this->getSettingValue('gmail_user_email'));
+        // Emails to exclude from notifications (requester + system email)
+        $excludeEmails = [
+            strtolower($ticket->requester->email),
+            strtolower($this->getSettingValue('gmail_user_email')),
+        ];
 
-        // Extract additional recipients from ticket's email_to and email_cc (if created from email)
-        $additionalTo = [];
-        $additionalCc = [];
-
-        $requesterEmail = strtolower($ticket->requester->email);
-
-        // Parse email_to JSON array
-        if (!empty($ticket->email_to)) {
-            $emailTo = is_string($ticket->email_to) ? json_decode($ticket->email_to, true) : $ticket->email_to;
-            if (is_array($emailTo)) {
-                foreach ($emailTo as $recipient) {
-                    if (!empty($recipient['email'])) {
-                        $recipientEmail = strtolower($recipient['email']);
-                        // Exclude requester and system email
-                        if ($recipientEmail !== $requesterEmail && $recipientEmail !== $systemEmail) {
-                            $additionalTo[] = $recipient;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Parse email_cc JSON array
-        if (!empty($ticket->email_cc)) {
-            $emailCc = is_string($ticket->email_cc) ? json_decode($ticket->email_cc, true) : $ticket->email_cc;
-            if (is_array($emailCc)) {
-                foreach ($emailCc as $recipient) {
-                    if (!empty($recipient['email'])) {
-                        $recipientEmail = strtolower($recipient['email']);
-                        // Exclude requester and system email
-                        if ($recipientEmail !== $requesterEmail && $recipientEmail !== $systemEmail) {
-                            $additionalCc[] = $recipient;
-                        }
-                    }
-                }
-            }
-        }
+        // Extract additional recipients from ticket's email fields (if created from email)
+        $additionalTo = $this->filterEmailRecipients($ticket->email_to, $excludeEmails);
+        $additionalCc = $this->filterEmailRecipients($ticket->email_cc, $excludeEmails);
 
         return $this->sendGenericTemplateEmail('ticket', 'nuevo_ticket', $ticket, [], [], $additionalTo, $additionalCc);
     }
@@ -758,6 +702,39 @@ class EmailService
         }
 
         return $baseUrl . $relativeUrl;
+    }
+
+    /**
+     * Filter email recipients, excluding specified email addresses
+     *
+     * Parses JSON-encoded or array recipients and removes excluded emails.
+     *
+     * @param string|array|null $recipients JSON string or array of ['name' => '', 'email' => '']
+     * @param array $excludeEmails Lowercase email addresses to exclude
+     * @return array Filtered recipients
+     */
+    private function filterEmailRecipients(string|array|null $recipients, array $excludeEmails): array
+    {
+        if (empty($recipients)) {
+            return [];
+        }
+
+        $decoded = is_string($recipients) ? json_decode($recipients, true) : $recipients;
+        if (!is_array($decoded)) {
+            return [];
+        }
+
+        $filtered = [];
+        foreach ($decoded as $recipient) {
+            if (!empty($recipient['email'])) {
+                $email = strtolower($recipient['email']);
+                if (!in_array($email, $excludeEmails, true)) {
+                    $filtered[] = $recipient;
+                }
+            }
+        }
+
+        return $filtered;
     }
 
     /**

@@ -5,9 +5,8 @@ namespace App\Controller\Admin;
 
 use App\Controller\AppController;
 use App\Service\GmailService;
+use App\Service\SettingsService;
 use App\Service\WhatsappService;
-use App\Utility\SettingsEncryptionTrait;
-use Cake\I18n\DateTime;
 use Cake\Log\Log;
 
 /**
@@ -20,74 +19,12 @@ use Cake\Log\Log;
  */
 class SettingsController extends AppController
 {
-    use SettingsEncryptionTrait;
-    /**
-     * Helper method to save or update a setting (with automatic encryption)
-     *
-     * @param string $key Setting key
-     * @param string $value Setting value
-     * @return bool Success status
-     */
-    private function _saveSetting(string $key, string $value): bool
+    private SettingsService $settingsService;
+
+    public function initialize(): void
     {
-        $settingsTable = $this->fetchTable('SystemSettings');
-        $setting = $settingsTable->find()->where(['setting_key' => $key])->first();
-
-        // Encrypt sensitive values automatically
-        $valueToStore = $this->shouldEncrypt($key)
-            ? $this->encryptSetting($value, $key)
-            : $value;
-
-        if ($setting) {
-            $setting->setting_value = $valueToStore;
-            $setting->modified = new DateTime();
-        } else {
-            $setting = $settingsTable->newEntity([
-                'setting_key' => $key,
-                'setting_value' => $valueToStore,
-                'setting_type' => 'string',
-            ]);
-        }
-
-        $result = (bool) $settingsTable->save($setting);
-
-        // Clear all settings caches when a setting is updated
-        if ($result) {
-            \Cake\Cache\Cache::delete('system_settings', '_cake_core_');
-            \Cake\Cache\Cache::delete('whatsapp_settings', '_cake_core_');
-            \Cake\Cache\Cache::delete('n8n_settings', '_cake_core_');
-            \Cake\Cache\Cache::delete('gmail_settings', '_cake_core_');
-            \Cake\Cache\Cache::delete('sla_settings', '_cake_core_');
-        }
-
-        return $result;
-    }
-
-    /**
-     * Helper method to load all settings as associative array (with automatic decryption)
-     *
-     * @return array Settings array with key => value pairs (decrypted)
-     */
-    private function _loadSettings(): array
-    {
-        // Try to use cached settings from AppController first
-        $settings = \Cake\Cache\Cache::read('system_settings', '_cake_core_');
-
-        if ($settings === null) {
-            // Cache miss - load from database
-            $settingsTable = $this->fetchTable('SystemSettings');
-            $settings = $settingsTable->find()
-                ->select(['setting_key', 'setting_value'])
-                ->all()
-                ->combine('setting_key', 'setting_value')
-                ->toArray();
-
-            // Decrypt and cache for 1 hour
-            $settings = $this->processSettings($settings);
-            \Cake\Cache\Cache::write('system_settings', $settings, '_cake_core_');
-        }
-
-        return $settings;
+        parent::initialize();
+        $this->settingsService = new SettingsService();
     }
 
     /**
@@ -112,14 +49,14 @@ class SettingsController extends AppController
             }
 
             foreach ($data as $key => $value) {
-                $this->_saveSetting($key, $value);
+                $this->settingsService->saveSetting($key, $value);
             }
 
             $this->Flash->success('Configuración guardada exitosamente.');
             return $this->redirect(['action' => 'index']);
         }
 
-        $this->set('settings', $this->_loadSettings());
+        $this->set('settings', $this->settingsService->loadAll());
     }
 
     /**
@@ -129,17 +66,12 @@ class SettingsController extends AppController
      */
     public function gmailAuth()
     {
-        $settingsTable = $this->fetchTable('SystemSettings');
-
-        // Get client_secret_path from settings
-        $clientSecretSetting = $settingsTable->find()
-            ->where(['setting_key' => 'gmail_client_secret_path'])
-            ->first();
+        // Load all settings (already decrypted by SettingsService)
+        $allSettings = $this->settingsService->loadAll();
 
         $config = [];
-        if ($clientSecretSetting) {
-            // No decryption needed for client_secret_path (it's a file path)
-            $config['client_secret_path'] = $clientSecretSetting->setting_value;
+        if (!empty($allSettings['gmail_client_secret_path'])) {
+            $config['client_secret_path'] = $allSettings['gmail_client_secret_path'];
         }
 
         // Set redirect URI for OAuth2 flow (callback URL)
@@ -160,8 +92,8 @@ class SettingsController extends AppController
                 $tokens = $gmailService->authenticate($code);
 
                 if (isset($tokens['refresh_token'])) {
-                    // Save refresh token to settings using helper method
-                    if ($this->_saveSetting('gmail_refresh_token', $tokens['refresh_token'])) {
+                    // Save refresh token to settings using service
+                    if ($this->settingsService->saveSetting('gmail_refresh_token', $tokens['refresh_token'])) {
                         $this->Flash->success('Gmail autorizado exitosamente.');
                         Log::info('Gmail OAuth completed successfully');
                     } else {
@@ -193,21 +125,13 @@ class SettingsController extends AppController
      */
     public function testGmail()
     {
-        $settingsTable = $this->fetchTable('SystemSettings');
+        // Load all settings (already decrypted by SettingsService)
+        $allSettings = $this->settingsService->loadAll();
 
-        // Get Gmail config
-        $settings = $settingsTable->find()
-            ->where(['setting_key IN' => ['gmail_refresh_token', 'gmail_client_secret_path']])
-            ->all();
-
-        $config = [];
-        foreach ($settings as $setting) {
-            $key = str_replace('gmail_', '', $setting->setting_key);
-            // Decrypt sensitive values
-            $config[$key] = $this->shouldEncrypt($setting->setting_key)
-                ? $this->decryptSetting($setting->setting_value, $setting->setting_key)
-                : $setting->setting_value;
-        }
+        $config = [
+            'refresh_token' => $allSettings['gmail_refresh_token'] ?? '',
+            'client_secret_path' => $allSettings['gmail_client_secret_path'] ?? '',
+        ];
 
         try {
             $gmailService = new GmailService($config);

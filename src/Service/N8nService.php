@@ -15,8 +15,10 @@ use Cake\I18n\FrozenTime;
 class N8nService
 {
     use LocatorAwareTrait;
+    use Traits\ConfigResolutionTrait;
 
     private array $config;
+    private ?array $systemConfig;
 
     /**
      * Constructor
@@ -25,49 +27,14 @@ class N8nService
      */
     public function __construct(?array $systemConfig = null)
     {
-        $this->config = $this->resolveConfig($systemConfig);
-    }
-
-    /**
-     * Resolve n8n configuration with 3-tier resolution:
-     * 1. Constructor-provided systemConfig (fastest, no I/O)
-     * 2. Main 'system_settings' cache (populated by AppController)
-     * 3. Service-specific DB query with cache
-     *
-     * @param array|null $systemConfig System configuration from constructor
-     * @return array Resolved configuration
-     */
-    private function resolveConfig(?array $systemConfig): array
-    {
-        // 1. From constructor systemConfig (contains all settings including n8n_*)
-        if ($systemConfig !== null && isset($systemConfig['n8n_enabled'])) {
-            return $systemConfig;
-        }
-
-        // 2. From main settings cache (populated by AppController::beforeFilter)
-        $cachedConfig = \Cake\Cache\Cache::read('system_settings', '_cake_core_');
-        if ($cachedConfig && isset($cachedConfig['n8n_enabled'])) {
-            return $cachedConfig;
-        }
-
-        // 3. Service-specific DB query with its own cache
-        return \Cake\Cache\Cache::remember('n8n_settings', function () {
-            $settingsTable = $this->fetchTable('SystemSettings');
-            $settings = $settingsTable->find()
-                ->select(['setting_key', 'setting_value'])
-                ->where([
-                    'setting_key IN' => [
-                        'n8n_enabled',
-                        'n8n_webhook_url',
-                        'n8n_api_key',
-                        'n8n_send_tags_list',
-                        'n8n_timeout',
-                    ]
-                ])
-                ->toArray();
-
-            return collection($settings)->combine('setting_key', 'setting_value')->toArray();
-        }, '_cake_core_');
+        $this->systemConfig = $systemConfig;
+        $this->config = $this->resolveSettingsBatch('n8n_enabled', 'n8n_settings', [
+            'n8n_enabled',
+            'n8n_webhook_url',
+            'n8n_api_key',
+            'n8n_send_tags_list',
+            'n8n_timeout',
+        ]);
     }
 
     /**

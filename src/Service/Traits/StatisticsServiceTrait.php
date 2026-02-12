@@ -23,18 +23,18 @@ trait StatisticsServiceTrait
         $startDate = $filters['start_date'] ?? null;
         $endDate = $filters['end_date'] ?? null;
 
-        $now = new \DateTime();
+        $now = new \Cake\I18n\DateTime();
         switch ($dateRange) {
             case 'today':
                 $startDate = $now->format('Y-m-d');
                 $endDate = $now->format('Y-m-d');
                 break;
             case 'week':
-                $startDate = (new \DateTime('-7 days'))->format('Y-m-d');
+                $startDate = (new \Cake\I18n\DateTime('-7 days'))->format('Y-m-d');
                 $endDate = $now->format('Y-m-d');
                 break;
             case 'month':
-                $startDate = (new \DateTime('-30 days'))->format('Y-m-d');
+                $startDate = (new \Cake\I18n\DateTime('-30 days'))->format('Y-m-d');
                 $endDate = $now->format('Y-m-d');
                 break;
             case 'custom':
@@ -380,7 +380,7 @@ trait StatisticsServiceTrait
         $table = $this->fetchTable($tableName);
 
         return $table->find()
-            ->where(['created >=' => new \DateTime('-7 days')])
+            ->where(['created >=' => new \Cake\I18n\DateTime('-7 days')])
             ->count();
     }
 

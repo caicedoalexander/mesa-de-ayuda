@@ -18,6 +18,7 @@ class ComprasService
     use \App\Service\Traits\NotificationDispatcherTrait;
     use \App\Service\Traits\GenericAttachmentTrait;
     use EntityConversionTrait;
+    use \App\Service\Traits\SlaAwareTrait;
 
     private EmailService $emailService;
     private WhatsappService $whatsappService;
@@ -194,33 +195,32 @@ class ComprasService
     }
 
     /**
-     * Verifica si el SLA de resolución está vencido
+     * SLA methods provided by SlaAwareTrait:
+     * - isFirstResponseSLABreached($entity)
+     * - isResolutionSLABreached($entity) (uses getResolutionSlaDue() for legacy fallback)
+     * - getSlaStatus($entity)
+     */
+
+    /**
+     * Alias for backward compatibility
      *
      * @param Compra $compra Compra entity
      * @return bool
      */
     public function isSLABreached(Compra $compra): bool
     {
-        return $this->slaService->isResolutionSlaBreached(
-            $compra->resolution_sla_due ?? $compra->sla_due_date,
-            $compra->resolved_at,
-            $compra->status
-        );
+        return $this->isResolutionSLABreached($compra);
     }
 
     /**
-     * Verifica si el SLA de primera respuesta está vencido
+     * Override to support legacy sla_due_date field in Compras
      *
-     * @param Compra $compra Compra entity
-     * @return bool
+     * @param \Cake\Datasource\EntityInterface $entity Compra entity
+     * @return \Cake\I18n\DateTime|null
      */
-    public function isFirstResponseSLABreached(Compra $compra): bool
+    protected function getResolutionSlaDue(\Cake\Datasource\EntityInterface $entity): ?\Cake\I18n\DateTime
     {
-        return $this->slaService->isFirstResponseSlaBreached(
-            $compra->first_response_sla_due,
-            $compra->first_response_at,
-            $compra->status
-        );
+        return $entity->resolution_sla_due ?? $entity->sla_due_date;
     }
 
     /**
@@ -243,28 +243,6 @@ class ComprasService
             ->contain(['Requesters', 'Assignees'])
             ->order(['resolution_sla_due' => 'ASC'])
             ->toArray();
-    }
-
-    /**
-     * Get SLA status information for a compra
-     *
-     * @param Compra $compra Compra entity
-     * @return array{first_response: array, resolution: array}
-     */
-    public function getSlaStatus(Compra $compra): array
-    {
-        return [
-            'first_response' => $this->slaService->getSlaStatus(
-                $compra->first_response_sla_due,
-                $compra->first_response_at,
-                $compra->status
-            ),
-            'resolution' => $this->slaService->getSlaStatus(
-                $compra->resolution_sla_due ?? $compra->sla_due_date,
-                $compra->resolved_at,
-                $compra->status
-            ),
-        ];
     }
 
     /**

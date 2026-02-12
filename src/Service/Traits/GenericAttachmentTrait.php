@@ -317,10 +317,12 @@ trait GenericAttachmentTrait
     /**
      * Get attachment table name for entity type
      *
+     * Protected: also used by EntityConversionTrait
+     *
      * @param string $entityType Entity type
      * @return string Table name
      */
-    private function getAttachmentTableName(string $entityType): string
+    protected function getAttachmentTableName(string $entityType): string
     {
         return match ($entityType) {
             'ticket' => 'Attachments',
@@ -716,26 +718,6 @@ trait GenericAttachmentTrait
         }
 
         return $filename;
-    }
-
-    /**
-     * Get file extension from MIME type
-     *
-     * @param string $mimeType MIME type
-     * @return string Extension
-     */
-    private function getExtensionFromMimeType(string $mimeType): string
-    {
-        $map = [
-            'image/jpeg' => 'jpg',
-            'image/pjpeg' => 'jpg',
-            'image/png' => 'png',
-            'image/gif' => 'gif',
-            'image/bmp' => 'bmp',
-            'image/webp' => 'webp',
-        ];
-
-        return $map[$mimeType] ?? 'jpg';
     }
 
     /**

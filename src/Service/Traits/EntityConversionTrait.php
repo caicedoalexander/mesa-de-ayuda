@@ -5,7 +5,6 @@ namespace App\Service\Traits;
 
 use Cake\Datasource\EntityInterface;
 use Cake\Log\Log;
-use Cake\ORM\Locator\LocatorAwareTrait;
 
 /**
  * EntityConversionTrait
@@ -14,12 +13,12 @@ use Cake\ORM\Locator\LocatorAwareTrait;
  * Eliminates ~160 lines of duplicated code
  *
  * Requirements:
- * - Using class must use LocatorAwareTrait
- * - Entity numbering must follow: {prefix}_number (e.g., ticket_number, compra_number)
+ * - Using class must use LocatorAwareTrait (for fetchTable())
+ * - Using class must use TicketSystemTrait (for getCommentsTableName(), getForeignKeyName())
+ * - Using class must use GenericAttachmentTrait (for getAttachmentTableName())
  */
 trait EntityConversionTrait
 {
-    use LocatorAwareTrait;
 
     /**
      * Copy comments from source entity to target entity
@@ -99,9 +98,9 @@ trait EntityConversionTrait
         EntityInterface $targetEntity,
         string $targetEntityNumber
     ): int {
-        // Get table names and foreign keys
-        $sourceAttachmentsTable = $this->getAttachmentsTableName($sourceType);
-        $targetAttachmentsTable = $this->getAttachmentsTableName($targetType);
+        // Get table names and foreign keys (getAttachmentTableName from GenericAttachmentTrait)
+        $sourceAttachmentsTable = $this->getAttachmentTableName($sourceType);
+        $targetAttachmentsTable = $this->getAttachmentTableName($targetType);
         $targetForeignKey = $this->getForeignKeyName($targetType);
 
         // Get association name for source attachments
@@ -173,22 +172,6 @@ trait EntityConversionTrait
         }
 
         return $copiedCount;
-    }
-
-    /**
-     * Get attachments table name for entity type
-     *
-     * @param string $entityType Entity type
-     * @return string Table name
-     */
-    private function getAttachmentsTableName(string $entityType): string
-    {
-        return match ($entityType) {
-            'ticket' => 'Attachments',
-            'pqrs' => 'PqrsAttachments',
-            'compra' => 'ComprasAttachments',
-            default => throw new \InvalidArgumentException("Invalid entity type: {$entityType}"),
-        };
     }
 
     /**

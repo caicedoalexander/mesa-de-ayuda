@@ -86,7 +86,7 @@ class StatisticsService
         $recentResolved = $ticketsTable->find()
             ->where([
                 'status' => 'resuelto',
-                'resolved_at >=' => new \DateTime('-7 days')
+                'resolved_at >=' => new \Cake\I18n\DateTime('-7 days')
             ])
             ->count();
 
@@ -481,7 +481,7 @@ class StatisticsService
      */
     private function getSLAMetrics($baseQuery): array
     {
-        $now = new \DateTime();
+        $now = new \Cake\I18n\DateTime();
 
         // SLA breached count (past deadline and not completed/rejected/converted)
         $breachedQuery = clone $baseQuery;
@@ -494,7 +494,7 @@ class StatisticsService
 
         // SLA at risk (< 24 hours remaining)
         $atRiskQuery = clone $baseQuery;
-        $tomorrow = (new \DateTime())->modify('+24 hours');
+        $tomorrow = (new \Cake\I18n\DateTime())->modify('+24 hours');
         $atRiskCount = $atRiskQuery
             ->where([
                 'sla_due_date >=' => $now,

@@ -92,7 +92,7 @@ class S3Service
         }
 
         try {
-            $result = $this->client->putObject([
+            $this->client->putObject([
                 'Bucket' => $this->bucket,
                 'Key' => $s3Path,
                 'SourceFile' => $localPath,
@@ -123,7 +123,7 @@ class S3Service
         }
 
         try {
-            $result = $this->client->getObject([
+            $this->client->getObject([
                 'Bucket' => $this->bucket,
                 'Key' => $s3Path,
                 'SaveAs' => $localPath,
@@ -151,7 +151,7 @@ class S3Service
         }
 
         try {
-            $result = $this->client->deleteObject([
+            $this->client->deleteObject([
                 'Bucket' => $this->bucket,
                 'Key' => $s3Path,
             ]);

@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Utility\SettingsEncryptionTrait;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use Cake\Log\Log;
 use App\Service\Traits\EntityConversionTrait;
@@ -20,7 +19,6 @@ use App\Service\Traits\EntityConversionTrait;
 class TicketService
 {
     use LocatorAwareTrait;
-    use SettingsEncryptionTrait;
     use \App\Service\Traits\TicketSystemTrait;
     use \App\Service\Traits\NotificationDispatcherTrait;
     use \App\Service\Traits\GenericAttachmentTrait;
@@ -483,22 +481,8 @@ class TicketService
         $ticketsTable = $this->fetchTable('Tickets');
 
         try {
-            // Generate ticket number
-            $year = date('Y');
-            $prefix = "TKT-{$year}-";
-            $lastTicket = $ticketsTable->find()
-                ->select(['ticket_number'])
-                ->where(['ticket_number LIKE' => $prefix . '%'])
-                ->order(['ticket_number' => 'DESC'])
-                ->first();
-
-            if ($lastTicket) {
-                $lastNumber = (int)substr($lastTicket->ticket_number, -5);
-                $newNumber = $lastNumber + 1;
-            } else {
-                $newNumber = 1;
-            }
-            $ticketNumber = $prefix . str_pad((string)$newNumber, 5, '0', STR_PAD_LEFT);
+            // Generate ticket number using Table method (avoids duplication)
+            $ticketNumber = $ticketsTable->generateTicketNumber();
 
             // Create ticket from compra data
             $ticket = $ticketsTable->newEntity([

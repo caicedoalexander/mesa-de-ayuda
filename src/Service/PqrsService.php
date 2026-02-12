@@ -25,6 +25,7 @@ class PqrsService
     use \App\Service\Traits\TicketSystemTrait;
     use \App\Service\Traits\NotificationDispatcherTrait;
     use \App\Service\Traits\GenericAttachmentTrait;
+    use \App\Service\Traits\SlaAwareTrait;
 
     private EmailService $emailService;
     private WhatsappService $whatsappService;
@@ -125,56 +126,11 @@ class PqrsService
     }
 
     /**
-     * Verifica si el SLA de primera respuesta está vencido
-     *
-     * @param \App\Model\Entity\Pqr $pqrs PQRS entity
-     * @return bool
+     * SLA methods provided by SlaAwareTrait:
+     * - isFirstResponseSLABreached($entity)
+     * - isResolutionSLABreached($entity)
+     * - getSlaStatus($entity)
      */
-    public function isFirstResponseSLABreached(\App\Model\Entity\Pqr $pqrs): bool
-    {
-        return $this->slaService->isFirstResponseSlaBreached(
-            $pqrs->first_response_sla_due,
-            $pqrs->first_response_at,
-            $pqrs->status
-        );
-    }
-
-    /**
-     * Verifica si el SLA de resolución está vencido
-     *
-     * @param \App\Model\Entity\Pqr $pqrs PQRS entity
-     * @return bool
-     */
-    public function isResolutionSLABreached(\App\Model\Entity\Pqr $pqrs): bool
-    {
-        return $this->slaService->isResolutionSlaBreached(
-            $pqrs->resolution_sla_due,
-            $pqrs->resolved_at,
-            $pqrs->status
-        );
-    }
-
-    /**
-     * Get SLA status information for a PQRS
-     *
-     * @param \App\Model\Entity\Pqr $pqrs PQRS entity
-     * @return array{first_response: array, resolution: array}
-     */
-    public function getSlaStatus(\App\Model\Entity\Pqr $pqrs): array
-    {
-        return [
-            'first_response' => $this->slaService->getSlaStatus(
-                $pqrs->first_response_sla_due,
-                $pqrs->first_response_at,
-                $pqrs->status
-            ),
-            'resolution' => $this->slaService->getSlaStatus(
-                $pqrs->resolution_sla_due,
-                $pqrs->resolved_at,
-                $pqrs->status
-            ),
-        ];
-    }
 
     /**
      * Obtiene PQRS con SLA de resolución vencido

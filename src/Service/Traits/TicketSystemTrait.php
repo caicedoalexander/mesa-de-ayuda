@@ -379,10 +379,12 @@ trait TicketSystemTrait
     /**
      * Get comments table name from entity type
      *
+     * Protected: also used by EntityConversionTrait
+     *
      * @param string $entityType Entity type (ticket, pqrs, compra)
      * @return string Comments table name
      */
-    private function getCommentsTableName(string $entityType): string
+    protected function getCommentsTableName(string $entityType): string
     {
         return match ($entityType) {
             'ticket' => 'TicketComments',
@@ -411,10 +413,12 @@ trait TicketSystemTrait
     /**
      * Get foreign key name from entity type
      *
+     * Protected: also used by EntityConversionTrait
+     *
      * @param string $entityType Entity type (ticket, pqrs, compra)
      * @return string Foreign key name
      */
-    private function getForeignKeyName(string $entityType): string
+    protected function getForeignKeyName(string $entityType): string
     {
         return match ($entityType) {
             'ticket' => 'ticket_id',
