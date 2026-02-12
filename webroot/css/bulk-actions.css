@@ -100,6 +100,7 @@ table, thead, tbody, th, td {
 #btn-refresh-list:hover {
     border-color: var(--admin-green);
     color: var(--admin-green);
+    box-shadow: 0 0 4px var(--admin-green);
 }
 
 /* ============================================
