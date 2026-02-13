@@ -601,7 +601,7 @@ $this->assign('title', 'Configuración');
             <div class="form-group">
                 <?= $this->Form->label('whatsapp_api_url', 'URL de Evolution API') ?>
                 <?= $this->Form->text('whatsapp_api_url', [
-                    'value' => $settings['whatsapp_api_url'] ?? 'https://n8n-evolution-api.jx7zng.easypanel.host',
+                    'value' => $settings['whatsapp_api_url'] ?? '',
                     'placeholder' => 'https://your-evolution-api.com'
                 ]) ?>
                 <small>URL base de tu instancia de Evolution API</small>

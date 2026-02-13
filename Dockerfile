@@ -43,7 +43,7 @@ COPY docker/php/php.ini /usr/local/etc/php/conf.d/custom.ini
 # Configure Nginx
 RUN rm -f /etc/nginx/sites-enabled/default \
     && rm -f /etc/nginx/sites-available/default
-COPY docker/nginx/easypanel.conf /etc/nginx/sites-enabled/default
+COPY docker/nginx/standalone.conf /etc/nginx/sites-enabled/default
 
 # Copy supervisor configuration for running nginx + php-fpm + worker
 RUN echo '[unix_http_server]\n\

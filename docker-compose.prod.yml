@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PHP-FPM Application (Production)
   web:
@@ -25,6 +23,13 @@ services:
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
       - SECURITY_SALT=${SECURITY_SALT}
+      - TRUST_PROXY=${TRUST_PROXY:-true}
+      - FULL_BASE_URL=${FULL_BASE_URL:-}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET:-}
+      - AWS_S3_ENABLED=${AWS_S3_ENABLED:-false}
     networks:
       - mesadeayuda_network
     logging:
@@ -78,7 +83,15 @@ services:
       - DB_DATABASE=${DB_DATABASE}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
+      - SECURITY_SALT=${SECURITY_SALT}
+      - TRUST_PROXY=${TRUST_PROXY:-true}
+      - FULL_BASE_URL=${FULL_BASE_URL:-}
       - WORKER_ENABLED=true
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET:-}
+      - AWS_S3_ENABLED=${AWS_S3_ENABLED:-false}
     networks:
       - mesadeayuda_network
     depends_on:

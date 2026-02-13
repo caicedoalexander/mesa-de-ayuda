@@ -11,6 +11,7 @@ use Cake\Console\ConsoleOptionParser;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use Cake\Log\Log;
 use Cake\Console\Exception\StopException;
+use Cake\Datasource\ConnectionManager;
 
 /**
  * GmailWorker command
@@ -24,6 +25,11 @@ class GmailWorkerCommand extends Command
 {
     use LocatorAwareTrait;
     use SettingsEncryptionTrait;
+
+    private bool $shouldStop = false;
+
+    private const MIN_RETRY_SECONDS = 60;
+    private const MAX_RETRY_SECONDS = 600;
 
     /**
      * Hook method for defining this command's option parser.
@@ -61,16 +67,26 @@ class GmailWorkerCommand extends Command
         $io->out('Press CTRL+C to stop');
         $io->hr();
 
+        // Register signal handlers for graceful shutdown
+        $this->registerSignalHandlers($io);
+
         // Check if worker is enabled
         if (!$this->isWorkerEnabled()) {
             $io->warning('Worker is disabled via WORKER_ENABLED environment variable');
             return self::CODE_ERROR;
         }
 
+        // Wait for database connectivity before entering main loop
+        if (!$this->waitForDatabase($io)) {
+            $io->error('Could not connect to database after multiple attempts. Exiting.');
+            return self::CODE_ERROR;
+        }
+
         $iteration = 0;
+        $consecutiveErrors = 0;
 
         // Main worker loop
-        while (true) {
+        while (!$this->shouldStop) {
             $iteration++;
             $startTime = microtime(true);
 
@@ -98,6 +114,9 @@ class GmailWorkerCommand extends Command
                     }
                 }
 
+                // Reset backoff on successful iteration
+                $consecutiveErrors = 0;
+
                 $duration = round(microtime(true) - $startTime, 2);
                 $io->verbose("  Duration: {$duration}s");
 
@@ -114,13 +133,13 @@ class GmailWorkerCommand extends Command
                 $io->out("  Next import at: {$nextRun}");
                 $io->hr();
 
-                // Sleep until next iteration
-                sleep($waitSeconds);
+                // Sleep in small increments to allow signal handling
+                $this->interruptibleSleep($waitSeconds);
             } catch (StopException $e) {
-                // User pressed CTRL+C
                 $io->out('Worker stopped by user');
                 break;
             } catch (\Exception $e) {
+                $consecutiveErrors++;
                 $io->error("  Worker error: {$e->getMessage()}");
                 Log::error('Gmail worker error', [
                     'iteration' => $iteration,
@@ -129,14 +148,93 @@ class GmailWorkerCommand extends Command
                     'line' => $e->getLine(),
                 ]);
 
-                // Wait a bit before retrying after error
-                $io->out('  Waiting 60 seconds before retry...');
-                sleep(60);
+                // Exponential backoff: 60s, 120s, 240s, 480s, capped at 600s
+                $retrySeconds = min(
+                    self::MIN_RETRY_SECONDS * (2 ** ($consecutiveErrors - 1)),
+                    self::MAX_RETRY_SECONDS
+                );
+                $io->out("  Waiting {$retrySeconds} seconds before retry (attempt #{$consecutiveErrors})...");
+                $this->interruptibleSleep((int)$retrySeconds);
             }
         }
 
         $io->out('Gmail Worker Stopped');
         return self::CODE_SUCCESS;
+    }
+
+    /**
+     * Register POSIX signal handlers for graceful shutdown
+     *
+     * @param \Cake\Console\ConsoleIo $io Console IO
+     * @return void
+     */
+    private function registerSignalHandlers(ConsoleIo $io): void
+    {
+        if (!function_exists('pcntl_signal')) {
+            $io->verbose('pcntl extension not available, signal handling disabled');
+            return;
+        }
+
+        pcntl_signal(SIGTERM, function () use ($io) {
+            $io->out('');
+            $io->out('Received SIGTERM, shutting down gracefully...');
+            $this->shouldStop = true;
+        });
+
+        pcntl_signal(SIGINT, function () use ($io) {
+            $io->out('');
+            $io->out('Received SIGINT, shutting down gracefully...');
+            $this->shouldStop = true;
+        });
+
+        pcntl_async_signals(true);
+    }
+
+    /**
+     * Sleep in 1-second increments to allow signal processing
+     *
+     * @param int $seconds Total seconds to sleep
+     * @return void
+     */
+    private function interruptibleSleep(int $seconds): void
+    {
+        for ($i = 0; $i < $seconds && !$this->shouldStop; $i++) {
+            sleep(1);
+        }
+    }
+
+    /**
+     * Wait for database connectivity with retries
+     *
+     * @param \Cake\Console\ConsoleIo $io Console IO
+     * @return bool True if connected, false if all retries exhausted
+     */
+    private function waitForDatabase(ConsoleIo $io): bool
+    {
+        $maxAttempts = 10;
+        $waitSeconds = 5;
+
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            if ($this->shouldStop) {
+                return false;
+            }
+
+            try {
+                /** @var \Cake\Database\Connection $connection */
+                $connection = ConnectionManager::get('default');
+                $connection->execute('SELECT 1');
+                $io->success('Database connection established');
+                return true;
+            } catch (\Exception $e) {
+                $io->warning("Database connection attempt {$attempt}/{$maxAttempts} failed: {$e->getMessage()}");
+                if ($attempt < $maxAttempts) {
+                    $io->out("  Retrying in {$waitSeconds} seconds...");
+                    $this->interruptibleSleep($waitSeconds);
+                }
+            }
+        }
+
+        return false;
     }
 
     /**

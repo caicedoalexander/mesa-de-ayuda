@@ -11,9 +11,9 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     libicu-dev \
-    supervisor \
-    cron \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -23,6 +23,9 @@ WORKDIR /var/www/html
 
 # Copy application files
 COPY . /var/www/html
+
+# Copy config template to app_local.php (uses environment variables)
+RUN cp config/app_local.example.php config/app_local.php
 
 # Install application dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
