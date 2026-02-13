@@ -47,11 +47,7 @@ class AppController extends Controller
         $this->loadComponent('Flash');
         $this->loadComponent('Authentication.Authentication');
 
-        /*
-         * Enable the following component for recommended CakePHP form protection settings.
-         * see https://book.cakephp.org/5/en/controllers/components/form-protection.html
-         */
-        //$this->loadComponent('FormProtection');
+        $this->loadComponent('FormProtection');
     }
 
     /**
@@ -84,8 +80,14 @@ class AppController extends Controller
             return $this->processSettings($config);
         }, '_cake_core_');
 
-        // Make system settings available in views
-        $this->set('systemConfig', $systemConfig);
+        // Filter out sensitive settings before passing to views
+        $sensitiveKeys = [
+            'gmail_refresh_token', 'gmail_client_secret_path',
+            'whatsapp_api_key', 'whatsapp_api_token',
+            'n8n_api_key', 'n8n_webhook_url',
+        ];
+        $safeConfig = array_diff_key($systemConfig, array_flip($sensitiveKeys));
+        $this->set('systemConfig', $safeConfig);
         $this->set('systemTitle', $systemConfig['system_title'] ?? 'Sistema de Soporte');
 
         // Set layout based on user role

@@ -136,8 +136,15 @@ trait TicketSystemTrait
         $entityTable = $this->fetchTable($entityTableName);
         $entity = $entityTable->get($entityId);
 
-        // No sanitization as requested by user
-        $sanitizedBody = $body;
+        // Sanitize HTML content to prevent stored XSS
+        $config = \HTMLPurifier_Config::createDefault();
+        $config->set('HTML.Allowed', 'p,br,b,i,u,strong,em,a[href],ul,ol,li,blockquote,h1,h2,h3,h4,h5,h6,img[src|alt|width|height],table,thead,tbody,tr,td,th,span,div,pre,code,hr');
+        $config->set('HTML.TargetBlank', true);
+        $config->set('URI.AllowedSchemes', ['http' => true, 'https' => true, 'mailto' => true]);
+        $config->set('Attr.AllowedFrameTargets', ['_blank']);
+        $config->set('Cache.SerializerPath', TMP . 'htmlpurifier');
+        $purifier = new \HTMLPurifier($config);
+        $sanitizedBody = $purifier->purify($body);
 
         $data = [
             'user_id' => $userId,
@@ -165,7 +172,9 @@ trait TicketSystemTrait
             $data['sent_as_email'] = false;
         }
 
-        $comment = $commentsTable->newEntity($data);
+        $comment = $commentsTable->newEntity($data, ['accessibleFields' => [
+            'user_id' => true, 'is_system_comment' => true, 'sent_as_email' => true,
+        ]]);
 
         if (!$commentsTable->save($comment)) {
             Log::error('Failed to add comment', ['errors' => $comment->getErrors()]);
@@ -329,12 +338,12 @@ trait TicketSystemTrait
             // Fallback implementation
             $history = $historyTable->newEntity([
                 $foreignKey => $entityId,
-                'user_id' => $userId,
+                'changed_by' => $userId,
                 'field_name' => $fieldName,
                 'old_value' => $oldValue,
                 'new_value' => $newValue,
-                'description' => $description
-            ]);
+                'description' => $description,
+            ], ['accessibleFields' => ['changed_by' => true]]);
             $historyTable->save($history);
         }
     }

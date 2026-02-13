@@ -130,7 +130,7 @@ if ($entityType === 'ticket' || $entityType === 'compra') {
         </div>
 
         <div class="lh-base small p-3 rounded" style="background-color: rgba(31, 115, 183, 0.1);">
-            <?php echo $description; ?>
+            <?= $this->Sanitize->html($description) ?>
         </div>
 
         <?php
@@ -158,7 +158,7 @@ if ($entityType === 'ticket' || $entityType === 'compra') {
         <?php foreach ($comments as $comment): ?>
             <?php if ($comment->is_system_comment): ?>
                 <div class="bg-warning bg-opacity-10 mb-3 border-warning fw-bold py-2 shadow-sm w-50 mx-auto text-center" style="font-size: 13px !important; border-radius: 8px;">
-                    <?php echo $comment->body; ?>
+                    <?= $this->Sanitize->html($comment->body) ?>
                 </div>
             <?php else: ?>
                 <div class="card border-0 p-3 mb-3" style="background-color: transparent !important;">
@@ -240,7 +240,7 @@ if ($entityType === 'ticket' || $entityType === 'compra') {
                         </div>
                     </div>
                     <div class="lh-base small p-3 rounded <?= $comment->is_system_comment ? 'bg-warning bg-opacity-10 border-warning' : ($comment->comment_type === 'internal' ? 'bg-warning bg-opacity-10' : 'bg-secondary bg-opacity-10') ?>">
-                        <?php echo $comment->body; ?>
+                        <?= $this->Sanitize->html($comment->body) ?>
                     </div>
 
                     <?php

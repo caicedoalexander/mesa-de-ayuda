@@ -108,12 +108,16 @@ class ComprasService
                 'requester_id' => $ticket->requester_id,
                 'assignee_id' => $data['assignee_id'] ?? null,
                 'channel' => $ticket->channel ?? 'email',
-                'email_to' => $ticket->email_to,  // Copy email recipients
-                'email_cc' => $ticket->email_cc,  // Copy CC recipients (managers, etc.)
-                'sla_due_date' => $slaDeadlines['resolution_sla_due'], // Legacy field
+                'email_to' => $ticket->email_to,
+                'email_cc' => $ticket->email_cc,
+                'sla_due_date' => $slaDeadlines['resolution_sla_due'],
                 'first_response_sla_due' => $slaDeadlines['first_response_sla_due'],
                 'resolution_sla_due' => $slaDeadlines['resolution_sla_due'],
-            ]);
+            ], ['accessibleFields' => [
+                'compra_number' => true, 'status' => true, 'requester_id' => true,
+                'channel' => true, 'sla_due_date' => true,
+                'first_response_sla_due' => true, 'resolution_sla_due' => true,
+            ]]);
 
             if ($comprasTable->save($compra)) {
                 $this->logHistory(

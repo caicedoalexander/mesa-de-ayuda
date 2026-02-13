@@ -77,7 +77,8 @@ class TicketCommentsTable extends Table
         $validator
             ->scalar('comment_type')
             ->maxLength('comment_type', 20)
-            ->notEmptyString('comment_type');
+            ->notEmptyString('comment_type')
+            ->inList('comment_type', ['public', 'internal', 'system'], 'Tipo de comentario no válido.');
 
         $validator
             ->scalar('body')

@@ -34,15 +34,15 @@ class TicketComment extends Entity
      */
     protected array $_accessible = [
         'ticket_id' => true,
-        'user_id' => true,
+        'user_id' => false,
         'comment_type' => true,
         'body' => true,
-        'is_system_comment' => true,
-        'gmail_message_id' => true,
-        'sent_as_email' => true,
+        'is_system_comment' => false,
+        'gmail_message_id' => false,
+        'sent_as_email' => false,
         'email_to' => true,
         'email_cc' => true,
-        'created' => true,
+        'created' => false,
         'ticket' => true,
         'user' => true,
     ];

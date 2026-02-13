@@ -59,7 +59,7 @@ class SettingsService
                 'setting_key' => $key,
                 'setting_value' => $valueToStore,
                 'setting_type' => 'string',
-            ]);
+            ], ['accessibleFields' => ['setting_key' => true, 'setting_type' => true]]);
         }
 
         $result = (bool) $settingsTable->save($setting);

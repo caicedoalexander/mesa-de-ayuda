@@ -91,8 +91,9 @@ class TicketService
             return null;
         }
 
-        // No sanitization as requested
-        $description = $emailData['body_html'] ?: $emailData['body_text'];
+        // Sanitize HTML content from email to prevent stored XSS
+        $rawBody = $emailData['body_html'] ?: $emailData['body_text'];
+        $description = $this->sanitizeHtml($rawBody);
 
         // Generate ticket number
         $ticketNumber = $ticketsTable->generateTicketNumber();
@@ -122,7 +123,10 @@ class TicketService
             'requester_id' => $user->id,
             'channel' => $channel,
             'source_email' => $fromEmail,
-        ]);
+        ], ['accessibleFields' => [
+            'ticket_number' => true, 'gmail_message_id' => true, 'gmail_thread_id' => true,
+            'status' => true, 'requester_id' => true, 'channel' => true, 'source_email' => true,
+        ]]);
         assert($ticket instanceof \App\Model\Entity\Ticket);
 
         // Set email recipients directly (bypass marshalling to avoid validation issues)
@@ -192,8 +196,9 @@ class TicketService
             return null;
         }
 
-        // Extract body content from emailData
-        $body = $emailData['body_html'] ?: $emailData['body_text'];
+        // Extract and sanitize body content from emailData to prevent stored XSS
+        $rawBody = $emailData['body_html'] ?: $emailData['body_text'];
+        $body = $this->sanitizeHtml($rawBody);
 
         // Truncate body if > 65,000 chars (prevent DB overflow)
         $maxLength = 65000;
@@ -217,7 +222,9 @@ class TicketService
             'sent_as_email' => false,
             'email_to' => !empty($emailData['email_to']) ? json_encode($emailData['email_to']) : null,
             'email_cc' => !empty($emailData['email_cc']) ? json_encode($emailData['email_cc']) : null,
-        ]);
+        ], ['accessibleFields' => [
+            'user_id' => true, 'is_system_comment' => true, 'gmail_message_id' => true, 'sent_as_email' => true,
+        ]]);
         assert($comment instanceof \App\Model\Entity\TicketComment);
 
         // Save comment, return null on failure
@@ -283,7 +290,7 @@ class TicketService
             'role' => 'requester',
             'password' => null,
             'is_active' => true,
-        ]);
+        ], ['accessibleFields' => ['role' => true, 'is_active' => true]]);
         assert($user instanceof \App\Model\Entity\User);
 
         if ($usersTable->save($user)) {
@@ -497,7 +504,10 @@ class TicketService
                 'email_to' => $compra->email_to,
                 'email_cc' => $compra->email_cc,
                 'source_email' => $compra->requester->email ?? null,
-            ]);
+            ], ['accessibleFields' => [
+                'ticket_number' => true, 'status' => true, 'requester_id' => true,
+                'channel' => true, 'source_email' => true,
+            ]]);
 
             if ($ticketsTable->save($ticket)) {
                 // Log creation in ticket history
@@ -661,5 +671,25 @@ class TicketService
             ]);
             return false;
         }
+    }
+
+    /**
+     * Sanitize HTML content from emails to prevent stored XSS
+     *
+     * @param string $html Raw HTML content
+     * @return string Sanitized HTML
+     */
+    private function sanitizeHtml(string $html): string
+    {
+        $config = \HTMLPurifier_Config::createDefault();
+        $config->set('HTML.Allowed', 'p,br,b,i,u,strong,em,a[href],ul,ol,li,blockquote,h1,h2,h3,h4,h5,h6,img[src|alt|width|height],table,thead,tbody,tr,td,th,span,div,pre,code,hr');
+        $config->set('HTML.TargetBlank', true);
+        $config->set('URI.AllowedSchemes', ['http' => true, 'https' => true, 'mailto' => true]);
+        $config->set('Attr.AllowedFrameTargets', ['_blank']);
+        $config->set('Cache.SerializerPath', TMP . 'htmlpurifier');
+
+        $purifier = new \HTMLPurifier($config);
+
+        return $purifier->purify($html);
     }
 }

@@ -28,6 +28,23 @@ class SettingsController extends AppController
     }
 
     /**
+     * Before filter - require admin role
+     *
+     * @param \Cake\Event\EventInterface<\Cake\Controller\Controller> $event Event.
+     * @return \Cake\Http\Response|null|void
+     */
+    public function beforeFilter(\Cake\Event\EventInterface $event)
+    {
+        parent::beforeFilter($event);
+
+        $user = $this->Authentication->getIdentity();
+        if (!$user || $user->get('role') !== 'admin') {
+            $this->Flash->error('Solo los administradores pueden acceder a esta sección.');
+            return $this->redirect(['controller' => 'Tickets', 'action' => 'index', 'prefix' => false]);
+        }
+    }
+
+    /**
      * Index method - Show and update settings
      *
      * @return \Cake\Http\Response|null|void Renders view
@@ -48,8 +65,20 @@ class SettingsController extends AppController
                 $data['n8n_send_tags_list'] = '0';
             }
 
+            // Allowlist of valid setting keys to prevent arbitrary setting injection
+            $allowedKeys = [
+                'system_title', 'gmail_check_interval',
+                'whatsapp_enabled', 'whatsapp_api_url', 'whatsapp_api_key',
+                'whatsapp_instance_name', 'whatsapp_tickets_number',
+                'whatsapp_compras_number', 'whatsapp_pqrs_number',
+                'n8n_enabled', 'n8n_webhook_url', 'n8n_api_key',
+                'n8n_send_tags_list', 'n8n_timeout',
+            ];
+
             foreach ($data as $key => $value) {
-                $this->settingsService->saveSetting($key, $value);
+                if (in_array($key, $allowedKeys, true)) {
+                    $this->settingsService->saveSetting($key, $value);
+                }
             }
 
             $this->Flash->success('Configuración guardada exitosamente.');
@@ -102,7 +131,7 @@ class SettingsController extends AppController
                     }
                 } else {
                     $this->Flash->warning('No se recibió refresh token. Intenta nuevamente.');
-                    Log::warning('No refresh token in OAuth response', ['tokens' => $tokens]);
+                    Log::warning('No refresh token in OAuth response', ['token_keys' => array_keys($tokens ?? [])]);
                 }
 
                 return $this->redirect(['action' => 'index']);

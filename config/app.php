@@ -432,6 +432,12 @@ return [
      */
     'Session' => [
         'defaults' => 'php',
+        'ini' => [
+            'session.cookie_httponly' => true,
+            'session.cookie_samesite' => 'Lax',
+            'session.cookie_secure' => (bool) env('TRUST_PROXY', false),
+            'session.use_strict_mode' => true,
+        ],
     ],
 
     /**

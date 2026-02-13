@@ -29,12 +29,12 @@ class ComprasHistory extends Entity
      */
     protected array $_accessible = [
         'compra_id' => true,
-        'changed_by' => true,
+        'changed_by' => false,
         'field_name' => true,
         'old_value' => true,
         'new_value' => true,
         'description' => true,
-        'created' => true,
+        'created' => false,
         'compra' => true,
         'user' => true,
     ];

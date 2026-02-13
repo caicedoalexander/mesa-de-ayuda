@@ -126,12 +126,14 @@ class TicketsTable extends Table
         $validator
             ->scalar('status')
             ->maxLength('status', 20)
-            ->notEmptyString('status');
+            ->notEmptyString('status')
+            ->inList('status', ['nuevo', 'abierto', 'en_progreso', 'pendiente', 'resuelto', 'cerrado'], 'Estado no válido.');
 
         $validator
             ->scalar('priority')
             ->maxLength('priority', 20)
-            ->notEmptyString('priority');
+            ->notEmptyString('priority')
+            ->inList('priority', ['baja', 'media', 'alta', 'urgente'], 'Prioridad no válida.');
 
         $validator
             ->integer('requester_id')

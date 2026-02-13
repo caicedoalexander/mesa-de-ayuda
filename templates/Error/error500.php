@@ -32,5 +32,5 @@ endif;
 <h2><?= __d('cake', 'An Internal Error Has Occurred.') ?></h2>
 <p class="error">
     <strong><?= __d('cake', 'Error') ?>: </strong>
-    <?= h($message) ?>
+    <?= Configure::read('debug') ? h($message) : __d('cake', 'An Internal Error Has Occurred.') ?>
 </p>

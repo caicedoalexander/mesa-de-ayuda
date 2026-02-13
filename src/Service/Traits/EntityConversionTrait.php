@@ -62,8 +62,10 @@ trait EntityConversionTrait
                 'comment_type' => $comment->comment_type,
                 'body' => $comment->body,
                 'is_system_comment' => $comment->is_system_comment,
-                'sent_as_email' => false, // Never send email for copied comments
-            ]);
+                'sent_as_email' => false,
+            ], ['accessibleFields' => [
+                'user_id' => true, 'is_system_comment' => true, 'sent_as_email' => true,
+            ]]);
 
             if ($targetTable->save($newComment)) {
                 $copiedCount++;
@@ -143,7 +145,7 @@ trait EntityConversionTrait
                 // Create database record
                 $newAttachment = $targetTable->newEntity([
                     $targetForeignKey => $targetEntity->id,
-                    $this->getCommentForeignKey($targetType) => null, // Not linked to specific comment
+                    $this->getCommentForeignKey($targetType) => null,
                     'filename' => $attachment->filename,
                     'original_filename' => $attachment->original_filename,
                     'file_path' => $targetDir . $attachment->filename,
@@ -152,7 +154,10 @@ trait EntityConversionTrait
                     'is_inline' => $attachment->is_inline,
                     'content_id' => $attachment->content_id,
                     'uploaded_by' => $this->getUploadedByField($attachment, $sourceType),
-                ]);
+                ], ['accessibleFields' => [
+                    'filename' => true, 'file_path' => true, 'mime_type' => true, 'file_size' => true,
+                    'is_inline' => true, 'content_id' => true, 'uploaded_by' => true, 'uploaded_by_user_id' => true,
+                ]]);
 
                 if ($targetTable->save($newAttachment)) {
                     $copiedCount++;

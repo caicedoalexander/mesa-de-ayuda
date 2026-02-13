@@ -27,10 +27,10 @@ class SystemSetting extends Entity
      * @var array<string, bool>
      */
     protected array $_accessible = [
-        'setting_key' => true,
+        'setting_key' => false,
         'setting_value' => true,
-        'setting_type' => true,
-        'created' => true,
-        'modified' => true,
+        'setting_type' => false,
+        'created' => false,
+        'modified' => false,
     ];
 }

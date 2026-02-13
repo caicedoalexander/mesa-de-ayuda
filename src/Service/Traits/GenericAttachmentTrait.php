@@ -58,6 +58,8 @@ trait GenericAttachmentTrait
         'exe', 'bat', 'cmd', 'com', 'pif', 'scr', 'vbs', 'js', 'jar',
         'sh', 'app', 'deb', 'rpm', 'dmg', 'pkg', 'run', 'msi', 'dll',
         'sys', 'drv', 'cpl', 'scf', 'lnk', 'inf', 'reg',
+        'php', 'phtml', 'php3', 'php4', 'php5', 'phps', 'phar', 'cgi',
+        'pl', 'py', 'rb', 'asp', 'aspx', 'jsp', 'htaccess', 'htpasswd',
     ];
 
     /**
@@ -219,7 +221,10 @@ trait GenericAttachmentTrait
             $filePath
         );
 
-        $attachment = $attachmentsTable->newEntity($data);
+        $attachment = $attachmentsTable->newEntity($data, ['accessibleFields' => [
+            'filename' => true, 'file_path' => true, 'mime_type' => true, 'file_size' => true,
+            'is_inline' => true, 'content_id' => true, 'uploaded_by' => true, 'uploaded_by_user_id' => true,
+        ]]);
 
         if (!$attachmentsTable->save($attachment)) {
             Log::error("Failed to save {$entityType} attachment to database", [
@@ -510,7 +515,10 @@ trait GenericAttachmentTrait
         // Save to database
         $attachmentTableName = $this->getAttachmentTableName($entityType);
         $attachmentsTable = $this->fetchTable($attachmentTableName);
-        $attachment = $attachmentsTable->newEntity($data);
+        $attachment = $attachmentsTable->newEntity($data, ['accessibleFields' => [
+            'filename' => true, 'file_path' => true, 'mime_type' => true, 'file_size' => true,
+            'is_inline' => true, 'content_id' => true, 'uploaded_by' => true, 'uploaded_by_user_id' => true,
+        ]]);
 
         if ($attachmentsTable->save($attachment)) {
             Log::info("{$entityType} attachment saved from binary", [
@@ -653,14 +661,16 @@ trait GenericAttachmentTrait
         // Use finfo to detect actual MIME type
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
         if ($finfo === false) {
-            return true; // Fail open if finfo not available
+            Log::warning('finfo not available for MIME verification, rejecting file');
+
+            return false;
         }
 
         $actualMime = finfo_file($finfo, $filePath);
         finfo_close($finfo);
 
         if ($actualMime === false) {
-            return true; // Fail open
+            return false;
         }
 
         // Get extension from ORIGINAL filename, not temp file path

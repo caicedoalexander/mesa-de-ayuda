@@ -29,12 +29,12 @@ class PqrsHistory extends Entity
      */
     protected array $_accessible = [
         'pqrs_id' => true,
-        'changed_by' => true,
+        'changed_by' => false,
         'field_name' => true,
         'old_value' => true,
         'new_value' => true,
         'description' => true,
-        'created' => true,
+        'created' => false,
         'pqr' => true,
         'user' => true,
     ];

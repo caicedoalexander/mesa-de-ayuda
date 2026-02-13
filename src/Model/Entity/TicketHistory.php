@@ -33,12 +33,12 @@ class TicketHistory extends Entity
      */
     protected array $_accessible = [
         'ticket_id' => true,
-        'changed_by' => true,
+        'changed_by' => false,
         'field_name' => true,
         'old_value' => true,
         'new_value' => true,
         'description' => true,
-        'created' => true,
+        'created' => false,
         'ticket' => true,
         'user' => true,
     ];

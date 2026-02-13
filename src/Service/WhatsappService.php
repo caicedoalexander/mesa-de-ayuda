@@ -18,6 +18,7 @@ class WhatsappService
 {
     use LocatorAwareTrait;
     use Traits\ConfigResolutionTrait;
+    use Traits\SecureHttpTrait;
 
     private \App\Service\Renderer\NotificationRenderer $renderer;
 
@@ -127,46 +128,30 @@ class WhatsappService
         try {
             $url = rtrim($config['whatsapp_api_url'], '/') .
                 '/message/sendText/' .
-                $config['whatsapp_instance_name'];
+                urlencode($config['whatsapp_instance_name']);
 
             $data = [
                 'number' => $number,
                 'text' => $text,
             ];
 
-            $ch = curl_init($url);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            $headers = [
                 'Content-Type: application/json',
                 'apikey: ' . $config['whatsapp_api_key'],
-            ]);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+            ];
 
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $error = curl_error($ch);
+            $result = $this->secureCurlPost($url, json_encode($data), $headers, 10);
 
-            if ($error) {
-                Log::error('WhatsApp API cURL error', [
-                    'error' => $error,
-                    'number' => $number,
-                ]);
-                return false;
-            }
-
-            if ($httpCode >= 200 && $httpCode < 300) {
+            if ($result['success']) {
                 Log::info('WhatsApp message sent successfully', [
                     'number' => $number,
-                    'http_code' => $httpCode,
+                    'http_code' => $result['http_code'],
                 ]);
                 return true;
             } else {
-                Log::error('WhatsApp API returned error', [
-                    'http_code' => $httpCode,
-                    'response' => $response,
+                Log::error('WhatsApp API error', [
+                    'http_code' => $result['http_code'],
+                    'error' => $result['error'],
                     'number' => $number,
                 ]);
                 return false;

@@ -18,6 +18,23 @@ use Psr\Http\Message\UploadedFileInterface;
 class ConfigFilesController extends AppController
 {
     /**
+     * Before filter - require admin role
+     *
+     * @param \Cake\Event\EventInterface<\Cake\Controller\Controller> $event Event.
+     * @return \Cake\Http\Response|null|void
+     */
+    public function beforeFilter(\Cake\Event\EventInterface $event)
+    {
+        parent::beforeFilter($event);
+
+        $user = $this->Authentication->getIdentity();
+        if (!$user || $user->get('role') !== 'admin') {
+            $this->Flash->error('Solo los administradores pueden acceder a esta sección.');
+            return $this->redirect(['controller' => 'Tickets', 'action' => 'index', 'prefix' => false]);
+        }
+    }
+
+    /**
      * Supported config file types and their destinations
      */
     private const FILE_DESTINATIONS = [
@@ -219,7 +236,7 @@ class ConfigFilesController extends AppController
                 'setting_value' => $path,
                 'setting_type' => 'string',
                 'description' => 'Path to ' . $key . ' configuration file',
-            ]);
+            ], ['accessibleFields' => ['setting_key' => true, 'setting_type' => true]]);
         }
 
         $settingsTable->saveOrFail($setting);

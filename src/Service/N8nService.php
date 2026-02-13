@@ -16,6 +16,7 @@ class N8nService
 {
     use LocatorAwareTrait;
     use Traits\ConfigResolutionTrait;
+    use Traits\SecureHttpTrait;
 
     private array $config;
     private ?array $systemConfig;
@@ -183,54 +184,16 @@ class N8nService
     {
         $timeout = (int) ($this->config['n8n_timeout'] ?? 10);
 
-        // Build headers
         $headers = [
             'Content-Type: application/json',
             'User-Agent: TicketSystem/1.0',
         ];
 
-        // Add API key header if configured
         if (!empty($this->config['n8n_api_key'])) {
             $headers[] = 'X-API-Key: ' . $this->config['n8n_api_key'];
         }
 
-        // Initialize cURL
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // For development, remove in production
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-        // curl_close() is deprecated in PHP 8.5+ (auto-closes when out of scope)
-
-        if ($error) {
-            return [
-                'success' => false,
-                'error' => $error,
-                'http_code' => 0,
-            ];
-        }
-
-        if ($httpCode >= 200 && $httpCode < 300) {
-            return [
-                'success' => true,
-                'http_code' => $httpCode,
-                'response' => $response,
-            ];
-        }
-
-        return [
-            'success' => false,
-            'http_code' => $httpCode,
-            'response' => $response,
-            'error' => 'HTTP ' . $httpCode,
-        ];
+        return $this->secureCurlPost($url, json_encode($payload), $headers, $timeout);
     }
 
     /**

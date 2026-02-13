@@ -268,7 +268,7 @@ class ComprasController extends AppController
 
         } catch (\Exception $e) {
             \Cake\Log\Log::error('Error en convertToTicket: ' . $e->getMessage());
-            $this->Flash->error(__('Error al procesar la conversión: {0}', $e->getMessage()));
+            $this->Flash->error(__('Error al procesar la conversión. Contacta al administrador.'));
             return $this->redirect(['action' => 'view', $id]);
         }
     }

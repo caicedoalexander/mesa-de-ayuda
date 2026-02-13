@@ -77,7 +77,10 @@ class PqrsService
             'channel' => 'web',
             'first_response_sla_due' => $slaDeadlines['first_response_sla_due'],
             'resolution_sla_due' => $slaDeadlines['resolution_sla_due'],
-        ]);
+        ], ['accessibleFields' => [
+            'pqrs_number' => true, 'status' => true, 'channel' => true,
+            'first_response_sla_due' => true, 'resolution_sla_due' => true,
+        ]]);
         assert($pqrs instanceof \App\Model\Entity\Pqr);
 
         if (!$pqrsTable->save($pqrs)) {

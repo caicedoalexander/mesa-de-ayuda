@@ -304,7 +304,7 @@ class SlaManagementService
                 'setting_value' => (string)$value,
                 'setting_type' => 'integer',
                 'description' => "SLA setting: {$key}",
-            ]);
+            ], ['accessibleFields' => ['setting_key' => true, 'setting_type' => true]]);
         }
 
         $result = $settingsTable->save($setting);

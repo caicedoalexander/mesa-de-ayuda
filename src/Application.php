@@ -94,6 +94,26 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
                 'httponly' => true,
             ]))
 
+            // Security headers middleware
+            ->add((new \Cake\Http\Middleware\SecurityHeadersMiddleware())
+                ->setHeader('X-Content-Type-Options', 'nosniff')
+                ->setHeader('X-Frame-Options', 'SAMEORIGIN')
+                ->setHeader('X-XSS-Protection', '1; mode=block')
+                ->setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+                ->setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+                ->setHeader('Content-Security-Policy', implode('; ', [
+                    "default-src 'self'",
+                    "script-src 'self' https://cdn.jsdelivr.net",
+                    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
+                    "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com",
+                    "img-src 'self' data: https:",
+                    "connect-src 'self'",
+                    "frame-ancestors 'self'",
+                    "base-uri 'self'",
+                    "form-action 'self'",
+                ]))
+            )
+
             // Add authentication middleware
             ->add(new AuthenticationMiddleware($this));
 

@@ -81,6 +81,19 @@ class UsersTable extends Table
         $validator
             ->scalar('password')
             ->maxLength('password', 255)
+            ->minLength('password', 8, 'La contraseña debe tener al menos 8 caracteres.')
+            ->add('password', 'complexity', [
+                'rule' => function ($value) {
+                    if (empty($value)) {
+                        return true;
+                    }
+
+                    return (bool) preg_match('/[A-Z]/', $value) &&
+                        (bool) preg_match('/[a-z]/', $value) &&
+                        (bool) preg_match('/[0-9]/', $value);
+                },
+                'message' => 'La contraseña debe contener al menos una mayúscula, una minúscula y un número.',
+            ])
             ->allowEmptyString('password');
 
         $validator
