@@ -686,7 +686,7 @@ class TicketService
         $config->set('HTML.TargetBlank', true);
         $config->set('URI.AllowedSchemes', ['http' => true, 'https' => true, 'mailto' => true]);
         $config->set('Attr.AllowedFrameTargets', ['_blank']);
-        $config->set('Cache.SerializerPath', TMP . 'htmlpurifier');
+        $config->set('Cache.DefinitionImpl', null);
 
         $purifier = new \HTMLPurifier($config);
 

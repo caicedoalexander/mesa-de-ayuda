@@ -27,6 +27,9 @@ class ConfigFilesController extends AppController
     {
         parent::beforeFilter($event);
 
+        // Unlock file upload action
+        $this->FormProtection->setConfig('unlockedActions', ['upload']);
+
         $user = $this->Authentication->getIdentity();
         if (!$user || $user->get('role') !== 'admin') {
             $this->Flash->error('Solo los administradores pueden acceder a esta sección.');

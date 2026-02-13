@@ -47,6 +47,13 @@ class PqrsController extends AppController
         // Allow public access to create action (form submission)
         $this->Authentication->addUnauthenticatedActions(['create', 'success']);
 
+        // Unlock actions that use JS-submitted forms or AJAX
+        $this->FormProtection->setConfig('unlockedActions', [
+            'addComment', 'assign', 'changeStatus', 'changePriority',
+            'bulkAssign', 'bulkChangePriority', 'bulkDelete',
+            'history', 'create',
+        ]);
+
         // Allow admin and servicio_cliente roles for PQRS module
         return $this->redirectByRole(['admin', 'servicio_cliente'], 'PQRS');
     }

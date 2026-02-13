@@ -37,6 +37,14 @@ class TicketsController extends AppController
     {
         parent::beforeFilter($event);
 
+        // Unlock actions that use JS-submitted forms or AJAX
+        $this->FormProtection->setConfig('unlockedActions', [
+            'addComment', 'assign', 'changeStatus', 'changePriority',
+            'addTag', 'removeTag', 'addFollower', 'convertToCompra',
+            'bulkAssign', 'bulkChangePriority', 'bulkAddTag', 'bulkDelete',
+            'history',
+        ]);
+
         // Allow admin, agent, and requester roles for Tickets module
         return $this->redirectByRole(['admin', 'agent', 'requester'], 'tickets');
     }

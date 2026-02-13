@@ -37,6 +37,11 @@ class SettingsController extends AppController
     {
         parent::beforeFilter($event);
 
+        // Unlock actions with dynamic forms
+        $this->FormProtection->setConfig('unlockedActions', [
+            'index', 'gmailAuth', 'testWhatsapp',
+        ]);
+
         $user = $this->Authentication->getIdentity();
         if (!$user || $user->get('role') !== 'admin') {
             $this->Flash->error('Solo los administradores pueden acceder a esta sección.');

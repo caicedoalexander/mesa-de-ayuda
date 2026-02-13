@@ -34,7 +34,7 @@ class SanitizeHelper extends Helper
             $config->set('HTML.TargetBlank', true);
             $config->set('URI.AllowedSchemes', ['http' => true, 'https' => true, 'mailto' => true]);
             $config->set('Attr.AllowedFrameTargets', ['_blank']);
-            $config->set('Cache.SerializerPath', TMP . 'htmlpurifier');
+            $config->set('Cache.DefinitionImpl', null);
             $this->purifier = new \HTMLPurifier($config);
         }
 

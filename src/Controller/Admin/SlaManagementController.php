@@ -40,6 +40,9 @@ class SlaManagementController extends AppController
     {
         parent::beforeFilter($event);
 
+        // Unlock actions with dynamic forms
+        $this->FormProtection->setConfig('unlockedActions', ['index']);
+
         // Only admins can access SLA management
         $user = $this->Authentication->getIdentity();
         if ($user && $user->get('role') !== 'admin') {

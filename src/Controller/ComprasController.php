@@ -42,6 +42,13 @@ class ComprasController extends AppController
     {
         parent::beforeFilter($event);
 
+        // Unlock actions that use JS-submitted forms or AJAX
+        $this->FormProtection->setConfig('unlockedActions', [
+            'addComment', 'assign', 'changeStatus', 'changePriority',
+            'convertToTicket', 'bulkAssign', 'bulkChangePriority', 'bulkDelete',
+            'history',
+        ]);
+
         // Allow admin and compras roles for Compras module
         return $this->redirectByRole(['admin', 'compras'], 'compras');
     }
