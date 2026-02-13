@@ -141,7 +141,7 @@ class TicketHistoryTable extends Table
             'old_value' => (string) $oldValue,
             'new_value' => (string) $newValue,
             'description' => $description,
-        ]);
+        ], ['accessibleFields' => ['changed_by' => true]]);
 
         return $this->save($history);
     }

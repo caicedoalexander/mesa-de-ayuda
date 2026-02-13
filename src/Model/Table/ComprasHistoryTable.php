@@ -104,7 +104,7 @@ class ComprasHistoryTable extends Table
             'old_value' => $oldValue,
             'new_value' => $newValue,
             'description' => $description ?? "Campo '{$fieldName}' cambiado de '{$oldValue}' a '{$newValue}'",
-        ]);
+        ], ['accessibleFields' => ['changed_by' => true]]);
 
         return $this->save($history);
     }
