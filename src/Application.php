@@ -109,11 +109,11 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
                 $response = $handler->handle($request);
                 $csp = implode('; ', [
                     "default-src 'self'",
-                    "script-src 'self' https://cdn.jsdelivr.net",
+                    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://code.jquery.com",
                     "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
                     "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com",
                     "img-src 'self' data: https:",
-                    "connect-src 'self'",
+                    "connect-src 'self' https://cdn.jsdelivr.net",
                     "frame-ancestors 'self'",
                     "base-uri 'self'",
                     "form-action 'self'",
