@@ -96,12 +96,18 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
 
             // Security headers middleware
             ->add((new \Cake\Http\Middleware\SecurityHeadersMiddleware())
-                ->setHeader('X-Content-Type-Options', 'nosniff')
-                ->setHeader('X-Frame-Options', 'SAMEORIGIN')
-                ->setHeader('X-XSS-Protection', '1; mode=block')
-                ->setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
-                ->setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
-                ->setHeader('Content-Security-Policy', implode('; ', [
+                ->noSniff()
+                ->setXFrameOptions('sameorigin')
+                ->setXssProtection('block')
+                ->setReferrerPolicy('strict-origin-when-cross-origin')
+                ->setPermissionsPolicy('camera=(), microphone=(), geolocation=()')
+                ->setCrossDomainPolicy('none')
+            )
+
+            // Content-Security-Policy header (not supported by SecurityHeadersMiddleware)
+            ->add(function ($request, $handler) {
+                $response = $handler->handle($request);
+                $csp = implode('; ', [
                     "default-src 'self'",
                     "script-src 'self' https://cdn.jsdelivr.net",
                     "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
@@ -111,8 +117,10 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
                     "frame-ancestors 'self'",
                     "base-uri 'self'",
                     "form-action 'self'",
-                ]))
-            )
+                ]);
+
+                return $response->withHeader('Content-Security-Policy', $csp);
+            })
 
             // Add authentication middleware
             ->add(new AuthenticationMiddleware($this));
