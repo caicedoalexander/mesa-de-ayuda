@@ -84,15 +84,15 @@ class SeedSystemSettings extends AbstractMigration
                 'modified' => $timestamp,
             ],
             [
-                'setting_key' => 'whatsapp_api_token',
+                'setting_key' => 'whatsapp_api_key',
                 'setting_value' => '',
                 'setting_type' => 'encrypted',
-                'description' => 'WhatsApp Evolution API authentication token (encrypted)',
+                'description' => 'WhatsApp Evolution API authentication key (encrypted)',
                 'created' => $timestamp,
                 'modified' => $timestamp,
             ],
             [
-                'setting_key' => 'whatsapp_instance',
+                'setting_key' => 'whatsapp_instance_name',
                 'setting_value' => '',
                 'setting_type' => 'string',
                 'description' => 'WhatsApp instance name in Evolution API',

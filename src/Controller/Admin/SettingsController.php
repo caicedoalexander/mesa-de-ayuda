@@ -546,9 +546,8 @@ class SettingsController extends AppController
         $this->request->allowMethod(['get']);
         $this->viewBuilder()->setClassName('Json');
 
-        // Get cached system config to avoid redundant DB query
-        $systemConfig = $this->viewBuilder()->getVar('systemConfig');
-        $whatsappService = new WhatsappService($systemConfig);
+        // Pass null to force config resolution from cache/DB (view config excludes sensitive keys)
+        $whatsappService = new WhatsappService(null);
         $result = $whatsappService->testConnection();
 
         $this->set([

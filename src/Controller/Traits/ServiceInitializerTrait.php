@@ -37,8 +37,8 @@ trait ServiceInitializerTrait
      */
     protected function initializeServices(array $serviceMap): void
     {
-        // Get cached system config from parent (set in AppController::beforeFilter)
-        $systemConfig = $this->viewBuilder()->getVar('systemConfig');
+        // Read full config from cache (view config excludes sensitive keys like api_key/tokens)
+        $systemConfig = \Cake\Cache\Cache::read('system_settings', '_cake_core_');
 
         // Services that don't need systemConfig
         $noConfigServices = [

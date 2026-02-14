@@ -83,7 +83,7 @@ class AppController extends Controller
         // Filter out sensitive settings before passing to views
         $sensitiveKeys = [
             'gmail_refresh_token', 'gmail_client_secret_path',
-            'whatsapp_api_key', 'whatsapp_api_token',
+            'whatsapp_api_key',
             'n8n_api_key', 'n8n_webhook_url',
         ];
         $safeConfig = array_diff_key($systemConfig, array_flip($sensitiveKeys));
