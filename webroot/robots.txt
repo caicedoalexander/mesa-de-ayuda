@@ -1,0 +1,12 @@
+User-agent: *
+Disallow: /users/login
+Disallow: /users/register
+Disallow: /admin/
+Disallow: /api/
+Disallow: /tmp/
+Disallow: /logs/
+
+# Permitir acceso a recursos estáticos
+Allow: /css/
+Allow: /js/
+Allow: /img/
