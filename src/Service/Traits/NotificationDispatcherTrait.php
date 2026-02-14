@@ -9,13 +9,13 @@ use Cake\Log\Log;
 /**
  * NotificationDispatcherTrait
  *
- * Centralizes notification dispatch logic with clear rules:
- * - WhatsApp: ONLY on entity creation
- * - Email: Creation, status changes, comments
+ * Centralizes notification dispatch logic:
+ * - Email: Creation, status changes, comments, responses
+ * - WhatsApp: ONLY on entity creation (via dispatchCreationNotifications)
  *
  * Requires using class to have:
  * - emailService property (EmailService instance)
- * - whatsappService property (WhatsappService instance)
+ * - whatsappService property (WhatsappService instance) - only needed for creation notifications
  */
 trait NotificationDispatcherTrait
 {
@@ -66,8 +66,6 @@ trait NotificationDispatcherTrait
     /**
      * Dispatch update notifications (Email ONLY)
      *
-     * WhatsApp is NEVER sent for updates (status changes, comments, responses)
-     *
      * @param string $entityType 'ticket', 'pqrs', 'compra'
      * @param EntityInterface $entity Entity instance
      * @param string $notificationType 'status_change', 'comment', 'response'
@@ -82,7 +80,7 @@ trait NotificationDispatcherTrait
     ): void {
         $methods = $this->getNotificationMethods($entityType, $notificationType);
 
-        // Email ONLY (WhatsApp never sent for updates)
+        // Email ONLY
         if (empty($methods['email'])) {
             Log::warning("No email method found for {$entityType} {$notificationType}");
             return;

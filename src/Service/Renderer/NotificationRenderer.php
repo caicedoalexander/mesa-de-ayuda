@@ -144,149 +144,21 @@ class NotificationRenderer
      */
     public function renderWhatsappNewTicket(\App\Model\Entity\Ticket $ticket): string
     {
-        return "🎫 *Nuevo Ticket Creado*\n\n" .
-            "📋 Ticket: *{$ticket->ticket_number}*\n" .
-            "👤 Solicitante: {$ticket->requester->name}\n" .
-            "📧 Email: {$ticket->requester->email}\n" .
-            "📝 Asunto: {$ticket->subject}\n" .
-            "📅 Fecha: {$this->formatDate($ticket->created)}\n\n" .
-            "_Sistema de Tickets - Soporte_";
-    }
+        $priorityLabels = ['baja' => 'Baja', 'media' => 'Media', 'alta' => 'Alta', 'urgente' => 'Urgente'];
+        $priorityLabel = $priorityLabels[$ticket->priority] ?? ucfirst($ticket->priority);
+        $channelLabel = $ticket->channel === 'email' ? 'Correo electrónico' : ucfirst($ticket->channel);
 
-    /**
-     * Render WhatsApp message for status change
-     *
-     * @param \App\Model\Entity\Ticket $ticket Ticket entity
-     * @param string $oldStatus Old status
-     * @param string $newStatus New status
-     * @return string Message text
-     */
-    public function renderWhatsappStatusChange(\App\Model\Entity\Ticket $ticket, string $oldStatus, string $newStatus): string
-    {
-        $emojis = [
-            'nuevo' => '🆕',
-            'abierto' => '🔴',
-            'pendiente' => '🔵',
-            'resuelto' => '✅',
-        ];
-        $emoji = $emojis[$newStatus] ?? '📌';
-        $assigneeName = $ticket->assignee ? $ticket->assignee->name : 'Sin asignar';
-
-        return "{$emoji} *Cambio de Estado de Ticket*\n\n" .
-            "📋 Ticket: *{$ticket->ticket_number}*\n" .
-            "📝 Asunto: {$ticket->subject}\n" .
-            "👤 Solicitante: {$ticket->requester->name}\n" .
-            "🔄 Estado anterior: {$oldStatus}\n" .
-            "🔄 Estado nuevo: *{$newStatus}*\n" .
-            "👨‍💼 Asignado a: {$assigneeName}\n\n" .
-            "_Sistema de Tickets - Soporte_";
-    }
-
-    /**
-     * Render WhatsApp message for new comment
-     *
-     * @param \App\Model\Entity\Ticket|\App\Model\Entity\Pqr $entity Ticket or PQRS entity
-     * @param \App\Model\Entity\TicketComment|\App\Model\Entity\PqrsComment $comment Comment entity
-     * @param bool $isPqrs Whether it is a PQRS
-     * @return string Message text
-     */
-    public function renderWhatsappNewComment($entity, $comment, bool $isPqrs = false): string
-    {
-        $number = $isPqrs ? $entity->pqrs_number : $entity->ticket_number;
-        $type = $isPqrs ? 'PQRS' : 'Ticket';
-        $footer = $isPqrs ? '_Sistema de PQRS_' : '_Sistema de Tickets - Soporte_';
-
-        $commentText = strip_tags($comment->body);
-        if (mb_strlen($commentText) > 200) {
-            $commentText = mb_substr($commentText, 0, 197) . '...';
-        }
-
-        $authorName = $comment->user ? $comment->user->name : 'Sistema';
-
-        return "💬 *Nuevo Comentario en {$type}*\n\n" .
-            "📋 {$type}: *{$number}*\n" .
-            "📝 Asunto: {$entity->subject}\n" .
-            "👤 Comentario de: {$authorName}\n" .
-            "📅 Fecha: {$this->formatDate($comment->created)}\n\n" .
-            "💭 Comentario:\n{$commentText}\n\n" .
-            $footer;
-    }
-
-    /**
-     * Render WhatsApp message for unified response
-     *
-     * @param \App\Model\Entity\Ticket|\App\Model\Entity\Pqr $entity Ticket or PQRS entity
-     * @param mixed $comment Comment entity
-     * @param string $oldStatus Old status
-     * @param string $newStatus New status
-     * @param bool $isPqrs Whether it is a PQRS
-     * @return string Message text
-     */
-    public function renderWhatsappResponse($entity, $comment, string $oldStatus, string $newStatus, bool $isPqrs = false): string
-    {
-        $number = $isPqrs ? $entity->pqrs_number : $entity->ticket_number;
-        $type = $isPqrs ? 'PQRS' : 'Ticket';
-        $footer = $isPqrs ? '_Sistema de Atención al Cliente - PQRS_' : '_Sistema de Tickets - Soporte_';
-
-        $hasStatusChange = ($oldStatus !== $newStatus);
-
-        $commentText = strip_tags($comment->body);
-        if (mb_strlen($commentText) > 300) {
-            $commentText = mb_substr($commentText, 0, 297) . '...';
-        }
-
-        $header = $isPqrs
-            ? "💬 *Respuesta del Equipo*\n\n"
-            : "💬 *Respuesta del Agente*\n\n";
-
-        $typeLine = '';
-        if ($isPqrs) {
-            $typeEmoji = match ($entity->type) {
-                'peticion' => '📝',
-                'queja' => '😞',
-                'reclamo' => '⚠️',
-                'sugerencia' => '💡',
-                default => '📋'
-            };
-            $typeLabel = $this->getTypeLabel($entity->type);
-            $typeLine = "{$typeEmoji} Tipo: {$typeLabel}\n";
-        }
-
-        $requesterName = $isPqrs ? $entity->requester_name : $entity->requester->name;
-
-        $message = $header .
-            "📋 {$type}: *{$number}*\n" .
-            $typeLine .
-            "📝 Asunto: {$entity->subject}\n" .
-            "👤 Solicitante: {$requesterName}\n\n";
-
-        if ($hasStatusChange) {
-            $oldLabel = $this->getStatusLabel($oldStatus);
-            $newLabel = $this->getStatusLabel($newStatus);
-            $assigneeName = $entity->assignee ? $entity->assignee->name : 'Sin asignar';
-
-            // Simple emoji mapping for status change
-            $newStatusEmoji = match ($newStatus) {
-                'resuelto' => '✅',
-                'cerrado' => '🔒',
-                'abierto' => '🔓',
-                'en_proceso' => '⚙️',
-                default => '🔄'
-            };
-
-            $message .= "🔄 *Cambio de Estado*\n" .
-                "{$oldLabel} → {$newStatusEmoji} *{$newLabel}*\n" .
-                "👨‍💼 Asignado a: {$assigneeName}\n\n";
-        }
-
-        $authorName = $comment->user ? $comment->user->name : 'Sistema';
-
-        $message .= "💬 *Respuesta de {$authorName}:*\n" .
-            "{$commentText}\n\n" .
-            "📅 {$this->formatDate($comment->created)}\n\n" .
-            $footer;
-
-        return $message;
+        return "━━━━━━━━━━━━━━━━━━━━\n" .
+            "*NUEVO TICKET DE SOPORTE*\n" .
+            "━━━━━━━━━━━━━━━━━━━━\n\n" .
+            "*{$ticket->ticket_number}*\n" .
+            "{$ticket->subject}\n\n" .
+            "*Solicitante:* {$ticket->requester->name}\n" .
+            "*Correo:* {$ticket->requester->email}\n" .
+            "*Prioridad:* {$priorityLabel}\n" .
+            "*Canal:* {$channelLabel}\n" .
+            "*Fecha:* {$this->formatDate($ticket->created)}\n\n" .
+            "— _Mesa de Ayuda_";
     }
 
     /**
@@ -297,53 +169,26 @@ class NotificationRenderer
      */
     public function renderWhatsappNewPqrs(\App\Model\Entity\Pqr $pqrs): string
     {
-        $typeEmojis = [
-            'peticion' => '📝',
-            'queja' => '⚠️',
-            'reclamo' => '❗',
-            'sugerencia' => '💡',
-        ];
-        $typeEmoji = $typeEmojis[$pqrs->type] ?? '📋';
         $typeLabel = $this->getTypeLabel($pqrs->type);
 
-        return "{$typeEmoji} *Nueva PQRS Creada*\n\n" .
-            "📋 PQRS: *{$pqrs->pqrs_number}*\n" .
-            "🔖 Tipo: {$typeLabel}\n" .
-            "👤 Solicitante: {$pqrs->requester_name}\n" .
-            "📧 Email: {$pqrs->requester_email}\n" .
-            "📝 Asunto: {$pqrs->subject}\n" .
-            "📅 Fecha: {$this->formatDate($pqrs->created)}\n\n" .
-            "_Sistema de PQRS_";
-    }
+        $contact = "*Solicitante:* {$pqrs->requester_name}\n" .
+            "*Correo:* {$pqrs->requester_email}";
+        if (!empty($pqrs->requester_phone)) {
+            $contact .= "\n*Teléfono:* {$pqrs->requester_phone}";
+        }
+        if (!empty($pqrs->requester_city)) {
+            $contact .= "\n*Ciudad:* {$pqrs->requester_city}";
+        }
 
-    /**
-     * Render WhatsApp message for PQRS status change
-     *
-     * @param \App\Model\Entity\Pqr $pqrs PQRS entity
-     * @param string $oldStatus Old status
-     * @param string $newStatus New status
-     * @return string Message text
-     */
-    public function renderWhatsappPqrsStatusChange(\App\Model\Entity\Pqr $pqrs, string $oldStatus, string $newStatus): string
-    {
-        $emojis = [
-            'nuevo' => '🆕',
-            'en_revision' => '👁️',
-            'en_proceso' => '⚙️',
-            'resuelto' => '✅',
-            'cerrado' => '🔒',
-        ];
-        $emoji = $emojis[$newStatus] ?? '📌';
-        $assigneeName = $pqrs->assignee ? $pqrs->assignee->name : 'Sin asignar';
-
-        return "{$emoji} *Cambio de Estado de PQRS*\n\n" .
-            "📋 PQRS: *{$pqrs->pqrs_number}*\n" .
-            "📝 Asunto: {$pqrs->subject}\n" .
-            "👤 Solicitante: {$pqrs->requester_name}\n" .
-            "🔄 Estado anterior: {$oldStatus}\n" .
-            "🔄 Estado nuevo: *{$newStatus}*\n" .
-            "👨‍💼 Asignado a: {$assigneeName}\n\n" .
-            "_Sistema de PQRS_";
+        return "━━━━━━━━━━━━━━━━━━━━\n" .
+            "*NUEVA PQRS REGISTRADA*\n" .
+            "━━━━━━━━━━━━━━━━━━━━\n\n" .
+            "*{$pqrs->pqrs_number}*\n" .
+            "{$pqrs->subject}\n\n" .
+            "*Tipo:* {$typeLabel}\n" .
+            $contact . "\n" .
+            "*Fecha:* {$this->formatDate($pqrs->created)}\n\n" .
+            "— _Mesa de Ayuda_";
     }
 
     /**
@@ -354,29 +199,31 @@ class NotificationRenderer
      */
     public function renderWhatsappNewCompra(\App\Model\Entity\Compra $compra): string
     {
-        $priorityEmojis = [
-            'baja' => '🟢',
-            'media' => '🟡',
-            'alta' => '🟠',
-            'urgente' => '🔴',
-        ];
-        $priorityEmoji = $priorityEmojis[$compra->priority] ?? '⚪';
+        $priorityLabels = ['baja' => 'Baja', 'media' => 'Media', 'alta' => 'Alta', 'urgente' => 'Urgente'];
+        $priorityLabel = $priorityLabels[$compra->priority] ?? ucfirst($compra->priority);
 
-        $slaDate = $compra->sla_due_date
-            ? $this->formatDate($compra->sla_due_date)
-            : 'No definido';
+        $slaLine = '';
+        $slaDue = $compra->resolution_sla_due ?? $compra->sla_due_date ?? null;
+        if ($slaDue) {
+            $slaLine = "*Fecha límite SLA:* {$this->formatDate($slaDue)}\n";
+        }
 
-        $assigneeName = $compra->assignee ? $compra->assignee->name : 'Sin asignar';
+        $origin = '';
+        if (!empty($compra->original_ticket_number)) {
+            $origin = "*Origen:* Ticket {$compra->original_ticket_number}\n";
+        }
 
-        return "🛒 *Nueva Orden de Compra*\n\n" .
-            "📋 Compra: *{$compra->compra_number}*\n" .
-            "👤 Solicitante: {$compra->requester->name}\n" .
-            "📧 Email: {$compra->requester->email}\n" .
-            "📝 Asunto: {$compra->subject}\n" .
-            "{$priorityEmoji} Prioridad: {$compra->priority}\n" .
-            "👨‍💼 Asignado a: {$assigneeName}\n" .
-            "⏰ SLA vence: {$slaDate}\n" .
-            "📅 Creada: {$this->formatDate($compra->created)}\n\n" .
-            "_Sistema de Compras_";
+        return "━━━━━━━━━━━━━━━━━━━━\n" .
+            "*NUEVA SOLICITUD DE COMPRA*\n" .
+            "━━━━━━━━━━━━━━━━━━━━\n\n" .
+            "*{$compra->compra_number}*\n" .
+            "{$compra->subject}\n\n" .
+            "*Solicitante:* {$compra->requester->name}\n" .
+            "*Correo:* {$compra->requester->email}\n" .
+            "*Prioridad:* {$priorityLabel}\n" .
+            $origin .
+            $slaLine .
+            "*Fecha:* {$this->formatDate($compra->created)}\n\n" .
+            "— _Mesa de Ayuda_";
     }
 }

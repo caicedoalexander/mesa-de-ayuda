@@ -23,7 +23,6 @@ class ResponseService
     private ?PqrsService $pqrsService = null;
     private ?ComprasService $comprasService = null;
     private ?EmailService $emailService = null;
-    private ?WhatsappService $whatsappService = null;
     private ?array $systemConfig;
 
     /**
@@ -56,11 +55,6 @@ class ResponseService
     private function getEmailService(): EmailService
     {
         return $this->emailService ??= new EmailService($this->systemConfig);
-    }
-
-    private function getWhatsappService(): WhatsappService
-    {
-        return $this->whatsappService ??= new WhatsappService($this->systemConfig);
     }
 
     /**
@@ -225,9 +219,8 @@ class ResponseService
         array $emailTo = [],
         array $emailCc = []
     ): void {
-        // Ensure notification services are loaded (required by NotificationDispatcherTrait)
+        // Ensure email service is loaded (required by NotificationDispatcherTrait)
         $this->emailService = $this->getEmailService();
-        $this->whatsappService = $this->getWhatsappService();
 
         $hasPublicComment = $hasComment && $commentType === 'public';
 

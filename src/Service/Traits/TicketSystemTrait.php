@@ -13,7 +13,6 @@ use Cake\I18n\FrozenTime;
  * Requires the using class to have:
  * - fetchTable() method (from LocatorAwareTrait)
  * - emailService property
- * - whatsappService property
  */
 trait TicketSystemTrait
 {
@@ -85,11 +84,9 @@ trait TicketSystemTrait
         }
 
         // Send notifications ONLY if requested
-        // NOTE: WhatsApp is ONLY sent on entity creation, not status changes
         if ($sendNotifications) {
             $method = $this->getStatusChangeNotificationMethod($entityType);
 
-            // Send Email ONLY (WhatsApp removed - only sent on creation)
             try {
                 $this->emailService->$method($entity, $oldStatus, $newStatus);
             } catch (\Exception $e) {
