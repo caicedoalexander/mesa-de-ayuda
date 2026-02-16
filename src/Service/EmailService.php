@@ -61,7 +61,7 @@ class EmailService
     private function getSystemVariables(): array
     {
         return [
-            'system_title' => $this->getSettingValue('system_title', 'Sistema de Soporte'),
+            'system_title' => $this->getSettingValue('system_title', 'Mesa de Ayuda'),
             'current_year' => date('Y'),
         ];
     }
@@ -222,7 +222,7 @@ class EmailService
     {
         try {
             // Get system title and Gmail email using centralized config resolution
-            $systemTitle = $this->getSettingValue('system_title', 'Sistema de Soporte');
+            $systemTitle = $this->getSettingValue('system_title', 'Mesa de Ayuda');
             $fromEmail = $this->getSettingValue('gmail_user_email', 'noreply@localhost');
 
             // Build recipients array for Gmail API
@@ -300,9 +300,7 @@ class EmailService
      */
     public function sendNewPqrsNotification($pqrs): bool
     {
-        return $this->sendGenericTemplateEmail('pqrs', 'nuevo_pqrs', $pqrs, [
-            'system_title' => 'Sistema de Atención al Cliente',
-        ]);
+        return $this->sendGenericTemplateEmail('pqrs', 'nuevo_pqrs', $pqrs);
     }
 
     /**
@@ -323,7 +321,6 @@ class EmailService
 
         return $this->sendGenericTemplateEmail('pqrs', 'pqrs_estado', $pqrs, [
             'status_change_section' => $this->renderer->renderStatusChangeHtml($oldStatus, $newStatus, $assigneeName),
-            'system_title' => 'Mesa de Ayuda',
         ]);
     }
 
@@ -382,9 +379,10 @@ class EmailService
             return true;
         }
 
-        // Build extra variables
-        $slaDate = $compra->sla_due_date
-            ? $this->renderer->formatDate($compra->sla_due_date)
+        // Build extra variables (prefer resolution_sla_due, fallback to legacy sla_due_date)
+        $slaDue = $compra->resolution_sla_due ?? $compra->sla_due_date ?? null;
+        $slaDate = $slaDue
+            ? $this->renderer->formatDate($slaDue)
             : 'No definido';
 
         $extraVars = [
@@ -560,7 +558,6 @@ class EmailService
                 'entityContain' => ['Requesters', 'Assignees', 'Attachments'],
                 'attachmentsProperty' => 'attachments',
                 'commentForeignKey' => 'comment_id',
-                'systemTitle' => 'Sistema de Soporte',
             ],
             'pqrs' => [
                 'entityTable' => 'Pqrs',
@@ -568,7 +565,6 @@ class EmailService
                 'entityContain' => ['Assignees', 'PqrsAttachments'],
                 'attachmentsProperty' => 'pqrs_attachments',
                 'commentForeignKey' => 'pqrs_comment_id',
-                'systemTitle' => 'Sistema de Atención al Cliente',
             ],
             'compra' => [
                 'entityTable' => 'Compras',
@@ -576,7 +572,6 @@ class EmailService
                 'entityContain' => ['Requesters', 'Assignees', 'ComprasAttachments'],
                 'attachmentsProperty' => 'compras_attachments',
                 'commentForeignKey' => 'compras_comment_id',
-                'systemTitle' => 'Sistema de Compras',
             ],
         };
     }
@@ -610,7 +605,6 @@ class EmailService
             'attachments_list' => $this->renderer->renderAttachmentsHtml($commentAttachments),
             'agent_profile_image_url' => $agentProfileImageUrl,
             'agent_name' => $author,
-            'system_title' => $config['systemTitle'],
         ];
 
         // Entity-specific variables
