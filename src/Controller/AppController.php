@@ -20,11 +20,13 @@ use App\Constants\CacheConstants;
 use App\Constants\RoleConstants;
 use App\Constants\SettingKeys;
 use App\Model\Entity\User;
+use App\Service\Auth\SessionExpiryPolicy;
 use App\Service\Traits\SettingsEncryptionTrait;
 use Cake\Cache\Cache;
 use Cake\Controller\Controller;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
+use Cake\I18n\DateTime;
 
 /**
  * Application Controller
@@ -72,6 +74,38 @@ class AppController extends Controller
         $identity = $this->Authentication->getIdentity();
         $this->set('currentUser', $identity?->getOriginalData());
 
+        // Corte diario: fuerza re-login a partir de la próxima medianoche
+        // (America/Bogota). Aplica a TODAS las sesiones. La clave DEBE vivir
+        // fuera del namespace 'Auth' que usa SessionAuthenticator.
+        if ($identity !== null) {
+            $session = $this->request->getSession();
+            $expiresAt = $session->read('SessionExpiry.expiresAt');
+
+            if ($expiresAt === null) {
+                $session->write(
+                    'SessionExpiry.expiresAt',
+                    SessionExpiryPolicy::nextMidnight(DateTime::now())->getTimestamp(),
+                );
+            } elseif (SessionExpiryPolicy::isExpired((int)$expiresAt, time())) {
+                $this->Authentication->logout();
+
+                // logout() borra la clave 'Auth' y rota el id de sesión, pero
+                // conserva el resto de datos. Si la marca de expiración
+                // sobrevive, vuelve a expulsar al usuario en cada login
+                // posterior desde ese navegador, dejándolo sin poder entrar.
+                $session->delete('SessionExpiry');
+
+                $this->Flash->error('Tu sesión expiró. Vuelve a iniciar sesión.');
+
+                // Los controladores hijos llaman a parent::beforeFilter() sin
+                // propagar su retorno; el resultado del evento sí llega a
+                // Controller::startupProcess() y detiene la acción.
+                $event->setResult($this->redirect(['controller' => 'Users', 'action' => 'login']));
+
+                return;
+            }
+        }
+
         // Load system settings with cache (1 hour TTL)
         $systemConfig = Cache::remember(CacheConstants::CACHE_SETTINGS, function () {
             $systemSettingsTable = $this->fetchTable('SystemSettings');
@@ -96,7 +130,6 @@ class AppController extends Controller
         ];
         $safeConfig = array_diff_key($systemConfig, array_flip($sensitiveKeys));
         $this->set('systemConfig', $safeConfig);
-        $this->set('systemTitle', $systemConfig[SettingKeys::SYSTEM_TITLE] ?? CacheConstants::DEFAULT_SYSTEM_TITLE);
 
         // Admins always see the admin header even on non-/admin routes (e.g.
         // /tickets). Non-admins fall through to the default layout. The

@@ -33,7 +33,7 @@ $buildVersion = date('Y.m.d');
                     Centraliza solicitudes de tus sucursales, prioriza por SLA y mantén
                     al equipo enfocado en lo que importa.
                 </p>
-
+                <!--
                 <div class="app-login-brand-stats">
                     <div>
                         <div class="app-login-brand-stat-value">3 min</div>
@@ -48,14 +48,17 @@ $buildVersion = date('Y.m.d');
                         <div class="app-login-brand-stat-label">Sucursales<br>activas</div>
                     </div>
                 </div>
+                -->
             </div>
 
             <footer class="app-login-brand-foot">
                 <span>&copy; <?= date('Y') ?> Compañía Operadora Portuaria Cafetera S.A.</span>
+                <!--
                 <span class="sep"></span>
                 <a href="#" tabindex="-1">Términos</a>
                 <span class="sep"></span>
                 <a href="#" tabindex="-1">Privacidad</a>
+                -->
             </footer>
         </aside>
 
@@ -153,7 +156,7 @@ $buildVersion = date('Y.m.d');
                         <div class="app-login-help-title">¿No tienes cuenta?</div>
                         <div class="app-login-help-message">
                             Solicita acceso a tu administrador o envía un correo a
-                            <a href="mailto:soporte@operadoracafetera.com">soporte@operadoracafetera.com</a>
+                            <a href="mailto:coordinadortic@operadoracafetera.com">coordinadortic@operadoracafetera.com</a>
                         </div>
                     </div>
                 </div>

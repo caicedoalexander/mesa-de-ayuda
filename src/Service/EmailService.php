@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Constants\CacheConstants;
 use App\Constants\SettingKeys;
 use App\Notification\Channel\NotificationMessage;
+use App\Notification\Email\EmailBrand;
 use App\Service\Dto\SystemConfig;
 use App\Service\Traits\GenericAttachmentTrait;
 use App\Service\Util\LogMasker;
@@ -151,7 +151,6 @@ class EmailService
     ): bool {
         $tempDir = null;
         try {
-            $systemTitle = $this->getSettingValue(SettingKeys::SYSTEM_TITLE, CacheConstants::DEFAULT_SYSTEM_TITLE);
             $fromEmail = $this->getSettingValue(SettingKeys::GMAIL_USER_EMAIL, 'noreply@localhost');
 
             $toRecipients = [$to => $to];
@@ -202,7 +201,7 @@ class EmailService
             }
 
             $options = [
-                'from' => [$fromEmail => $systemTitle],
+                'from' => [$fromEmail => EmailBrand::TEAM_NAME],
                 'headers' => ['X-Mesa-Ayuda-Notification' => 'true'],
             ];
 

@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Constants\CacheConstants;
 use App\Constants\SettingKeys;
 use App\Service\Dto\SystemConfig;
 use App\Service\Renderer\NotificationRenderer;
@@ -237,7 +236,7 @@ class WhatsappService
         $testMessage = "✅ Prueba de conexión - Evolution API\n\n" .
             "Este es un mensaje de prueba del módulo de Tickets.\n" .
             "Si recibes este mensaje, la integración está funcionando correctamente.\n\n" .
-            '_' . CacheConstants::DEFAULT_SYSTEM_TITLE . ' - Tickets_';
+            '_Mesa de Ayuda - Tickets_';
 
         $result = $this->sendMessage($config[SettingKeys::WHATSAPP_TICKETS_NUMBER], $testMessage);
 

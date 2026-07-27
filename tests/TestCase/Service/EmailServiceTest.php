@@ -5,6 +5,7 @@ namespace App\Test\TestCase\Service;
 
 use App\Model\Table\TicketsTable;
 use App\Notification\Channel\NotificationMessage;
+use App\Notification\Email\EmailBrand;
 use App\Service\Dto\SystemConfig;
 use App\Service\EmailService;
 use App\Service\GmailService;
@@ -271,6 +272,42 @@ class EmailServiceTest extends TestCase
 
         $msg = NotificationMessage::whatsapp('+57x', 'hello');
         $this->assertFalse($service->dispatch($msg));
+    }
+
+    /**
+     * El remitente (from display name) debe ser la constante de marca
+     * EmailBrand::TEAM_NAME, desacoplado de cualquier ajuste de settings.
+     * Captura $options via willReturnCallback y afirma el par email => nombre.
+     */
+    public function testDispatchSetsFromDisplayNameToBrandTeamName(): void
+    {
+        $capturedOptions = null;
+        $gmail = $this->getMockBuilder(GmailService::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['sendEmail'])
+            ->getMock();
+        $gmail->method('sendEmail')->willReturnCallback(
+            static function ($to, $subject, $body, $attachments, $options) use (&$capturedOptions): ?string {
+                $capturedOptions = $options;
+
+                return 'sent@mail.gmail.com';
+            },
+        );
+
+        $service = $this->buildService($this->createMock(TicketCommentService::class), $gmail);
+
+        $msg = NotificationMessage::email(
+            recipient: 'user@example.com',
+            subject: 'New ticket',
+            bodyHtml: '<p>b</p>',
+        );
+
+        $service->dispatch($msg);
+
+        $this->assertIsArray($capturedOptions);
+        // With SystemConfig::empty() the from-email resolves to '' (present-but-empty
+        // GMAIL_USER_EMAIL). Task 2's contract is the display NAME, so assert only that.
+        $this->assertSame([EmailBrand::TEAM_NAME], array_values($capturedOptions['from']));
     }
 
     // -------------------- helpers --------------------

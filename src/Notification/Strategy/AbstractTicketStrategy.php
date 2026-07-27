@@ -125,7 +125,7 @@ abstract class AbstractTicketStrategy implements TicketNotificationStrategy
         $ticketComments = $this->fetchTable('TicketComments')->find()
             ->select(['id', 'rfc_message_id'])
             ->where(['ticket_id' => $ticket->id, 'rfc_message_id IS NOT' => null])
-            ->order(['id' => 'ASC'])
+            ->orderBy(['id' => 'ASC'])
             ->all();
 
         $chain = [];

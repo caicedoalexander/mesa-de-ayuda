@@ -342,8 +342,9 @@ class SettingsController extends AppController
 
         if ($saved) {
             $this->Flash->success('Configuración de Gmail guardada. Ahora autoriza el acceso OAuth.');
+            $identity = $this->Authentication->getIdentity();
             Log::info('Gmail client_secret updated', [
-                'user' => $this->Authentication->getIdentity()?->get('email'),
+                'user' => $identity['email'] ?? null,
             ]);
         } else {
             $this->Flash->error('No se pudo guardar la configuración de Gmail.');

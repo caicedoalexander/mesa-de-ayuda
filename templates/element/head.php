@@ -2,7 +2,7 @@
     <?= $this->Html->charset() ?>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>
-        <?= $this->fetch('title') ?> - <?= h($systemTitle ?? 'Sistema de Soporte') ?>
+        <?= $this->fetch('title') ?>
     </title>
     <link rel="icon" type="image/svg+xml" href="<?= $this->Url->image('logos/logo-mesa-ayuda.svg') ?>">
 

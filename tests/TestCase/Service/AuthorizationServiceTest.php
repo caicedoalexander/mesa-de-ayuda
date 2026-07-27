@@ -57,7 +57,7 @@ final class AuthorizationServiceTest extends TestCase
 
     public function testAssignmentDisabledWhenRoleIsMissing(): void
     {
-        // Identity without a 'role' key: get('role') yields null, which is not
+        // Identity without a 'role' key: $user['role'] yields null, which is not
         // a staff role, so assignment stays disabled.
         $identity = new Identity(['id' => 1]);
         self::assertTrue($this->service->isAssignmentDisabled($identity));

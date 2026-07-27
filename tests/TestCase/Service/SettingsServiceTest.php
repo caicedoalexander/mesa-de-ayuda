@@ -33,7 +33,7 @@ final class SettingsServiceTest extends TestCase
 
     public function testKeyDoesNotRequirePurgeForUnrelatedSettings(): void
     {
-        $this->assertFalse(SettingsService::keyRequiresOAuthCachePurge('system_title'));
+        $this->assertFalse(SettingsService::keyRequiresOAuthCachePurge(SettingKeys::N8N_WEBHOOK_URL));
         $this->assertFalse(SettingsService::keyRequiresOAuthCachePurge('whatsapp_api_url'));
     }
 }

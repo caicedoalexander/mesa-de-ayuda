@@ -583,7 +583,7 @@ class TicketIngestionService
         // Most reattachments target a comment (latest thread participant).
         $comment = $this->fetchTable('TicketComments')->find()
             ->where(['rfc_message_id' => $rfcId])
-            ->order(['id' => 'DESC'])
+            ->orderBy(['id' => 'DESC'])
             ->first();
         if ($comment !== null) {
             return $this->fetchTable('Tickets')->find()
@@ -869,7 +869,7 @@ class TicketIngestionService
 
         if (!isset($ticket->requester)) {
             $ticketsTable = $this->fetchTable('Tickets');
-            $ticket = $ticketsTable->get($ticket->id, ['contain' => ['Requesters']]);
+            $ticket = $ticketsTable->get($ticket->id, contain: ['Requesters']);
         }
         if (!empty($ticket->requester->email)) {
             $set[strtolower(trim((string)$ticket->requester->email))] = true;

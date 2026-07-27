@@ -146,6 +146,28 @@ class S3StorageService
     }
 
     /**
+     * Comprobación de conectividad para el health check. HeadBucket es la
+     * operación más liviana que valida credenciales + existencia del bucket
+     * sin crear ni listar objetos.
+     *
+     * @return bool True si el bucket es accesible
+     */
+    public function healthCheck(): bool
+    {
+        try {
+            $this->client()->headBucket([
+                'Bucket' => $this->bucket,
+            ]);
+
+            return true;
+        } catch (Throwable $e) {
+            Log::error('S3 health check failed', ['bucket' => $this->bucket, 'error' => $e->getMessage()]);
+
+            return false;
+        }
+    }
+
+    /**
      * Cliente lazy: no se construye en el constructor para no penalizar
      * requests que no tocan archivos (mismo criterio que
      * TicketServiceInitializerTrait).

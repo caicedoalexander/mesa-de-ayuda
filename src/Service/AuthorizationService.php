@@ -19,7 +19,7 @@ class AuthorizationService
      *
      * Callers always pass the result of $this->Authentication->getIdentity()
      * (or a stored copy), which is null when unauthenticated and an
-     * IdentityInterface otherwise — no array probing needed.
+     * IdentityInterface otherwise — no type probing needed.
      *
      * @param \Authentication\IdentityInterface|null $user Authenticated identity
      * @return bool True if assignment should be disabled
@@ -30,7 +30,7 @@ class AuthorizationService
             return true;
         }
 
-        $userRole = $user->get('role');
+        $userRole = $user['role'];
 
         return !in_array($userRole, RoleConstants::STAFF_ROLES, true);
     }

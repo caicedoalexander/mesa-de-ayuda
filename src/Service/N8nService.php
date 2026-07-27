@@ -6,7 +6,7 @@ namespace App\Service;
 use App\Constants\SettingKeys;
 use App\Model\Entity\Ticket;
 use App\Service\Dto\SystemConfig;
-use Cake\I18n\FrozenTime;
+use Cake\I18n\DateTime;
 use Cake\Log\Log;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use Exception;
@@ -145,7 +145,7 @@ class N8nService
         // Build base payload
         $payload = [
             'event' => 'ticket.created',
-            'timestamp' => FrozenTime::now()->toIso8601String(),
+            'timestamp' => DateTime::now()->toIso8601String(),
             'ticket' => [
                 'id' => $ticket->id,
                 'subject' => $ticket->subject,
@@ -266,7 +266,7 @@ class N8nService
         try {
             $testPayload = [
                 'event' => 'connection.test',
-                'timestamp' => FrozenTime::now()->toIso8601String(),
+                'timestamp' => DateTime::now()->toIso8601String(),
                 'test' => true,
             ];
 

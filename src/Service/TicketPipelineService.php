@@ -18,7 +18,7 @@ use Authentication\IdentityInterface;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventManager;
 use Cake\Event\EventManagerInterface;
-use Cake\I18n\FrozenTime;
+use Cake\I18n\DateTime;
 use Cake\Log\Log;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use Throwable;
@@ -341,7 +341,7 @@ class TicketPipelineService
             $entity->status = $newStatus;
         }
 
-        $now = FrozenTime::now();
+        $now = DateTime::now();
         if ($newStatus === TicketConstants::STATUS_RESUELTO && !$entity->resolved_at) {
             $entity->resolved_at = $now;
         }

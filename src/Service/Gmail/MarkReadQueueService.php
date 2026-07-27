@@ -144,7 +144,7 @@ final class MarkReadQueueService
             return array_slice($this->table->selectAllForTest(), 0, $batch);
         }
         $iter = $this->table->find()
-            ->order(['created' => 'ASC'])
+            ->orderBy(['created' => 'ASC'])
             ->limit($batch)
             ->all();
         $rows = [];

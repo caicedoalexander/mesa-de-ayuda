@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\S3StorageService;
 use Exception;
 
 /**
@@ -66,6 +67,14 @@ class HealthController extends AppController
             $status['checks']['database'] = 'not_ready';
             $status['checks']['database_message'] = 'Migrations may be pending';
             $status['warnings'][] = 'Database not initialized - run migrations';
+        }
+
+        // Check 4: S3 storage connectivity (non-fatal, degrades like database)
+        if ((new S3StorageService())->healthCheck()) {
+            $status['checks']['s3'] = 'ok';
+        } else {
+            $status['checks']['s3'] = 'error';
+            $status['warnings'][] = 'S3 storage not reachable';
         }
 
         // Always return 200 OK if PHP/Nginx are running

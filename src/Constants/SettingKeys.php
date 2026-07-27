@@ -11,11 +11,8 @@ namespace App\Constants;
  */
 final class SettingKeys
 {
-    public const SYSTEM_TITLE = 'system_title';
-
     public const GMAIL_REFRESH_TOKEN = 'gmail_refresh_token';
     public const GMAIL_CLIENT_SECRET_JSON = 'gmail_client_secret_json';
-    public const GMAIL_CHECK_INTERVAL = 'gmail_check_interval';
     public const GMAIL_USER_EMAIL = 'gmail_user_email';
     public const GMAIL_LAST_HISTORY_ID = 'gmail_last_history_id';
 
@@ -49,8 +46,6 @@ final class SettingKeys
      *  - WHATSAPP_BOT_EMAIL (system-level identifier, not user-editable)
      */
     public const USER_EDITABLE_KEYS = [
-        self::SYSTEM_TITLE,
-        self::GMAIL_CHECK_INTERVAL,
         self::WHATSAPP_ENABLED,
         self::WHATSAPP_API_URL,
         self::WHATSAPP_API_KEY,

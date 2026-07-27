@@ -1,30 +1,21 @@
 services:
-  # Application (Nginx + PHP-FPM)
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: mesadeayuda_web
-    restart: always
+  app:
+    build: .
+    container_name: mesadeayuda
     ports:
       - 8082:80
     volumes:
       - ./logs:/var/www/html/logs
       - ./tmp:/var/www/html/tmp
-      - ./webroot/uploads:/var/www/html/webroot/uploads
     environment:
       - DEBUG=${DEBUG:-false}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT:-3306}
-      - DB_DATABASE=${DB_DATABASE:-mesadeayuda}
-      - DB_USERNAME=${DB_USERNAME:-root}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
       - SECURITY_SALT=${SECURITY_SALT}
-      - TRUST_PROXY=${TRUST_PROXY:-true}
-    networks:
-      - mesadeayuda_network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - S3_BUCKET=${S3_BUCKET}

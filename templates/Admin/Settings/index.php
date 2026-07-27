@@ -46,45 +46,6 @@ $n8nEnabled        = ($settings['n8n_enabled'] ?? '0') === '1';
     </div>
 </header>
 
-<!-- 1. General -->
-<div class="app-card">
-    <div class="app-card-header">
-        <div class="app-card-header-icon"><i class="bi bi-sliders"></i></div>
-        <div class="app-card-header-text">
-            <h3 class="app-card-header-title">Configuración general</h3>
-            <div class="app-card-header-subtitle">Título y frecuencia de ingesta</div>
-        </div>
-    </div>
-    <?= $this->Form->create(null, ['type' => 'post']) ?>
-    <div class="app-card-body">
-        <div class="app-form-row">
-            <div class="app-form-group">
-                <?= $this->Form->label('system_title', 'Título del sistema') ?>
-                <?= $this->Form->text('system_title', [
-                    'value' => $settings['system_title'] ?? 'Sistema de Soporte',
-                    'placeholder' => 'Sistema de Soporte',
-                ]) ?>
-            </div>
-            <div class="app-form-group">
-                <?= $this->Form->label('gmail_check_interval', 'Intervalo Gmail (min)') ?>
-                <?= $this->Form->number('gmail_check_interval', [
-                    'value' => $settings['gmail_check_interval'] ?? '5',
-                    'placeholder' => '5',
-                    'min' => 1,
-                ]) ?>
-                <small>Frecuencia con la que se revisan nuevos correos.</small>
-            </div>
-        </div>
-    </div>
-    <div class="app-card-footer">
-        <?= $this->Form->button(
-            '<i class="bi bi-check-lg"></i> Guardar configuración',
-            ['class' => 'btn-brand-primary', 'escapeTitle' => false]
-        ) ?>
-    </div>
-    <?= $this->Form->end() ?>
-</div>
-
 <!-- 2. Google OAuth -->
 <div class="app-card">
     <div class="app-card-header">

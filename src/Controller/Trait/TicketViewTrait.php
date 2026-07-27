@@ -56,7 +56,7 @@ trait TicketViewTrait
     {
         $variableName = $this->getSingleEntityVariable();
         $contain = $config['contain'] ?? $this->getDefaultViewContain($config['lazyLoadHistory'] ?? false);
-        $entity = $this->fetchTable('Tickets')->get($id, compact('contain'));
+        $entity = $this->fetchTable('Tickets')->get($id, contain: $contain);
         if (isset($config['permissionCheck']) && is_callable($config['permissionCheck'])) {
             $permissionResult = $config['permissionCheck']($entity);
             if ($permissionResult !== null) {

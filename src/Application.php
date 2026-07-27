@@ -24,6 +24,7 @@ use App\Notification\Strategy\TicketCommentAddedStrategy;
 use App\Notification\Strategy\TicketCreatedStrategy;
 use App\Notification\Strategy\TicketRespondedStrategy;
 use App\Notification\Strategy\TicketStatusChangedStrategy;
+use App\Service\Auth\SessionExpiryPolicy;
 use App\Service\Dto\SystemConfig;
 use App\Service\EmailService;
 use App\Service\TicketNotificationService;
@@ -41,11 +42,14 @@ use Cake\Event\EventManager;
 use Cake\Http\BaseApplication;
 use Cake\Http\Middleware\BodyParserMiddleware;
 use Cake\Http\Middleware\CsrfProtectionMiddleware;
+use Cake\Http\Middleware\EncryptedCookieMiddleware;
 use Cake\Http\Middleware\SecurityHeadersMiddleware;
 use Cake\Http\MiddlewareQueue;
+use Cake\I18n\DateTime;
 use Cake\ORM\Locator\TableLocator;
 use Cake\Routing\Middleware\AssetMiddleware;
 use Cake\Routing\Middleware\RoutingMiddleware;
+use Cake\Utility\Security;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -170,6 +174,11 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
                 return $response->withHeader('Content-Security-Policy', $csp);
             })
 
+            // Descifra la cookie de "recuérdame" antes de que el autenticador
+            // la lea (y la cifra en la respuesta). Clave: Security::getSalt()
+            // — Configure::read('Security.salt') sería null (bootstrap la consume).
+            ->add(new EncryptedCookieMiddleware(['MdaRemember'], Security::getSalt()))
+
             // Add authentication middleware
             ->add(new AuthenticationMiddleware($this));
 
@@ -193,15 +202,31 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
             'username' => 'email',
             'password' => 'password',
         ];
+        $identifier = [
+            'className' => 'Authentication.Password',
+            'fields' => $fields,
+        ];
 
+        // Orden significativo: Session (sesión existente) → Cookie (re-auth
+        // persistente) → Form (procesa el POST del login).
         $authenticationService->loadAuthenticator('Authentication.Session');
+        $authenticationService->loadAuthenticator('Authentication.Cookie', [
+            'rememberMeField' => 'remember_me',
+            'loginUrl' => '/users/login',
+            'fields' => $fields,
+            'identifier' => $identifier,
+            'cookie' => [
+                'name' => 'MdaRemember',
+                'expires' => SessionExpiryPolicy::nextMidnight(DateTime::now()),
+                'httponly' => true,
+                'samesite' => 'Lax',
+                'secure' => (bool)env('TRUST_PROXY', false),
+            ],
+        ]);
         $authenticationService->loadAuthenticator('Authentication.Form', [
             'fields' => $fields,
             'loginUrl' => '/users/login',
-            'identifier' => [
-                'className' => 'Authentication.Password',
-                'fields' => $fields,
-            ],
+            'identifier' => $identifier,
         ]);
 
         return $authenticationService;

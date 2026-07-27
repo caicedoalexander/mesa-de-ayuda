@@ -167,4 +167,25 @@ final class S3StorageServiceTest extends TestCase
 
         $this->assertNull($service->getStream('attachments/1000/no.pdf'));
     }
+
+    public function testHealthCheckSendsHeadBucketAndReturnsTrue(): void
+    {
+        $this->mock->append(new Result([]));
+        $service = $this->makeService();
+
+        $this->assertTrue($service->healthCheck());
+        $cmd = $this->mock->getLastCommand();
+        $this->assertSame('HeadBucket', $cmd->getName());
+        $this->assertSame('test-bucket', $cmd['Bucket']);
+    }
+
+    public function testHealthCheckReturnsFalseOnAwsError(): void
+    {
+        $this->mock->append(function (CommandInterface $cmd) {
+            return new S3Exception('sin acceso', $cmd);
+        });
+        $service = $this->makeService();
+
+        $this->assertFalse($service->healthCheck());
+    }
 }

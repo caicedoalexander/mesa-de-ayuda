@@ -16,6 +16,26 @@ use Cake\Http\Response;
 class UsersController extends AppController
 {
     /**
+     * Initialization hook method.
+     *
+     * @return void
+     */
+    public function initialize(): void
+    {
+        parent::initialize();
+
+        // El login es un punto de transición de sesión: antes de autenticar y,
+        // tras el corte diario a medianoche, la sesión previa se rota vía
+        // $session->renew(). El token de FormProtection va atado al session id,
+        // por lo que se desincroniza entre el GET que renderiza el form y el
+        // POST que lo valida → 400 FormProtectionException. La protección real
+        // contra CSRF la aporta CsrfProtectionMiddleware (no depende del session
+        // id) y permanece activa; FormProtection es anti-tampering de campos,
+        // irrelevante en un login que solo lee email/password/remember_me.
+        $this->FormProtection->setConfig('unlockedActions', ['login']);
+    }
+
+    /**
      * Before filter callback
      *
      * @param \Cake\Event\EventInterface $event Event.
@@ -41,9 +61,14 @@ class UsersController extends AppController
 
         $result = $this->Authentication->getResult();
 
+        // La identidad puede ser nula aun con un resultado válido: un logout()
+        // ejecutado en beforeFilter (corte diario) elimina el atributo
+        // `identity` del request pero deja intacto el resultado cacheado en
+        // AuthenticationService. En ese caso hay que mostrar el formulario.
+        $user = $this->Authentication->getIdentity();
+
         // If user is already logged in, redirect
-        if ($result && $result->isValid()) {
-            $user = $this->Authentication->getIdentity();
+        if ($result && $result->isValid() && $user !== null) {
             $target = $this->request->getQuery('redirect');
 
             // Validate redirect is a safe internal path (prevent open redirect)
@@ -53,7 +78,7 @@ class UsersController extends AppController
                 || !preg_match('#^/[a-zA-Z0-9]#', $target)
                 || str_contains($target, '//')
             ) {
-                $target = $this->getDefaultRedirectForRole($user->get('role'));
+                $target = $this->getDefaultRedirectForRole((string)$user['role']);
             }
 
             return $this->redirect($target);
@@ -97,6 +122,12 @@ class UsersController extends AppController
 
         if ($result && $result->isValid()) {
             $this->Authentication->logout();
+
+            // La marca de expiración nace con la sesión autenticada y debe
+            // morir con ella: si sobrevive al logout, el próximo login vuelve
+            // a expulsar al usuario en su propio request de autenticación.
+            $this->request->getSession()->delete('SessionExpiry');
+
             $this->Flash->success('Has cerrado sesión exitosamente');
 
             return $this->redirect(['controller' => 'Users', 'action' => 'login']);

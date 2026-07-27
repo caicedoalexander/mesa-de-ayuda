@@ -12,8 +12,6 @@ final class CacheConstants
     public const CACHE_CONFIG = '_cake_core_';
     public const CACHE_RESILIENCE = 'resilience';
 
-    public const DEFAULT_SYSTEM_TITLE = 'Mesa de Ayuda';
-
     /**
      * Cache slot that holds the previous webhook token during a rotation
      * grace window. Stored payload: ['token' => string, 'expires_at' => int].

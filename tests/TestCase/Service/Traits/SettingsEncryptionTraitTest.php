@@ -154,11 +154,11 @@ final class SettingsEncryptionTraitTest extends TestCase
 
         $processed = $this->harness->process([
             SettingKeys::WEBHOOK_GMAIL_IMPORT_TOKEN => $cipher,
-            'system_title' => 'Mesa de Ayuda',
+            'some_plain_setting' => 'Mesa de Ayuda',
         ]);
 
         $this->assertSame('the-token', $processed[SettingKeys::WEBHOOK_GMAIL_IMPORT_TOKEN]);
-        $this->assertSame('Mesa de Ayuda', $processed['system_title']);
+        $this->assertSame('Mesa de Ayuda', $processed['some_plain_setting']);
     }
 
     public function testProcessSettingsExcludesUndecryptableKeys(): void
@@ -172,13 +172,13 @@ final class SettingsEncryptionTraitTest extends TestCase
         $processed = $this->harness->process([
             SettingKeys::WHATSAPP_API_KEY => $cipherA,
             SettingKeys::N8N_API_KEY => $cipherB,
-            'system_title' => 'Helpdesk',
+            'some_plain_setting' => 'Helpdesk',
         ]);
 
         // Failed keys must be ABSENT (not '' — empty would pass auth checks via hash_equals).
         $this->assertArrayNotHasKey(SettingKeys::WHATSAPP_API_KEY, $processed);
         $this->assertArrayNotHasKey(SettingKeys::N8N_API_KEY, $processed);
-        $this->assertSame('Helpdesk', $processed['system_title']);
+        $this->assertSame('Helpdesk', $processed['some_plain_setting']);
     }
 
     public function testEncryptUsesCurrentSaltSoCiphersDifferAfterRotation(): void

@@ -5,37 +5,17 @@ namespace App\Test\TestCase\Notification\Email\Component;
 
 use App\Notification\Email\Component\EmailFrame;
 use App\Notification\Email\EmailBrand;
-use Cake\Core\Configure;
 use PHPUnit\Framework\TestCase;
 
 final class EmailFrameTest extends TestCase
 {
-    private mixed $previousFullBaseUrl = null;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->previousFullBaseUrl = Configure::read('App.fullBaseUrl');
-        Configure::write('App.fullBaseUrl', 'https://mesa.example.com');
-    }
-
-    protected function tearDown(): void
-    {
-        if ($this->previousFullBaseUrl === null) {
-            Configure::delete('App.fullBaseUrl');
-        } else {
-            Configure::write('App.fullBaseUrl', $this->previousFullBaseUrl);
-        }
-        parent::tearDown();
-    }
-
     public function testRendersInnerBodyAndMinimalFooter(): void
     {
         $html = EmailFrame::render('<p>BODY</p>');
 
         self::assertStringContainsString('<p>BODY</p>', $html);
         // Footer shows the small logo and the two brand lines.
-        self::assertStringContainsString('logo-mesa-ayuda.svg', $html);
+        self::assertStringContainsString('logo-mesa-ayuda.png', $html);
         self::assertStringContainsString(EmailBrand::TEAM_NAME, $html);
         self::assertStringContainsString(EmailBrand::ORG_NAME, $html);
     }
